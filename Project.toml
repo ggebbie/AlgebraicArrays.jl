@@ -1,0 +1,13 @@
+name = "AlgebraicArrays"
+uuid = "8af735f6-f3e5-4048-bdaa-40a2355e9eea"
+authors = ["G Jake Gebbie <ggebbie@whoi.edu>"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.10"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
