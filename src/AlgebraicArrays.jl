@@ -6,11 +6,11 @@ export VectorArray, MatrixArray
 export parent, domainsize, rangesize 
 #export CRmult
 export # export Base methods
-    size, show, vec, Matrix, *, first #,  display
+    size, show, vec, Matrix, *, first,  display, parent 
 export # export LinearAlgebra methods
     transpose, adjoint
     
-import Base: size, show, vec, Matrix, *, first
+import Base: size, show, vec, Matrix, *, first, display, parent 
 import LinearAlgebra: transpose, adjoint
 
 struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
@@ -29,8 +29,14 @@ Construct a `VectorArray` from an AbstractArray.
 VectorArray(A::AbstractArray, rsize) = reshape(A,rsize)
 
 parent(b::VectorArray) = b.data
+function Base.display(b::VectorArray)
+    #println(summary(b))
+    display(parent(b))
+    println("operating algebraically as")
+    display(vec(b))
+end
+#Base.display(b::VectorArray) = display(parent(b))
 Base.show(b::VectorArray) = show(parent(b))
-Base.display(b::VectorArray) = display(parent(b))
 Base.size(b::VectorArray) = size(parent(b))
 Base.vec(b::VectorArray) = vec(parent(b))
 Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
@@ -69,6 +75,12 @@ end
 
 parent(A::MatrixArray) = A.data
 Base.show(A::MatrixArray) = show(parent(A))
+function Base.display(A::MatrixArray)
+    #println(summary(b))
+    display(parent(A))
+    println("operating algebraically as")
+    display(Matrix(A))
+end
 #Base.display(A::MatrixArray) = display(parent(A))
 #Base.size(A::MatrixArray) = size(Matrix(A))
 Base.size(A::MatrixArray) = size(parent(A))
