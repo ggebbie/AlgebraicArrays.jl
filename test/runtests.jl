@@ -1,6 +1,7 @@
 using Revise
 using AlgebraicArrays
 using Test
+using ArraysOfArrays
 
 @testset "AlgebraicArrays.jl" begin
     # Write your tests here.
@@ -12,12 +13,12 @@ using Test
     @test a == c    
 
     # # make an array of arrays
-    # rowdims = (4,4)
-    # coldims = (5,5)
-    # alldims = Tuple(vcat([i for i in rowdims],[j for j in coldims]))
+    rowdims = (4,4)
+    coldims = (5,5)
+    alldims = Tuple(vcat([i for i in rowdims],[j for j in coldims]))
 
-    # C = nestedview(randn(alldims),length(coldims))
-    # C[5,5][4,4]
+    C = nestedview(randn(alldims),length(coldims))
+    C[5,5][4,4]
 
     # # turn an array of arrays into a MatrixArray
     # D = MatrixArray(C)
