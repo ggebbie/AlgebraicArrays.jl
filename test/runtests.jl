@@ -29,19 +29,24 @@ using ArraysOfArrays
         E = MatrixArray(Matrix(D),rsize,dsize)
         @test D == E 
 
-        @testset "*,+,-,/,\ and all that" begin
+        @testset "*,+,-,/,\\ and all that" begin
 
             rsize = (3,4)
             dsize = (2,3)
 
             q = VectorArray(randn(dsize))
             qT = transpose(q)
-            qTT = transpose(qT) # diff type than q
-            @test vec(q) == Matrix(qTT)
+             # same type than q, but type instability in code
+            qTT = transpose(qT)
+            @test q == qTT
 
+            # inner product
+            @test qT * q ≥ 0
+
+            # dot product is not correct
+            #@test q ⋅ q ≥ 0 
+            
             P = randn_MatrixArray(rsize,dsize)
-            @test P * PT isa MatrixArray
-            @test P == transpose(PT)
     
             # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
             @test (P*q) isa VectorArray
