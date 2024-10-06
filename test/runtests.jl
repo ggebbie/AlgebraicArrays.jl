@@ -73,6 +73,27 @@ end
 
         end
 
+        @testset "eigenstructure" begin
+
+            rsize = (1,3)
+            dsize = (1,3)
+            x = VectorArray(randn(rsize))
+            S = rand_MatrixArray(rsize,dsize)
+
+            vals, vecs = eigen(S)
+            F = eigen(S)
+
+            Diagonal(vals)
+
+            println(typeof(real(AbstractMatrix(F))))
+            #Matrix(F)
+            # Sx_eigen = V * D / V
+            # @test isapprox(Sx, Sx_eigen, atol = 1e-8)
+
+            # # check matrix exponential
+            # exp(Sx) # watch out for overflow!
+        end
+
     end
 
 

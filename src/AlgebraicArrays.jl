@@ -3,15 +3,15 @@ module AlgebraicArrays
 using LinearAlgebra
 
 export VectorArray, MatrixArray
-export parent, domainsize, rangesize 
+export parent, domainsize, rangesize
 #export CRmult
 export # export Base methods
     size, show, vec, Matrix, *, first,  display, parent, \, /
 export # export LinearAlgebra methods
-    transpose, adjoint
+    transpose, adjoint, eigen, Diagonal
     
 import Base: size, show, vec, Matrix, *, first, display, parent, \, /
-import LinearAlgebra: transpose, adjoint
+import LinearAlgebra: transpose, adjoint, eigen, Diagonal
 
 struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
     data:: A
@@ -164,5 +164,42 @@ function matrix right divide
 #     return MultipliableDimArray(Amat, rdims, ddims)
 # end
 Base.:(/)(A::MatrixArray, B::MatrixArray) = MatrixArray(Matrix(A) / Matrix(B), rangesize(A), rangesize(B))
+
+# eigenstructure only exists if A is uniform
+# should be a better way by reading type
+# uniform(A::MatrixArray{Real}) = true
+# uniform(b::VectorArray{Real}) = true
+# uniform(A) = uniform(Matrix(A))
+# function uniform(A::Matrix)
+#     ulist = unit.(A)
+#     return allequal(ulist)
+# end
+
+function LinearAlgebra.eigen(A::MatrixArray)
+
+    F = eigen(Matrix(A))
+
+    # eigen_dims = Eigenmode(1:size(A_matrix,2))
+    # model_dims = dims(A)
+    # values = MultipliableDimArray(uA * F.values, eigen_dims)
+    #values = DimVector(uA * F.values, eigen_dims)
+
+    dsize = length(F.values)
+    rsize = rangesize(A)
+
+    values = VectorArray(F.values,dsize)
+    vectors = MatrixArray(F.vectors,rsize,dsize) 
+
+    #vectors = MultipliableDimArray(F.vectors,
+    #        model_dims, eigen_dims)    
+
+    return Eigen(values, vectors)
+    
+    #return μ, vectors
+    # ideally, would return an Eigen factorization, in spirit like:
+    #    return Eigen(QuantityArray(F.values, dimension(A)), F.vectors)
+end
+
+Diagonal(a::VectorArray) = MatrixArray(Diagonal(vec(a)), rangesize(a), rangesize(a))
 
 end # module AlgebraicArrays
