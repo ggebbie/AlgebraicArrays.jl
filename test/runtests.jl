@@ -3,6 +3,13 @@ using AlgebraicArrays
 using Test
 using ArraysOfArrays
 
+function rand_MatrixArray(rsize,dsize)
+
+    # make an array of arrays
+    alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
+    return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+end
+
 @testset "AlgebraicArrays.jl" begin
 
     @testset "constructors" begin
@@ -22,13 +29,8 @@ using ArraysOfArrays
         # # make an array of arrays
         rsize = (1,2)
         dsize = (2,1)
-        alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
-
-        # investigator/algorithm makes a field of fields with physical dimensions
-        C = Matrix(nestedview(randn(alldims),length(dsize)))
+        D = rand_MatrixArray(rsize,dsize)
     
-        # turn an array of arrays into a MatrixArray for future calculations
-        D = MatrixArray(C)
 
         # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
         # turn a MatrixArray back into an array of arrays
@@ -41,10 +43,7 @@ using ArraysOfArrays
             dsize = (2,3)
 
             q = VectorArray(randn(dsize))
-
-            # # make an array of arrays
-            alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
-            P = MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+            P = rand_MatrixArray(rsize,dsize)
     
             # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
             @test (P*q) isa VectorArray
@@ -59,6 +58,18 @@ using ArraysOfArrays
 
             r = P * q
             @test isapprox(vec(P \ r), vec(q), atol = 1e-8) # sometimes failed w/o `vec`
+
+            # square matrices
+            rsize = (2,3)
+            dsize = (2,3)
+
+            S = rand_MatrixArray(rsize,dsize)
+            R = rand_MatrixArray(rsize,dsize)
+            Q = R * S
+            @test isapprox(Matrix(R \ Q), Matrix(S), atol = 1e-8)
+
+            # # square matrices, matrix matrix right divide
+            @test isapprox(Matrix(Q / S), Matrix(R), atol = 1e-8)
 
         end
 

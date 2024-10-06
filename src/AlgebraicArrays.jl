@@ -6,11 +6,11 @@ export VectorArray, MatrixArray
 export parent, domainsize, rangesize 
 #export CRmult
 export # export Base methods
-    size, show, vec, Matrix, *, first,  display, parent, \
+    size, show, vec, Matrix, *, first,  display, parent, \, /
 export # export LinearAlgebra methods
     transpose, adjoint
     
-import Base: size, show, vec, Matrix, *, first, display, parent, \
+import Base: size, show, vec, Matrix, *, first, display, parent, \, /
 import LinearAlgebra: transpose, adjoint
 
 struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
@@ -149,17 +149,20 @@ Base.:*(A::MatrixArray, B::MatrixArray) = MatrixArray(Matrix(A) * Matrix(B), ran
 
 Base.:(\ )(A::MatrixArray, b::VectorArray) = VectorArray(Matrix(A) \ vec(b), domainsize(A))
 Base.:(\ )(A::MatrixArray, B::MatrixArray) = MatrixArray(Matrix(A) \ Matrix(B), domainsize(A), domainsize(B))
+#     (c isa Number) && (c = [c]) # useful snippet if one-linear fails in some cases
 
-# function Base.:(\)(A::MatrixArray, b::VectorArray) #where T1<: AbstractDimArray where T2 <: Number
-#     c = Matrix(A) \ vec(b)
-#     (c isa Number) && (c = [c])
-#     return VectorArray(c, rangesize(A))
-# end
+"""
+function matrix right divide
 
-# function Base.:(\)(A::DimArray{T1}, B::DimArray{T2})  where T1 <: AbstractDimArray where T2 <: AbstractDimArray 
-#     C = Matrix(A) \ Matrix(B)
-#     (C isa Number) && (C = [C])
-#     return MatrixArray(C, rangesize(A), rangesize(B))
+`A/B = ( B'\\A')'
+"""
+# function Base.:(/)(A::DimArray{T1}, B::DimArray{T2})  where T1 <: AbstractDimArray where T2 <: AbstractDimArray 
+#     Amat = Matrix(A) / Matrix(B)
+#     (Amat isa Number) && (Amat = [Amat])
+#     ddims = dims(first(B))
+#     rdims = dims(first(A))
+#     return MultipliableDimArray(Amat, rdims, ddims)
 # end
+Base.:(/)(A::MatrixArray, B::MatrixArray) = MatrixArray(Matrix(A) / Matrix(B), rangesize(A), rangesize(B))
 
 end # module AlgebraicArrays
