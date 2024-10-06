@@ -2,7 +2,23 @@
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "f74e1e8c4673ed7b75d47ee001bcc1a760b8f767"
+project_hash = "3b46c1671742c9c1ed84d45ee6918d5a7aa92230"
+
+[[deps.ArraysOfArrays]]
+deps = ["Statistics"]
+git-tree-sha1 = "ad745f4bc2cfc5fe58484e53e49c3e650103e4bd"
+uuid = "65a8f2f4-9b39-5baf-92e2-a9cc46fdf018"
+version = "0.6.5"
+
+    [deps.ArraysOfArrays.extensions]
+    ArraysOfArraysAdaptExt = "Adapt"
+    ArraysOfArraysChainRulesCoreExt = "ChainRulesCore"
+    ArraysOfArraysStaticArraysCoreExt = "StaticArraysCore"
+
+    [deps.ArraysOfArrays.weakdeps]
+    Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -121,6 +137,21 @@ uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
+
+[[deps.SparseArrays]]
+deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
+uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+version = "1.10.0"
+
+[[deps.Statistics]]
+deps = ["LinearAlgebra", "SparseArrays"]
+uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+version = "1.10.0"
+
+[[deps.SuiteSparse_jll]]
+deps = ["Artifacts", "Libdl", "libblastrampoline_jll"]
+uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
+version = "7.2.1+1"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
