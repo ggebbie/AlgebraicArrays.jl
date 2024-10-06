@@ -3,13 +3,6 @@ using AlgebraicArrays
 using Test
 using ArraysOfArrays
 
-function rand_MatrixArray(rsize,dsize)
-
-    # make an array of arrays
-    alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
-    return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
-end
-
 @testset "AlgebraicArrays.jl" begin
 
     @testset "constructors" begin
@@ -29,21 +22,26 @@ end
         # # make an array of arrays
         rsize = (1,2)
         dsize = (2,1)
-        D = rand_MatrixArray(rsize,dsize)
-    
+        D = randn_MatrixArray(rsize,dsize)
 
         # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
         # turn a MatrixArray back into an array of arrays
         E = MatrixArray(Matrix(D),rsize,dsize)
         @test D == E 
 
-        @testset "multiplication" begin
+        @testset "*,+,-,/,\ and all that" begin
 
             rsize = (3,4)
             dsize = (2,3)
 
             q = VectorArray(randn(dsize))
-            P = rand_MatrixArray(rsize,dsize)
+            qT = transpose(q)
+            qTT = transpose(qT) # diff type than q
+            @test vec(q) == Matrix(qTT)
+
+            P = randn_MatrixArray(rsize,dsize)
+            @test P * PT isa MatrixArray
+            @test P == transpose(PT)
     
             # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
             @test (P*q) isa VectorArray
@@ -63,8 +61,8 @@ end
             rsize = (2,3)
             dsize = (2,3)
 
-            S = rand_MatrixArray(rsize,dsize)
-            R = rand_MatrixArray(rsize,dsize)
+            S = randn_MatrixArray(rsize,dsize)
+            R = randn_MatrixArray(rsize,dsize)
             Q = R * S
             @test isapprox(Matrix(R \ Q), Matrix(S), atol = 1e-8)
 
@@ -78,7 +76,7 @@ end
             rsize = (1,3)
             dsize = (1,3)
             x = VectorArray(randn(rsize))
-            S = rand_MatrixArray(rsize,dsize)
+            S = randn_MatrixArray(rsize,dsize)
 
             vals, vecs = eigen(S)
             F = eigen(S)

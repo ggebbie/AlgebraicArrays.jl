@@ -1,16 +1,20 @@
 module AlgebraicArrays
 
 using LinearAlgebra
+using ArraysOfArrays
 
 export VectorArray, MatrixArray, Array
 export parent, domainsize, rangesize
-#export CRmult
+export randn_VectorArray, randn_MatrixArray
 export # export Base methods
-    size, show, vec, Matrix, *, first,  display, parent, \, /
+    size, show, vec, Matrix, *, first
+export # export more Base methods
+    display, parent, \, / #, randn
 export # export LinearAlgebra methods
     transpose, adjoint, eigen, Diagonal
     
-import Base: size, show, vec, Matrix, *, first, display, parent, \, /, Array 
+import Base: size, show, vec, Matrix, *, first
+import Base: display, parent, \, /, Array #, randn 
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal
 
 struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
@@ -26,8 +30,18 @@ Construct a `VectorArray` from an AbstractArray.
 - `A::AbstractArray`
 - `rsize`: size of range
 """
-VectorArray(A::AbstractVector, rsize) = VectorArray(reshape(A,rsize))
-
+#VectorArray(A::AbstractVector, rsize) = VectorArray(reshape(A,rsize))
+function VectorArray(A::AbstractVector, rsize)
+    M = prod(rsize)
+    if M > 1
+        return VectorArray(reshape(A,rsize))
+    elseif M == 1
+        # warning: introduces type instability
+        # but useful for inner products
+        return first(A)
+    end
+end
+         
 parent(b::VectorArray) = b.data
 function Base.display(b::VectorArray)
     #println(summary(b))
@@ -43,6 +57,10 @@ Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
 
 rangesize(b::VectorArray) = size(parent(b))
 domainsize(b::VectorArray) = ()
+
+Base.transpose(P::VectorArray) = MatrixArray( transpose(vec(P)), 1, rangesize(P))
+
+randn_VectorArray(rsize) = VectorArray(randn(rsize))
 
 struct MatrixArray{T<:Number,
     M,
@@ -66,11 +84,20 @@ function MatrixArray(A::AbstractMatrix{T},rsize,dsize) where T <: Number
 
     M = prod(dsize)
     N = length(rsize)
-    P = Array{Array{T,N}}(undef,dsize)
-    for j in 1:M 
-        P[j] = reshape(A[:,j],rsize)
+
+    if M > 1
+        P = Array{Array{T,N}}(undef,dsize)
+        for j in 1:M 
+            P[j] = reshape(A[:,j],rsize)
+        end
+        return MatrixArray(P)
+    elseif M == 1
+        # warning: introduces type instability
+        # but useful for transpose of row vector
+        return VectorArray(reshape(A,rsize))
+    else
+        error("incompatible number of columns") 
     end
-    return MatrixArray(P)
 end
 
 parent(A::MatrixArray) = A.data
@@ -88,6 +115,7 @@ Base.getindex(A::MatrixArray, inds...) = getindex(parent(A), inds...) # need to 
 
 domainsize(A::MatrixArray) = size(parent(A))
 rangesize(A::MatrixArray) = size(first(parent(A)))
+
 
 """
 function Matrix(P::MatrixArray{T}) where T <: Number
@@ -133,6 +161,13 @@ Base.adjoint(P::MatrixArray) = MatrixArray( adjoint(Matrix(P)), domainsize(P), r
 #     return VectorArray(reshape(C,rowdims))
 # end
 
+# would prefer rand(MatrixArray,rsize,dsize)
+function rand_MatrixArray(rsize,dsize)
+    # make an array of arrays
+    alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
+    return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+end
+
 # slightly faster as a one-liner
 Base.:*(A::MatrixArray, b::VectorArray) =  VectorArray(Matrix(A) * vec(b), rangesize(A))
 
@@ -167,6 +202,12 @@ function matrix right divide
 # end
 Base.:(/)(A::MatrixArray, B::MatrixArray) = MatrixArray(Matrix(A) / Matrix(B), rangesize(A), rangesize(B))
 
+function randn_MatrixArray(rsize,dsize)
+    # make an array of arrays
+    alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
+    return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+end
+
 # eigenstructure only exists if A is uniform
 # should be a better way by reading type
 # uniform(A::MatrixArray{Real}) = true
@@ -178,28 +219,12 @@ Base.:(/)(A::MatrixArray, B::MatrixArray) = MatrixArray(Matrix(A) / Matrix(B), r
 # end
 
 function LinearAlgebra.eigen(A::MatrixArray)
-
     F = eigen(Matrix(A))
-
-    # eigen_dims = Eigenmode(1:size(A_matrix,2))
-    # model_dims = dims(A)
-    # values = MultipliableDimArray(uA * F.values, eigen_dims)
-    #values = DimVector(uA * F.values, eigen_dims)
-
     dsize = length(F.values)
     rsize = rangesize(A)
-
     values = VectorArray(F.values,dsize)
     vectors = MatrixArray(F.vectors,rsize,dsize) 
-
-    #vectors = MultipliableDimArray(F.vectors,
-    #        model_dims, eigen_dims)    
-
     return Eigen(values, vectors)
-    
-    #return μ, vectors
-    # ideally, would return an Eigen factorization, in spirit like:
-    #    return Eigen(QuantityArray(F.values, dimension(A)), F.vectors)
 end
 
 Diagonal(a::VectorArray) = MatrixArray(Diagonal(vec(a)), rangesize(a), rangesize(a))
