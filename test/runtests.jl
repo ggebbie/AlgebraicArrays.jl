@@ -4,37 +4,68 @@ using Test
 using ArraysOfArrays
 
 @testset "AlgebraicArrays.jl" begin
-    # Write your tests here.
 
-    rsize = (2,3)
-    a = randn(rsize)
-    b = VectorArray(a)
-    c = VectorArray(b, rsize)
-    @test a == c    
+    @testset "constructors" begin
 
-    # # make an array of arrays
-    rowdims = (4,4)
-    coldims = (5,5)
-    alldims = Tuple(vcat([i for i in rowdims],[j for j in coldims]))
+        rsize = (2,3)
 
-    C = nestedview(randn(alldims),length(coldims))
-    C[5,5][4,4]
+        # investigator makes a field with physical dimensions
+        a = randn(rsize)
 
-    # # turn an array of arrays into a MatrixArray
-    # D = MatrixArray(C)
-    # D = MatrixArray(Matrix(C))
+        # can immediately save it as a VectorArray for future calculations
+        b = VectorArray(a)
 
-    # # turn a MatrixArray into an algebraic array
-    # Matrix(D)
+        # internal algorithms must be able to turn into a vector, then bring it back to VectorArray
+        c = VectorArray(vec(a), rsize)
+        @test a == c    
 
-    # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
-    # q = D*b
+        # # make an array of arrays
+        rsize = (1,2)
+        dsize = (2,1)
+        alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
 
-    # rsize = (4,4)
-    # dsize = (5,5)
-    # MatrixArray(Matrix(D),rsize, dsize) # doesn't work 
+        # investigator/algorithm makes a field of fields with physical dimensions
+        C = Matrix(nestedview(randn(alldims),length(dsize)))
+    
+        # turn an array of arrays into a MatrixArray for future calculations
+        D = MatrixArray(C)
 
-    # # matrix-matrix multiplication
+        # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
+        # turn a MatrixArray back into an array of arrays
+        E = MatrixArray(Matrix(D),rsize,dsize)
+        @test D == E 
+
+        @testset "multiplication" begin
+
+            rsize = (3,4)
+            dsize = (2,3)
+
+            q = VectorArray(randn(dsize))
+
+            # # make an array of arrays
+            alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
+            P = MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+    
+            # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
+            @test (P*q) isa VectorArray
+
+            # # matrix-matrix multiplication
+            PT = transpose(P)
+            @test P * PT isa MatrixArray
+            @test P == transpose(PT)
+
+            P★ = adjoint(P)
+            @test P * P★ isa MatrixArray
+
+            r = P * q
+            @test isapprox(vec(P \ r), vec(q), atol = 1e-8) # sometimes failed w/o `vec`
+
+        end
+
+    end
+
+
+
     # rowdims = (3,3)
     # coldims = (3,3)
     # alldims = Tuple(vcat([i for i in rowdims],[j for j in coldims]))

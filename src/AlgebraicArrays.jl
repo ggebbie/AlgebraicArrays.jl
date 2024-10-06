@@ -6,11 +6,11 @@ export VectorArray, MatrixArray
 export parent, domainsize, rangesize 
 #export CRmult
 export # export Base methods
-    size, show, vec, Matrix, *, first,  display, parent 
+    size, show, vec, Matrix, *, first,  display, parent, \
 export # export LinearAlgebra methods
     transpose, adjoint
     
-import Base: size, show, vec, Matrix, *, first, display, parent 
+import Base: size, show, vec, Matrix, *, first, display, parent, \
 import LinearAlgebra: transpose, adjoint
 
 struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
@@ -26,7 +26,7 @@ Construct a `VectorArray` from an AbstractArray.
 - `A::AbstractArray`
 - `rsize`: size of range
 """
-VectorArray(A::AbstractArray, rsize) = reshape(A,rsize)
+VectorArray(A::AbstractVector, rsize) = VectorArray(reshape(A,rsize))
 
 parent(b::VectorArray) = b.data
 function Base.display(b::VectorArray)
@@ -116,19 +116,6 @@ Base.transpose(P::MatrixArray) = MatrixArray( transpose(Matrix(P)), domainsize(P
 
 Base.adjoint(P::MatrixArray) = MatrixArray( adjoint(Matrix(P)), domainsize(P), rangesize(P))
 
-# function Base.transpose(P::MatrixArray)
-#     dsize = domainsize(P)
-#     rsize = rangesize(P)
-#     #A = reshape(Matrix(P),rsize,prod(
-#     return MatrixArray(Matrix(transpose(Matrix(P))), dsize, rsize)
-# end
-
-# function Base.adjoint(P::MatrixArray) 
-#     dsize = domainsize(P)
-#     rsize = rangesize(P)
-#     return MatrixArray( adjoint(Matrix(P)), dsize, rsize)
-# end
-
 # function Base.:*(A::MatrixArray, b::VectorArray)
 #     c = zero(first(A))
 #     for j in eachindex(A)
@@ -137,37 +124,42 @@ Base.adjoint(P::MatrixArray) = MatrixArray( adjoint(Matrix(P)), domainsize(P), r
 #     return VectorArray(c)
 # end
 #slightly faster version of multiplication
-function Base.:*(A::MatrixArray, b::VectorArray)
-    C = Matrix(A) * vec(b)
-    (C isa Number) && (C = [C])
-    rowdims = size(first(A))
-    return VectorArray(reshape(C,rowdims))
-end
-
-function Base.:*(A::MatrixArray, B::MatrixArray) 
-    C = Matrix(A) * Matrix(B)
-    (C isa Number) && (C = [C])
-
-    #reshape using all of the dimensions
-    rsize = size(first(A))
-    dsize  = size(B)
-    return MatrixArray(C,rsize,dsize)
-end
-
-
-# function CRmult(A::MatrixArray{T}, B::MatrixArray{T}) where T <: Number
-#     # preallocate
-#     C = Array{Array{T}(und
-
-#         zero(first(A)
-#     c = zero(first(A))
-#     for j in eachindex(A)
-#         c += A[j] * b[j]
-#     end
-#     return VectorArray(c)
+# function Base.:*(A::MatrixArray, b::VectorArray)
+#     C = Matrix(A) * vec(b)
+#     (C isa Number) && (C = [C])
+#     rowdims = size(first(A))
+#     return VectorArray(reshape(C,rowdims))
 # end
 
-# first element in MatrixArray is a VectorArray
-#Base.first(A::MatrixArray) = VectorArray(first(A))
+# slightly faster as a one-liner
+Base.:*(A::MatrixArray, b::VectorArray) =  VectorArray(Matrix(A) * vec(b), rangesize(A))
+
+Base.:*(A::MatrixArray, B::MatrixArray) = MatrixArray(Matrix(A) * Matrix(B), rangesize(A), domainsize(B))
+
+# function Base.:*(A::MatrixArray, B::MatrixArray) 
+#     C = Matrix(A) * Matrix(B)
+#     (C isa Number) && (C = [C])
+
+#     #reshape using all of the dimensions
+#     #rsize = size(first(A))
+#     #dsize  = size(B)
+#     return MatrixArray(C, rangesize(A), domainsize(B))
+#     #return MatrixArray(C,rsize,dsize)
+# end
+
+Base.:(\ )(A::MatrixArray, b::VectorArray) = VectorArray(Matrix(A) \ vec(b), domainsize(A))
+Base.:(\ )(A::MatrixArray, B::MatrixArray) = MatrixArray(Matrix(A) \ Matrix(B), domainsize(A), domainsize(B))
+
+# function Base.:(\)(A::MatrixArray, b::VectorArray) #where T1<: AbstractDimArray where T2 <: Number
+#     c = Matrix(A) \ vec(b)
+#     (c isa Number) && (c = [c])
+#     return VectorArray(c, rangesize(A))
+# end
+
+# function Base.:(\)(A::DimArray{T1}, B::DimArray{T2})  where T1 <: AbstractDimArray where T2 <: AbstractDimArray 
+#     C = Matrix(A) \ Matrix(B)
+#     (C isa Number) && (C = [C])
+#     return MatrixArray(C, rangesize(A), rangesize(B))
+# end
 
 end # module AlgebraicArrays
