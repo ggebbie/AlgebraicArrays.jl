@@ -173,6 +173,8 @@ Base.:*(A::MatrixArray, b::VectorArray) =  VectorArray(Matrix(A) * vec(b), range
 
 Base.:*(A::MatrixArray, B::MatrixArray) = MatrixArray(Matrix(A) * Matrix(B), rangesize(A), domainsize(B))
 
+Base.:*(a::VectorArray, B::MatrixArray) = MatrixArray(vec(a) * Matrix(B), rangesize(a), domainsize(B))
+
 # function Base.:*(A::MatrixArray, B::MatrixArray) 
 #     C = Matrix(A) * Matrix(B)
 #     (C isa Number) && (C = [C])

@@ -45,7 +45,16 @@ using ArraysOfArrays
 
             # dot product is not correct
             #@test q ⋅ q ≥ 0 
-            
+
+            # symmetric outer product
+            @test q * qT isa MatrixArray
+
+            # asymmetric outer product
+            usize = (1,2)
+            u = randn_VectorArray(usize)
+            @test q * transpose(u) isa MatrixArray
+
+            # another way to make a MatrixArray
             P = randn_MatrixArray(rsize,dsize)
     
             # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
