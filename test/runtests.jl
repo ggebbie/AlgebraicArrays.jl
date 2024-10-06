@@ -84,8 +84,8 @@ end
             F = eigen(S)
 
             Diagonal(vals)
-
-            println(typeof(real(AbstractMatrix(F))))
+            @test isapprox(Matrix(F), Matrix(S), atol= 1e-8)
+            #println(typeof(real(AbstractMatrix(F))))
             #Matrix(F)
             # Sx_eigen = V * D / V
             # @test isapprox(Sx, Sx_eigen, atol = 1e-8)

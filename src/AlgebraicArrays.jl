@@ -2,7 +2,7 @@ module AlgebraicArrays
 
 using LinearAlgebra
 
-export VectorArray, MatrixArray
+export VectorArray, MatrixArray, Array
 export parent, domainsize, rangesize
 #export CRmult
 export # export Base methods
@@ -10,7 +10,7 @@ export # export Base methods
 export # export LinearAlgebra methods
     transpose, adjoint, eigen, Diagonal
     
-import Base: size, show, vec, Matrix, *, first, display, parent, \, /
+import Base: size, show, vec, Matrix, *, first, display, parent, \, /, Array 
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal
 
 struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
@@ -110,6 +110,8 @@ function Matrix(P::MatrixArray{T}) where T <: Number
     end
     return A 
 end
+
+Array(P::MatrixArray) = Matrix(P)
 
 # a pattern for any function
 Base.transpose(P::MatrixArray) = MatrixArray( transpose(Matrix(P)), domainsize(P), rangesize(P))
