@@ -3,6 +3,7 @@ module AlgebraicArrays
 using LinearAlgebra
 using ArraysOfArrays
 using DimensionalData
+using DimensionalData:@dim
 
 export VectorArray, MatrixArray, AlgebraicArray, Array
 export parent, domainsize, rangesize

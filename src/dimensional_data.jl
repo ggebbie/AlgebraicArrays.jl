@@ -1,3 +1,5 @@
+@dim RowVector "singular dimension"
+
 # put dimensional info into size, change name?
 function rangesize(b::VectorArray{T,N,DA}) where T where N where DA <: DimensionalData.AbstractDimArray
 
@@ -41,4 +43,10 @@ function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Uni
     else
         error("incompatible number of columns") 
     end
+end
+
+#    ones_row_vector = MultipliableDimArray(ones(1,2),,dims(B))
+function Base.transpose(b::VectorArray{T,N,DA}) where T<:Number where N where DA <: DimensionalData.AbstractDimArray
+
+    return AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangesize(b))
 end
