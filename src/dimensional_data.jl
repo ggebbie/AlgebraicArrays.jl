@@ -1,8 +1,11 @@
 @dim RowVector "singular dimension"
 
 # put dimensional info into size, change name?
-function rangesize(b::VectorArray{T,N,DA}) where T where N where DA <: DimensionalData.AbstractDimArray
+function rangesize(A::MatrixArray{T, M, N, R, C}) where {M, T<:Number, N, R<:AbstractArray{T, M}, C<:(AbstractDimArray{R, N})}
+    return dims(parent(A))
+end
 
+function rangesize(b::VectorArray{T,N,A}) where T <: Number where N where A <: DimensionalData.AbstractDimArray
     return dims(parent(b))
 end
 
@@ -19,7 +22,7 @@ function AlgebraicArray(A::AbstractVector, rdims::Union{Tuple,D}) where D <: Dim
     elseif M == 1
         # warning: introduces type instability
         # but useful for inner products
-        return first(A)
+        return VectorArray(first(A)) # bugfix?
     end
 end
 
@@ -35,7 +38,10 @@ function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Uni
         for j in 1:M 
             P[j] = DimArray(reshape(A[:,j],rsize),rdims)
         end
-        return MatrixArray(P)
+        # Ptmp = DimArray(P,ddims)
+        # println(typeof(Ptmp))
+        # return MatrixArray(Ptmp)
+        return MatrixArray(DimArray(P,ddims))
     elseif M == 1
         # warning: introduces type instability
         # but useful for transpose of row vector
@@ -50,3 +56,5 @@ function Base.transpose(b::VectorArray{T,N,DA}) where T<:Number where N where DA
 
     return AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangesize(b))
 end
+
+# Base.:*(A::MatrixArray{T,N,DA}), b::VectorArray{T,N,DA}) where T<:Number where M where N where DA <: DimensionalData.AbstractDimArray) =  AlgebraicArray(Matrix(A) * vec(b), rangesize(A))
