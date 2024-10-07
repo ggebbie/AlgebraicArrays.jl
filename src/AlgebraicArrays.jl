@@ -2,6 +2,7 @@ module AlgebraicArrays
 
 using LinearAlgebra
 using ArraysOfArrays
+using DimensionalData
 
 export VectorArray, MatrixArray, AlgebraicArray, Array
 export parent, domainsize, rangesize
@@ -229,5 +230,7 @@ function LinearAlgebra.eigen(A::MatrixArray)
 end
 
 Diagonal(a::VectorArray) = AlgebraicArray(Diagonal(vec(a)), rangesize(a), rangesize(a))
+
+include("dimensional_data.jl")
 
 end # module AlgebraicArrays
