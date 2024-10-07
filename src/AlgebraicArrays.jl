@@ -31,7 +31,7 @@ Construct a `VectorArray` or `MatrixArray` from an AbstractArray.
 - `rsize`: size of range
 """
 #VectorArray(A::AbstractVector, rsize) = VectorArray(reshape(A,rsize))
-function AlgebraicArray(A::AbstractVector, rsize)
+function AlgebraicArray(A::AbstractVector, rsize::Union{Int,NTuple{N,Int}}) where N
     M = prod(rsize)
     if M > 1
         return VectorArray(reshape(A,rsize))
@@ -80,7 +80,7 @@ Construct a `VectoArray` or `MatrixArray` from an AbstractArray.
 - `rsize`: size of range
 - `dsize`: size of domain
 """
-function AlgebraicArray(A::AbstractMatrix{T},rsize,dsize) where T <: Number 
+function AlgebraicArray(A::AbstractMatrix{T},rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2,T} # <: Number 
 
     M = prod(dsize)
     N = length(rsize)
@@ -116,11 +116,10 @@ Base.getindex(A::MatrixArray, inds...) = getindex(parent(A), inds...) # need to 
 domainsize(A::MatrixArray) = size(parent(A))
 rangesize(A::MatrixArray) = size(first(parent(A)))
 
-
 """
 function Matrix(P::MatrixArray{T}) where T <: Number
 """
-function Matrix(P::MatrixArray{T}) where T <: Number
+function Matrix(P::MatrixArray{T}) where T #<: Number
     N = length(P) # number of columns/ outer dims
     M = length(first(P)) # number of rows, take first inner element as example
 
@@ -204,7 +203,7 @@ function matrix right divide
 # end
 Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangesize(A), rangesize(B))
 
-function randn_MatrixArray(rsize,dsize)
+function randn_MatrixArray(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2}
     # make an array of arrays
     alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
     return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
