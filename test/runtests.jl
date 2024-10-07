@@ -16,7 +16,7 @@ using ArraysOfArrays
         b = VectorArray(a)
 
         # internal algorithms must be able to turn into a vector, then bring it back to VectorArray
-        c = VectorArray(vec(a), rsize)
+        c = AlgebraicArray(vec(a), rsize)
         @test a == c    
 
         # # make an array of arrays
@@ -26,7 +26,7 @@ using ArraysOfArrays
 
         # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
         # turn a MatrixArray back into an array of arrays
-        E = MatrixArray(Matrix(D),rsize,dsize)
+        E = AlgebraicArray(Matrix(D),rsize,dsize)
         @test D == E 
 
         @testset "*,+,-,/,\\ and all that" begin

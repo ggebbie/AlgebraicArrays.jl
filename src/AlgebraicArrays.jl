@@ -3,7 +3,7 @@ module AlgebraicArrays
 using LinearAlgebra
 using ArraysOfArrays
 
-export VectorArray, MatrixArray, Array
+export VectorArray, MatrixArray, AlgebraicArray, Array
 export parent, domainsize, rangesize
 export randn_VectorArray, randn_MatrixArray
 export # export Base methods
@@ -22,16 +22,16 @@ struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
 end
 
 """
-    VectorArray(A, rsize)
+    AlgebraicArray(A, rsize)
 
-Construct a `VectorArray` from an AbstractArray.
+Construct a `VectorArray` or `MatrixArray` from an AbstractArray.
 
 # Arguments
 - `A::AbstractArray`
 - `rsize`: size of range
 """
 #VectorArray(A::AbstractVector, rsize) = VectorArray(reshape(A,rsize))
-function VectorArray(A::AbstractVector, rsize)
+function AlgebraicArray(A::AbstractVector, rsize)
     M = prod(rsize)
     if M > 1
         return VectorArray(reshape(A,rsize))
@@ -58,7 +58,7 @@ Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
 rangesize(b::VectorArray) = size(parent(b))
 domainsize(b::VectorArray) = ()
 
-Base.transpose(P::VectorArray) = MatrixArray( transpose(vec(P)), 1, rangesize(P))
+Base.transpose(P::VectorArray) = AlgebraicArray( transpose(vec(P)), 1, rangesize(P))
 
 randn_VectorArray(rsize) = VectorArray(randn(rsize))
 
@@ -71,16 +71,16 @@ struct MatrixArray{T<:Number,
 end
 
 """
-    MatrixArray(A,rsize,dsize)
+    AlgebraicArray(A,rsize,dsize)
 
-Construct a `MatrixArray` from an AbstractArray.
+Construct a `VectoArray` or `MatrixArray` from an AbstractArray.
 
 # Arguments
 - `A::AbstractArray`
 - `rsize`: size of range
 - `dsize`: size of domain
 """
-function MatrixArray(A::AbstractMatrix{T},rsize,dsize) where T <: Number 
+function AlgebraicArray(A::AbstractMatrix{T},rsize,dsize) where T <: Number 
 
     M = prod(dsize)
     N = length(rsize)
@@ -142,9 +142,9 @@ end
 Array(P::MatrixArray) = Matrix(P)
 
 # a pattern for any function
-Base.transpose(P::MatrixArray) = MatrixArray( transpose(Matrix(P)), domainsize(P), rangesize(P))
+Base.transpose(P::MatrixArray) = AlgebraicArray( transpose(Matrix(P)), domainsize(P), rangesize(P))
 
-Base.adjoint(P::MatrixArray) = MatrixArray( adjoint(Matrix(P)), domainsize(P), rangesize(P))
+Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domainsize(P), rangesize(P))
 
 # function Base.:*(A::MatrixArray, b::VectorArray)
 #     c = zero(first(A))
@@ -169,11 +169,11 @@ function rand_MatrixArray(rsize,dsize)
 end
 
 # slightly faster as a one-liner
-Base.:*(A::MatrixArray, b::VectorArray) =  VectorArray(Matrix(A) * vec(b), rangesize(A))
+Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangesize(A))
 
-Base.:*(A::MatrixArray, B::MatrixArray) = MatrixArray(Matrix(A) * Matrix(B), rangesize(A), domainsize(B))
+Base.:*(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) * Matrix(B), rangesize(A), domainsize(B))
 
-Base.:*(a::VectorArray, B::MatrixArray) = MatrixArray(vec(a) * Matrix(B), rangesize(a), domainsize(B))
+Base.:*(a::VectorArray, B::MatrixArray) = AlgebraicArray(vec(a) * Matrix(B), rangesize(a), domainsize(B))
 
 # function Base.:*(A::MatrixArray, B::MatrixArray) 
 #     C = Matrix(A) * Matrix(B)
@@ -186,8 +186,8 @@ Base.:*(a::VectorArray, B::MatrixArray) = MatrixArray(vec(a) * Matrix(B), ranges
 #     #return MatrixArray(C,rsize,dsize)
 # end
 
-Base.:(\ )(A::MatrixArray, b::VectorArray) = VectorArray(Matrix(A) \ vec(b), domainsize(A))
-Base.:(\ )(A::MatrixArray, B::MatrixArray) = MatrixArray(Matrix(A) \ Matrix(B), domainsize(A), domainsize(B))
+Base.:(\ )(A::MatrixArray, b::VectorArray) = AlgebraicArray(Matrix(A) \ vec(b), domainsize(A))
+Base.:(\ )(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) \ Matrix(B), domainsize(A), domainsize(B))
 #     (c isa Number) && (c = [c]) # useful snippet if one-linear fails in some cases
 
 """
@@ -202,7 +202,7 @@ function matrix right divide
 #     rdims = dims(first(A))
 #     return MultipliableDimArray(Amat, rdims, ddims)
 # end
-Base.:(/)(A::MatrixArray, B::MatrixArray) = MatrixArray(Matrix(A) / Matrix(B), rangesize(A), rangesize(B))
+Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangesize(A), rangesize(B))
 
 function randn_MatrixArray(rsize,dsize)
     # make an array of arrays
@@ -224,11 +224,11 @@ function LinearAlgebra.eigen(A::MatrixArray)
     F = eigen(Matrix(A))
     dsize = length(F.values)
     rsize = rangesize(A)
-    values = VectorArray(F.values,dsize)
-    vectors = MatrixArray(F.vectors,rsize,dsize) 
+    values = AlgebraicArray(F.values,dsize)
+    vectors = AlgebraicArray(F.vectors,rsize,dsize) 
     return Eigen(values, vectors)
 end
 
-Diagonal(a::VectorArray) = MatrixArray(Diagonal(vec(a)), rangesize(a), rangesize(a))
+Diagonal(a::VectorArray) = AlgebraicArray(Diagonal(vec(a)), rangesize(a), rangesize(a))
 
 end # module AlgebraicArrays
