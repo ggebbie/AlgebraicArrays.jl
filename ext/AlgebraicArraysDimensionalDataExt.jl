@@ -3,6 +3,11 @@ module AlgebraicArraysDimensionalDataExt
 using AlgebraicArrays
 using DimensionalData
 using DimensionalData:@dim
+using LinearAlgebra
+
+import AlgebraicArrays: rangesize, domainsize, AlgebraicArray
+import LinearAlgebra: eigen
+import Base: exp, transpose
 
 @dim RowVector "singular dimension"
 @dim Eigenmode "eigenmode"
@@ -67,7 +72,7 @@ function Base.transpose(b::VectorArray{T,N,DA}) where T<:Number where N where DA
     return AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangesize(b))
 end
 
-function  LinearAlgebra.eigen(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
+function LinearAlgebra.eigen(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
     F = eigen(Matrix(A))
     #dsize = length(F.values)
     eigen_dims = Eigenmode(1:length(F.values))
@@ -78,9 +83,11 @@ function  LinearAlgebra.eigen(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:Abs
     return Eigen(values, vectors)
 end
 
-function exp(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
+function Base.exp(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
     # A must be endomorphic (check type signature someday)
     !endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
     eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually
     return AlgebraicArray(exp(Matrix(A)),rangesize(A),domainsize(A)) # wrap with same labels and format as A
 end
+
+end #module

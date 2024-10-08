@@ -2,6 +2,8 @@
 using AlgebraicArrays
 using Test
 using ArraysOfArrays
+using DimensionalData
+using DimensionalData:@dim
 
 @testset "AlgebraicArrays.jl" begin
 
@@ -146,6 +148,6 @@ using ArraysOfArrays
     #     return DimArray(P, domaindims)
     # end
 
-    #include("test_DimensionalData.jl")
+    include("test_DimensionalData.jl")
 
 end
