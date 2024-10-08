@@ -2,8 +2,8 @@ module AlgebraicArrays
 
 using LinearAlgebra
 using ArraysOfArrays
-using DimensionalData
-using DimensionalData:@dim
+#using DimensionalData
+#using DimensionalData:@dim
 
 export VectorArray, MatrixArray, AlgebraicArray, Array
 export parent, domainsize, rangesize, endomorphic
@@ -205,6 +205,6 @@ end
 
 Diagonal(a::VectorArray) = AlgebraicArray(Diagonal(vec(a)), rangesize(a), rangesize(a))
 
-include("dimensional_data.jl")
+#include("dimensional_data.jl")
 
 end # module AlgebraicArrays
