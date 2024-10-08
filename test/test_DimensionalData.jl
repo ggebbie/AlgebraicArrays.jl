@@ -68,14 +68,14 @@ end
         y = R \ q
         @test isapprox(x, y, atol = 1e-8)
 
-        Sx = MultipliableDimArray(rand(length(x),length(x)),
-            dims(x), dims(x))    
-        Q = Rx * Sx
-        Sx2 = Rx \ Q 
-        @test isapprox(Sx2, Sx, atol = 1e-8)
+        S = AlgebraicArray(rand(length(x),length(x)),
+            rangesize(x), rangesize(x))    
+        Q = R * S
+        U = R \ Q 
+        @test isapprox(Matrix(U), Matrix(S), atol = 1e-8)
 
         # square matrices, matrix matrix right divide
-        @test isapprox(Q / Sx, Rx, atol = 1e-8)
+        @test isapprox(Matrix(Q / S), Matrix(R), atol = 1e-8)
         
     end
 
@@ -83,12 +83,11 @@ end
         x = source_water_solution(surfaceregions,
             years,
             statevariables)
+        S = AlgebraicArray(rand(length(x),length(x)),
+            rangesize(x), rangesize(x))    
 
-        Sx = MultipliableDimArray(rand(length(x),length(x)),
-            dims(x), dims(x))    
-
-        D, V = eigen(Sx)
-        F = eigen(Sx)
+        D, V = eigen(S)
+        F = eigen(S)
 
         Sx_eigen = V * D / V
         @test isapprox(Sx, Sx_eigen, atol = 1e-8)

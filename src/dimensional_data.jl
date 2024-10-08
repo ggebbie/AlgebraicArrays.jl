@@ -1,7 +1,7 @@
 @dim RowVector "singular dimension"
 
 # put dimensional info into size, change name?
-function rangesize(A::MatrixArray{T, M, N, R, C}) where {M, T<:Number, N, R<:AbstractArray{T, M}, C<:(AbstractDimArray{R, N})}
+function rangesize(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
     return dims(parent(A))
 end
 
@@ -10,6 +10,10 @@ function rangesize(b::VectorArray{T,N,A}) where T <: Number where N where A <: D
 end
 
 domainsize(b::VectorArray{T,N,DA}) where T where N where DA <: DimensionalData.AbstractDimArray = ()
+
+function domainsize(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
+    return dims(first(parent(A)))
+end
 
 # would prefer to be more specific about the type of Tuple
 # instead I made the core routines dispatch with a specific Tuple structure
@@ -34,7 +38,7 @@ function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Uni
     N = length(rsize)
 
     if M > 1
-        P = Array{Array{T,N}}(undef,dsize)
+        P = Array{DimArray{T,N}}(undef,dsize)
         for j in 1:M 
             P[j] = DimArray(reshape(A[:,j],rsize),rdims)
         end
@@ -57,4 +61,12 @@ function Base.transpose(b::VectorArray{T,N,DA}) where T<:Number where N where DA
     return AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangesize(b))
 end
 
-# Base.:*(A::MatrixArray{T,N,DA}), b::VectorArray{T,N,DA}) where T<:Number where M where N where DA <: DimensionalData.AbstractDimArray) =  AlgebraicArray(Matrix(A) * vec(b), rangesize(A))
+function  LinearAlgebra.eigen(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
+    F = eigen(Matrix(A))
+    dsize = length(F.values)
+    rsize = rangesize(A)
+    values = AlgebraicArray(F.values,dsize)
+    vectors = AlgebraicArray(F.vectors,rsize,dsize) 
+    return Eigen(values, vectors)
+end
+
