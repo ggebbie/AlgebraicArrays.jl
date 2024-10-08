@@ -146,5 +146,6 @@ using ArraysOfArrays
     #     return DimArray(P, domaindims)
     # end
 
+    include("test_DimensionalData.jl")
 
 end

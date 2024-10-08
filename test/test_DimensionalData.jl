@@ -99,3 +99,4 @@ end
         @test endomorphic(S)
         exp(S) # watch out for overflow!
     end
+end
