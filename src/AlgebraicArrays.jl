@@ -11,11 +11,11 @@ export randn_VectorArray, randn_MatrixArray
 export # export Base methods
     size, show, vec, Matrix, *, first
 export # export more Base methods
-    display, parent, \, / #, randn
+    display, parent, \, /, real #, randn
 export # export LinearAlgebra methods
     transpose, adjoint, eigen, Diagonal
     
-import Base: size, show, vec, Matrix, *, first
+import Base: size, show, vec, Matrix, *, first, real 
 import Base: display, parent, \, /, Array #, randn 
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal
 
@@ -46,23 +46,21 @@ function AlgebraicArray(A::AbstractVector, rsize::Union{Int,NTuple{N,Int}}) wher
 end
          
 parent(b::VectorArray) = b.data
-#function Base.show(io,
+
 function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
     #println(summary(b))
     show(io,mime,parent(b))
-    println("")
-    println("============================")
-    println("*operating algebraically as*")
+    println(io,"")
+    println(io,"============================")
+    println(io,"*operating algebraically as*")
     show(io,mime,vec(b))
 end
-#Base.display(b::VectorArray) = display(parent(b))
-#Base.show(io,b::VectorArray) = show(io,parent(b))
 Base.size(b::VectorArray) = size(parent(b))
 Base.vec(b::VectorArray) = vec(parent(b))
 Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
-
 rangesize(b::VectorArray) = size(parent(b))
 domainsize(b::VectorArray) = ()
+Base.real(b::VectorArray) = VectorArray(real(parent(b)))
 
 Base.transpose(P::VectorArray) = AlgebraicArray( transpose(vec(P)), 1, rangesize(P))
 
@@ -116,7 +114,7 @@ function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
 end
 Base.size(A::MatrixArray) = size(parent(A))
 Base.getindex(A::MatrixArray, inds...) = getindex(parent(A), inds...) # need to reverse order?
-
+Base.real(A::MatrixArray) = MatrixArray(real(parent(A)))
 domainsize(A::MatrixArray) = size(parent(A))
 rangesize(A::MatrixArray) = size(first(parent(A)))
 

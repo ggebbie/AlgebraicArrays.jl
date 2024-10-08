@@ -87,11 +87,11 @@ end
         S = AlgebraicArray(rand(length(x),length(x)),
             rangesize(x), rangesize(x))    
 
-        # workaround for showing eigen output
         λ, V = eigen(S)
         F = eigen(S)
 
         Λ = Diagonal(λ)
+        #G = real(V * Λ / V) # also works
         G = V * Λ / V
         @test isapprox(Matrix(S), Matrix(G), atol = 1e-8)
 
