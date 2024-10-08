@@ -87,9 +87,9 @@ end
         S = AlgebraicArray(rand(length(x),length(x)),
             rangesize(x), rangesize(x))    
 
-            # error with showing eigen output
-        λ, V = eigen(S);
-        F = eigen(S);
+        # workaround for showing eigen output
+        λ, V = eigen(S)
+        F = eigen(S)
 
         Λ = Diagonal(λ)
         G = V * Λ / V

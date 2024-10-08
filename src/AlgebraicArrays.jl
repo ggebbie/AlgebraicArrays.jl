@@ -46,15 +46,17 @@ function AlgebraicArray(A::AbstractVector, rsize::Union{Int,NTuple{N,Int}}) wher
 end
          
 parent(b::VectorArray) = b.data
-function Base.display(b::VectorArray)
+#function Base.show(io,
+function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
     #println(summary(b))
-    display(parent(b))
+    show(io,mime,parent(b))
+    println("")
     println("============================")
     println("*operating algebraically as*")
-    display(vec(b))
+    show(io,mime,vec(b))
 end
 #Base.display(b::VectorArray) = display(parent(b))
-Base.show(b::VectorArray) = show(parent(b))
+#Base.show(io,b::VectorArray) = show(io,parent(b))
 Base.size(b::VectorArray) = size(parent(b))
 Base.vec(b::VectorArray) = vec(parent(b))
 Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
@@ -106,16 +108,12 @@ function AlgebraicArray(A::AbstractMatrix{T},rsize::Union{Int,NTuple{N1,Int}},ds
 end
 
 parent(A::MatrixArray) = A.data
-Base.show(A::MatrixArray) = show(parent(A))
-function Base.display(A::MatrixArray)
-    #println(summary(b))
-    display(parent(A))
-    println("============================")
-    println("*operating algebraically as*")
-    display(Matrix(A))
+function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
+    show(io,mime,parent(A))
+    println(io,"============================")
+    println(io,"*operating algebraically as*")
+    show(io,mime,Matrix(A))
 end
-#Base.display(A::MatrixArray) = display(parent(A))
-#Base.size(A::MatrixArray) = size(Matrix(A))
 Base.size(A::MatrixArray) = size(parent(A))
 Base.getindex(A::MatrixArray, inds...) = getindex(parent(A), inds...) # need to reverse order?
 
@@ -166,30 +164,12 @@ Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domainsize(P)
 #     return VectorArray(reshape(C,rowdims))
 # end
 
-# would prefer rand(MatrixArray,rsize,dsize)
-function rand_MatrixArray(rsize,dsize)
-    # make an array of arrays
-    alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
-    return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
-end
-
 # slightly faster as a one-liner
 Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangesize(A))
 
 Base.:*(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) * Matrix(B), rangesize(A), domainsize(B))
 
 Base.:*(a::VectorArray, B::MatrixArray) = AlgebraicArray(vec(a) * Matrix(B), rangesize(a), domainsize(B))
-
-# function Base.:*(A::MatrixArray, B::MatrixArray) 
-#     C = Matrix(A) * Matrix(B)
-#     (C isa Number) && (C = [C])
-
-#     #reshape using all of the dimensions
-#     #rsize = size(first(A))
-#     #dsize  = size(B)
-#     return MatrixArray(C, rangesize(A), domainsize(B))
-#     #return MatrixArray(C,rsize,dsize)
-# end
 
 Base.:(\ )(A::MatrixArray, b::VectorArray) = AlgebraicArray(Matrix(A) \ vec(b), domainsize(A))
 Base.:(\ )(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) \ Matrix(B), domainsize(A), domainsize(B))
@@ -214,16 +194,6 @@ function randn_MatrixArray(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTu
     alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
     return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
 end
-
-# eigenstructure only exists if A is uniform
-# should be a better way by reading type
-# uniform(A::MatrixArray{Real}) = true
-# uniform(b::VectorArray{Real}) = true
-# uniform(A) = uniform(Matrix(A))
-# function uniform(A::Matrix)
-#     ulist = unit.(A)
-#     return allequal(ulist)
-# end
 
 function LinearAlgebra.eigen(A::MatrixArray)
     F = eigen(Matrix(A))

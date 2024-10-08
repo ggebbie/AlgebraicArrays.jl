@@ -72,8 +72,12 @@ function  LinearAlgebra.eigen(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:Abs
     return Eigen(values, vectors)
 end
 
-function display(F::Eigen{T,V,S,U}) where {T,V,S<:MatrixArray,U<:VectorArray}
-    Flower = Eigen(vec(F.values),Matrix(F.vectors))
-    display(Flower)
-end
+# function display(F::Eigen{T,V,S,U}) where {T,V,S<:MatrixArray,U<:VectorArray}
+#     Flower = Eigen(vec(F.values),Matrix(F.vectors))
+#     display(Flower)
+# end
+# function show(F::Eigen{T,V,S,U}) where {T,V,S<:MatrixArray,U<:VectorArray}
+#     Flower = Eigen(vec(F.values),Matrix(F.vectors))
+#     show(Flower)
+# end
 
