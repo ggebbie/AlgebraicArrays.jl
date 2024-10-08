@@ -96,6 +96,6 @@ end
         @test isapprox(Matrix(S), Matrix(G), atol = 1e-8)
 
         # check matrix exponential
-        @test MultipliableDimArrays.endomorphic(Sx)
-        exp(Sx) # watch out for overflow!
+        @test endomorphic(S)
+        exp(S) # watch out for overflow!
     end

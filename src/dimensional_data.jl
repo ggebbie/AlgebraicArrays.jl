@@ -72,12 +72,9 @@ function  LinearAlgebra.eigen(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:Abs
     return Eigen(values, vectors)
 end
 
-# function display(F::Eigen{T,V,S,U}) where {T,V,S<:MatrixArray,U<:VectorArray}
-#     Flower = Eigen(vec(F.values),Matrix(F.vectors))
-#     display(Flower)
-# end
-# function show(F::Eigen{T,V,S,U}) where {T,V,S<:MatrixArray,U<:VectorArray}
-#     Flower = Eigen(vec(F.values),Matrix(F.vectors))
-#     show(Flower)
-# end
-
+function exp(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
+    # A must be endomorphic (check type signature someday)
+    !endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
+    eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually
+    return AlgebraicArray(exp(Matrix(A)),rangesize(A),domainsize(A)) # wrap with same labels and format as A
+end

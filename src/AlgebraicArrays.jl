@@ -6,16 +6,16 @@ using DimensionalData
 using DimensionalData:@dim
 
 export VectorArray, MatrixArray, AlgebraicArray, Array
-export parent, domainsize, rangesize
+export parent, domainsize, rangesize, endomorphic
 export randn_VectorArray, randn_MatrixArray
 export # export Base methods
     size, show, vec, Matrix, *, first
 export # export more Base methods
-    display, parent, \, /, real #, randn
+    display, parent, \, /, real, exp #, randn
 export # export LinearAlgebra methods
     transpose, adjoint, eigen, Diagonal
     
-import Base: size, show, vec, Matrix, *, first, real 
+import Base: size, show, vec, Matrix, *, first, real , exp
 import Base: display, parent, \, /, Array #, randn 
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal
 
@@ -117,6 +117,7 @@ Base.getindex(A::MatrixArray, inds...) = getindex(parent(A), inds...) # need to 
 Base.real(A::MatrixArray) = MatrixArray(real(parent(A)))
 domainsize(A::MatrixArray) = size(parent(A))
 rangesize(A::MatrixArray) = size(first(parent(A)))
+endomorphic(A::MatrixArray) = isequal(rangesize(A), domainsize(A))
 
 """
 function Matrix(P::MatrixArray{T}) where T <: Number
