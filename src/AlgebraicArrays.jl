@@ -19,7 +19,8 @@ import Base: size, show, vec, Matrix, *, first
 import Base: display, parent, \, /, Array #, randn 
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal
 
-struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
+#struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
+struct VectorArray{T,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
     data:: A
 end
 
@@ -65,7 +66,8 @@ Base.transpose(P::VectorArray) = AlgebraicArray( transpose(vec(P)), 1, rangesize
 
 randn_VectorArray(rsize) = VectorArray(randn(rsize))
 
-struct MatrixArray{T<:Number,
+#struct MatrixArray{T<:Number,
+struct MatrixArray{T,
     M,
     N,
     R<:AbstractArray{T,M},

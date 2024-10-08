@@ -1,4 +1,5 @@
 @dim RowVector "singular dimension"
+@dim Eigenmode "eigenmode"
 
 # put dimensional info into size, change name?
 function rangesize(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
@@ -18,7 +19,6 @@ end
 # would prefer to be more specific about the type of Tuple
 # instead I made the core routines dispatch with a specific Tuple structure
 function AlgebraicArray(A::AbstractVector, rdims::Union{Tuple,D}) where D <: DimensionalData.Dimension
-#function AlgebraicArray(A::AbstractVector, rdims::Tuple)
     rsize = size(rdims)
     M = prod(rsize)
     if M > 1
@@ -63,10 +63,17 @@ end
 
 function  LinearAlgebra.eigen(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
     F = eigen(Matrix(A))
-    dsize = length(F.values)
+    #dsize = length(F.values)
+    eigen_dims = Eigenmode(1:length(F.values))
+
     rsize = rangesize(A)
-    values = AlgebraicArray(F.values,dsize)
-    vectors = AlgebraicArray(F.vectors,rsize,dsize) 
+    values = AlgebraicArray(F.values, eigen_dims)
+    vectors = AlgebraicArray(F.vectors,rsize,eigen_dims) 
     return Eigen(values, vectors)
+end
+
+function display(F::Eigen{T,V,S,U}) where {T,V,S<:MatrixArray,U<:VectorArray}
+    Flower = Eigen(vec(F.values),Matrix(F.vectors))
+    display(Flower)
 end
 
