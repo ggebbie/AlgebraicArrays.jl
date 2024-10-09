@@ -2,6 +2,9 @@ using Revise
 using AlgebraicArrays
 using Test
 using ArraysOfArrays
+using DimensionalData
+using DimensionalData:@dim
+using Unitful
 
 @testset "AlgebraicArrays.jl" begin
 
@@ -104,6 +107,6 @@ using ArraysOfArrays
     end
 
     include("test_DimensionalData.jl")
-    #include("test_unitful.jl")
+    include("test_unitful.jl")
     
 end
