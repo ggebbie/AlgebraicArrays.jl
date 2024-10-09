@@ -13,12 +13,15 @@ export # export Base methods
     size, show, vec, Matrix, *, first
 export # export more Base methods
     display, parent, \, /, real, exp #, randn
+export # export more Base methods
+    getindex, setindex! 
 export # export LinearAlgebra methods
     transpose, adjoint, eigen, Diagonal
     
 import Base: size, show, vec, Matrix
 import Base: +, -, *, first, real , exp
-import Base: display, parent, \, /, Array #, randn 
+import Base: display, parent, \, /, Array #, randn
+import Base: getindex, setindex! 
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal
 
 #struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
@@ -60,6 +63,7 @@ end
 Base.size(b::VectorArray) = size(parent(b))
 Base.vec(b::VectorArray) = vec(parent(b))
 Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
+Base.setindex!(b::VectorArray, v, inds...) = setindex!(parent(b), v, inds...) 
 rangesize(b::VectorArray) = size(parent(b))
 domainsize(b::VectorArray) = ()
 Base.real(b::VectorArray) = VectorArray(real(parent(b)))
@@ -117,6 +121,7 @@ function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
 end
 Base.size(A::MatrixArray) = size(parent(A))
 Base.getindex(A::MatrixArray, inds...) = getindex(parent(A), inds...) # need to reverse order?
+Base.setindex!(A::MatrixArray, v, inds...) = setindex!(parent(A), v, inds...) # need to reverse order?
 Base.real(A::MatrixArray) = MatrixArray(real(parent(A)))
 domainsize(A::MatrixArray) = size(parent(A))
 rangesize(A::MatrixArray) = size(first(parent(A)))
