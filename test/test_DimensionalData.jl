@@ -1,13 +1,5 @@
 @testset "Dimensional Data" begin
 
-    #using Revise
-    # using AlgebraicArrays
-    # #using Unitful
-    # #using UnitfulLinearAlgebra
-    # using DimensionalData
-    # using DimensionalData:@dim
-    # using Test
-
     # fixed parameters
     @dim YearCE "years Common Era"
     @dim SurfaceRegion "surface location"
