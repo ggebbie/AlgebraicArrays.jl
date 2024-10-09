@@ -1,9 +1,9 @@
-#using Revise
+using Revise
 using AlgebraicArrays
 using Test
 using ArraysOfArrays
-using DimensionalData
-using DimensionalData:@dim
+# using DimensionalData
+# using DimensionalData:@dim
 
 @testset "AlgebraicArrays.jl" begin
 
@@ -99,54 +99,11 @@ using DimensionalData:@dim
 
             Diagonal(vals)
             @test isapprox(Matrix(F), Matrix(S), atol= 1e-8)
-            #println(typeof(real(AbstractMatrix(F))))
-            #Matrix(F)
-            # Sx_eigen = V * D / V
-            # @test isapprox(Sx, Sx_eigen, atol = 1e-8)
 
             # # check matrix exponential
-            # exp(Sx) # watch out for overflow!
+            exp(S) # watch out for overflow!
         end
-
     end
-
-
-
-    # rowdims = (3,3)
-    # coldims = (3,3)
-    # alldims = Tuple(vcat([i for i in rowdims],[j for j in coldims]))
-
-    # E = nestedview(randn(alldims),length(coldims))
-    # E[2,2][2,2]
-
-
-    # F = E * E
-    # F[2,2]
-
-    # DT = transpose(D)
-    # Ddagger = adjoint(D)
-
-
-    # G = MatrixArray(Matrix(E))
-    # G[2,2]
-    # H = G * G
-    # typeof(G)
-
-    # J = MatrixArray(Matrix(G),(3,3),(3,3))
-
-    # nested_array(A::AbstdractMatrix,rangedims,domaindims)
-
-    #     # extra step for type stability
-    #     Q1 = reshape(A[:,1],size(rangedims))
-    #     P1 = DimArray(Q1, rangedims)
-
-    #     P = Array{typeof(P1)}(undef,size(domaindims))
-    #     for j in eachindex(P)
-    #         Q = reshape(A[:,j],size(rangedims))
-    #         P[j] = DimArray(Q, rangedims)
-    #     end
-    #     return DimArray(P, domaindims)
-    # end
 
     include("test_DimensionalData.jl")
 

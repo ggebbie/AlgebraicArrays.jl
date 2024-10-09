@@ -155,13 +155,6 @@ Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domainsize(P)
 #     end
 #     return VectorArray(c)
 # end
-#slightly faster version of multiplication
-# function Base.:*(A::MatrixArray, b::VectorArray)
-#     C = Matrix(A) * vec(b)
-#     (C isa Number) && (C = [C])
-#     rowdims = size(first(A))
-#     return VectorArray(reshape(C,rowdims))
-# end
 
 # slightly faster as a one-liner
 Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangesize(A))
@@ -179,13 +172,6 @@ function matrix right divide
 
 `A/B = ( B'\\A')'
 """
-# function Base.:(/)(A::DimArray{T1}, B::DimArray{T2})  where T1 <: AbstractDimArray where T2 <: AbstractDimArray 
-#     Amat = Matrix(A) / Matrix(B)
-#     (Amat isa Number) && (Amat = [Amat])
-#     ddims = dims(first(B))
-#     rdims = dims(first(A))
-#     return MultipliableDimArray(Amat, rdims, ddims)
-# end
 Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangesize(A), rangesize(B))
 
 function randn_MatrixArray(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2}
@@ -205,6 +191,11 @@ end
 
 Diagonal(a::VectorArray) = AlgebraicArray(Diagonal(vec(a)), rangesize(a), rangesize(a))
 
-#include("dimensional_data.jl")
+function exp(A::MatrixArray)
+    # A must be endomorphic (check type signature someday)
+    !endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
+    eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually
+    return AlgebraicArray(exp(Matrix(A)),rangesize(A),domainsize(A)) # wrap with same labels and format as A
+end
 
 end # module AlgebraicArrays
