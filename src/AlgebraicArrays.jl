@@ -108,6 +108,7 @@ end
 parent(A::MatrixArray) = A.data
 function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
     show(io,mime,parent(A))
+    println(io,"")
     println(io,"============================")
     println(io,"*operating algebraically as*")
     show(io,mime,Matrix(A))
@@ -158,10 +159,10 @@ Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domainsize(P)
 
 # slightly faster as a one-liner
 Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangesize(A))
-
 Base.:*(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) * Matrix(B), rangesize(A), domainsize(B))
-
 Base.:*(a::VectorArray, B::MatrixArray) = AlgebraicArray(vec(a) * Matrix(B), rangesize(a), domainsize(B))
+Base.:*(a::Number, B::MatrixArray) = AlgebraicArray(a * Matrix(B), rangesize(B), domainsize(B))
+Base.:*(B::MatrixArray, a::Number) = a * B
 
 Base.:(\ )(A::MatrixArray, b::VectorArray) = AlgebraicArray(Matrix(A) \ vec(b), domainsize(A))
 Base.:(\ )(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) \ Matrix(B), domainsize(A), domainsize(B))

@@ -1,17 +1,20 @@
-using Revise
-using AlgebraicArrays
-using Test
-using ArraysOfArrays
+@testset "unitful" begin
 
-@testset "AlgebraicArrays.jl" begin
-
+    using Unitful
+    
     @testset "constructors" begin
-
+        unitlist = [u"kg", u"K", u"m"]
         rsize = (2,3)
-
+        
         # investigator makes a field with physical dimensions
-        a = randn(rsize)
 
+        # not uniform
+        nu = randn(rsize).*rand(unitlist,rsize)
+        @test !isa(nu,Matrix{Quantity{T,S,V}} where {T,S,V})
+        
+        a = randn(rsize)*rand(unitlist) # uniform
+        @test a isa Matrix{Quantity{T,S,V}} where {T,S,V}
+        
         # can immediately save it as a VectorArray for future calculations
         b = VectorArray(a)
 
@@ -22,7 +25,7 @@ using ArraysOfArrays
         # # make an array of arrays
         rsize = (1,2)
         dsize = (2,1)
-        D = randn_MatrixArray(rsize,dsize)
+        D = randn_MatrixArray(rsize,dsize)*rand(unitlist)
 
         # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
         # turn a MatrixArray back into an array of arrays
@@ -34,14 +37,15 @@ using ArraysOfArrays
             rsize = (3,4)
             dsize = (2,3)
 
-            q = VectorArray(randn(dsize))
+            # uniform matrix for inner product
+            q = VectorArray(randn(dsize)*rand(unitlist))
             qT = transpose(q)
              # same type than q, but type instability in code
             qTT = transpose(qT)
             @test q == qTT
 
             # inner product
-            @test qT * q ≥ 0
+            @test ustrip(qT * q) ≥ 0
 
             # dot product is not correct
             #@test q ⋅ q ≥ 0 
@@ -51,14 +55,18 @@ using ArraysOfArrays
 
             # asymmetric outer product
             usize = (1,2)
-            u = randn_VectorArray(usize)
+            u = randn_VectorArray(usize)*rand(unitlist)
             @test q * transpose(u) isa MatrixArray
 
             # another way to make a MatrixArray
-            P = randn_MatrixArray(rsize,dsize)
+            #P = randn_MatrixArray(rsize,dsize)
+            q = VectorArray(randn(dsize)*rand(unitlist))
+            P = q * transpose(u)
+            @test P isa MatrixArray
     
             # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
-            @test (P*q) isa VectorArray
+            s = randn_VectorArray(rsize)
+            @test (P*s) isa VectorArray
 
             # # matrix-matrix multiplication
             PT = transpose(P)
@@ -68,8 +76,8 @@ using ArraysOfArrays
             P★ = adjoint(P)
             @test P * P★ isa MatrixArray
 
-            r = P * q
-            @test isapprox(vec(P \ r), vec(q), atol = 1e-8) # sometimes failed w/o `vec`
+            r = P * s
+            @test isapprox(vec(P \ r), vec(s), atol = 1e-8) # sometimes failed w/o `vec`
 
             # square matrices
             rsize = (2,3)
@@ -97,13 +105,54 @@ using ArraysOfArrays
 
             Diagonal(vals)
             @test isapprox(Matrix(F), Matrix(S), atol= 1e-8)
+            #println(typeof(real(AbstractMatrix(F))))
+            #Matrix(F)
+            # Sx_eigen = V * D / V
+            # @test isapprox(Sx, Sx_eigen, atol = 1e-8)
 
             # # check matrix exponential
-            exp(S) # watch out for overflow!
+            # exp(Sx) # watch out for overflow!
         end
+
     end
 
-    include("test_DimensionalData.jl")
-    #include("test_unitful.jl")
-    
+
+
+    # rowdims = (3,3)
+    # coldims = (3,3)
+    # alldims = Tuple(vcat([i for i in rowdims],[j for j in coldims]))
+
+    # E = nestedview(randn(alldims),length(coldims))
+    # E[2,2][2,2]
+
+
+    # F = E * E
+    # F[2,2]
+
+    # DT = transpose(D)
+    # Ddagger = adjoint(D)
+
+
+    # G = MatrixArray(Matrix(E))
+    # G[2,2]
+    # H = G * G
+    # typeof(G)
+
+    # J = MatrixArray(Matrix(G),(3,3),(3,3))
+
+    # nested_array(A::AbstdractMatrix,rangedims,domaindims)
+
+    #     # extra step for type stability
+    #     Q1 = reshape(A[:,1],size(rangedims))
+    #     P1 = DimArray(Q1, rangedims)
+
+    #     P = Array{typeof(P1)}(undef,size(domaindims))
+    #     for j in eachindex(P)
+    #         Q = reshape(A[:,j],size(rangedims))
+    #         P[j] = DimArray(Q, rangedims)
+    #     end
+    #     return DimArray(P, domaindims)
+    # end
+
+
 end
