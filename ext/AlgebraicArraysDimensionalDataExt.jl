@@ -12,20 +12,13 @@ import Base: exp, transpose
 @dim RowVector "singular dimension"
 @dim Eigenmode "eigenmode"
 
-# put dimensional info into size, change name?
-function rangesize(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
-    return dims(parent(A))
-end
+MatrixDimArray = MatrixArray{T, M, N, R} where {M, T, N, R<:AbstractDimArray{T, M}}
+VectorDimArray = VectorArray{T,N,A} where {T, N, A <: DimensionalData.AbstractDimArray}
 
-function rangesize(b::VectorArray{T,N,A}) where T <: Number where N where A <: DimensionalData.AbstractDimArray
-    return dims(parent(b))
-end
+rangesize(A::Union{VectorDimArray,MatrixDimArray}) = dims(parent(A))
 
-domainsize(b::VectorArray{T,N,DA}) where T where N where DA <: DimensionalData.AbstractDimArray = ()
-
-function domainsize(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
-    return dims(first(parent(A)))
-end
+domainsize(b::VectorDimArray) = ()
+domainsize(A::MatrixDimArray) = dims(first(parent(A)))
 
 # would prefer to be more specific about the type of Tuple
 # instead I made the core routines dispatch with a specific Tuple structure
@@ -66,13 +59,9 @@ function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Uni
     end
 end
 
-#    ones_row_vector = MultipliableDimArray(ones(1,2),,dims(B))
-function Base.transpose(b::VectorArray{T,N,DA}) where T<:Number where N where DA <: DimensionalData.AbstractDimArray
+Base.transpose(b::VectorDimArray) = AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangesize(b))
 
-    return AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangesize(b))
-end
-
-function LinearAlgebra.eigen(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
+function  LinearAlgebra.eigen(A::MatrixDimArray)
     F = eigen(Matrix(A))
     #dsize = length(F.values)
     eigen_dims = Eigenmode(1:length(F.values))
@@ -83,7 +72,7 @@ function LinearAlgebra.eigen(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:Abst
     return Eigen(values, vectors)
 end
 
-function Base.exp(A::MatrixArray{T, M, N, R}) where {M, T, N, R<:AbstractDimArray{T, M}}
+function Base.exp(A::MatrixDimArray)
     # A must be endomorphic (check type signature someday)
     !endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
     eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually

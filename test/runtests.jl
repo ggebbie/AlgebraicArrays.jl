@@ -1,4 +1,4 @@
-using Revise
+#using Revise
 using AlgebraicArrays
 using Test
 using ArraysOfArrays
