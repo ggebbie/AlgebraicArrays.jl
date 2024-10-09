@@ -5,6 +5,8 @@ using DimensionalData
 using DimensionalData:@dim
 using LinearAlgebra
 
+#export VectorDimArray, MatrixDimArray
+
 import AlgebraicArrays: rangesize, domainsize, AlgebraicArray
 import LinearAlgebra: eigen
 import Base: exp, transpose

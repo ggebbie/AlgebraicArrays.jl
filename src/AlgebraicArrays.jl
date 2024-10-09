@@ -6,6 +6,7 @@ using ArraysOfArrays
 #using DimensionalData:@dim
 
 export VectorArray, MatrixArray, AlgebraicArray, Array
+export VectorDimArray, MatrixDimArray
 export parent, domainsize, rangesize, endomorphic
 export randn_VectorArray, randn_MatrixArray
 export # export Base methods
@@ -15,7 +16,8 @@ export # export more Base methods
 export # export LinearAlgebra methods
     transpose, adjoint, eigen, Diagonal
     
-import Base: size, show, vec, Matrix, *, first, real , exp
+import Base: size, show, vec, Matrix
+import Base: +, -, *, first, real , exp
 import Base: display, parent, \, /, Array #, randn 
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal
 
@@ -167,6 +169,12 @@ Base.:*(B::MatrixArray, a::Number) = a * B
 Base.:(\ )(A::MatrixArray, b::VectorArray) = AlgebraicArray(Matrix(A) \ vec(b), domainsize(A))
 Base.:(\ )(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) \ Matrix(B), domainsize(A), domainsize(B))
 #     (c isa Number) && (c = [c]) # useful snippet if one-linear fails in some cases
+
+Base.:+(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) + parent(B))
+Base.:+(a::VectorArray, b::VectorArray) = VectorArray(parent(a) + parent(b))
+
+Base.:-(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) - parent(B))
+Base.:-(a::VectorArray, b::VectorArray) = VectorArray(parent(a) - parent(b))
 
 """
 function matrix right divide
