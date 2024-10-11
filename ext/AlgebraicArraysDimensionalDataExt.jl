@@ -5,11 +5,12 @@ using DimensionalData
 using DimensionalData:@dim
 using LinearAlgebra
 
-#export VectorDimArray, MatrixDimArray
+export VectorDimArray, MatrixDimArray, dims
 
 import AlgebraicArrays: rangesize, domainsize, AlgebraicArray
 import LinearAlgebra: eigen
 import Base: exp, transpose
+import DimensionalData: dims
 
 @dim RowVector "singular dimension"
 @dim Eigenmode "eigenmode"
@@ -21,6 +22,29 @@ rangesize(A::Union{VectorDimArray,MatrixDimArray}) = dims(parent(A))
 
 domainsize(b::VectorDimArray) = ()
 domainsize(A::MatrixDimArray) = dims(first(parent(A)))
+DimensionalData.dims(A::VectorDimArray) = dims(parent(A))
+
+# implement broadcast
+Base.BroadcastStyle(::Type{<:VectorDimArray}) = Broadcast.ArrayStyle{VectorDimArray}()
+
+function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{VectorDimArray}}, ::Type{ElType}) where ElType
+    # Scan the inputs for the ArrayAndChar:
+    A = find_vda(bc)
+    # Use the char field of A to create the output
+    #WrappedDimArray(similar(Array{ElType}, axes(bc))) #, A.char)
+    VectorArray(DimArray(similar(Array{ElType}, axes(bc)), dims(A)))
+end
+function Base.similar(vda::VectorDimArray{T}) where T
+    VectorArray(similar(parent(vda))) #Array{T}, axes(vda)), dims(vda))
+end
+
+"`A = find_vda(As)` returns the first VectorDimArray among the arguments."
+find_vda(bc::Base.Broadcast.Broadcasted) = find_vda(bc.args)
+find_vda(args::Tuple) = find_vda(find_vda(args[1]), Base.tail(args))
+find_vda(x) = x
+find_vda(::Tuple{}) = nothing
+find_vda(a::VectorDimArray, rest) = a
+find_vda(::Any, rest) = find_vda(rest)
 
 # would prefer to be more specific about the type of Tuple
 # instead I made the core routines dispatch with a specific Tuple structure

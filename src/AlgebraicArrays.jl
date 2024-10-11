@@ -14,14 +14,14 @@ export # export Base methods
 export # export more Base methods
     display, parent, \, /, real, exp #, randn
 export # export more Base methods
-    getindex, setindex! 
+    getindex, setindex!, BroadcastStyle, similar
 export # export LinearAlgebra methods
     transpose, adjoint, eigen, Diagonal
     
 import Base: size, show, vec, Matrix
 import Base: +, -, *, first, real , exp
 import Base: display, parent, \, /, Array #, randn
-import Base: getindex, setindex! 
+import Base: getindex, setindex!, BroadcastStyle, similar
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal
 
 #struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
@@ -66,11 +66,32 @@ Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
 Base.setindex!(b::VectorArray, v, inds...) = setindex!(parent(b), v, inds...) 
 rangesize(b::VectorArray) = size(parent(b))
 domainsize(b::VectorArray) = ()
-Base.real(b::VectorArray) = VectorArray(real(parent(b)))
-
+#Base.real(b::VectorArray) = VectorArray(real(parent(b)))
 Base.transpose(P::VectorArray) = AlgebraicArray( transpose(vec(P)), 1, rangesize(P))
 
 randn_VectorArray(rsize) = VectorArray(randn(rsize))
+
+# implement broadcast
+Base.BroadcastStyle(::Type{<:VectorArray}) = Broadcast.ArrayStyle{VectorArray}()
+
+function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{VectorArray}}, ::Type{ElType}) where ElType
+    # Scan the inputs for the ArrayAndChar:
+    A = find_va(bc)
+    # Use the char field of A to create the output
+    #WrappedDimArray(similar(Array{ElType}, axes(bc))) #, A.char)
+    VectorArray(similar(Array{ElType}, axes(bc)))
+end
+function Base.similar(va::VectorArray{T}) where T
+    VectorArray(similar(Array{T}, axes(va)))
+end
+
+"`A = find_va(As)` returns the first VectorArray among the arguments."
+find_va(bc::Base.Broadcast.Broadcasted) = find_va(bc.args)
+find_va(args::Tuple) = find_va(find_va(args[1]), Base.tail(args))
+find_va(x) = x
+find_va(::Tuple{}) = nothing
+find_va(a::VectorArray, rest) = a
+find_va(::Any, rest) = find_va(rest)
 
 #struct MatrixArray{T<:Number,
 struct MatrixArray{T,
@@ -126,6 +147,28 @@ Base.real(A::MatrixArray) = MatrixArray(real(parent(A)))
 domainsize(A::MatrixArray) = size(parent(A))
 rangesize(A::MatrixArray) = size(first(parent(A)))
 endomorphic(A::MatrixArray) = isequal(rangesize(A), domainsize(A))
+
+# implement broadcast
+# Base.BroadcastStyle(::Type{<:MatrixArray}) = Broadcast.ArrayStyle{MatrixArray}()
+
+# function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MatrixArray}}, ::Type{ElType}) where ElType
+#     # Scan the inputs for the ArrayAndChar:
+#     A = find_ma(bc)
+#     # Use the char field of A to create the output
+#     #WrappedDimArray(similar(Array{ElType}, axes(bc))) #, A.char)
+#     MatrixArray(similar(Array{ElType}, axes(bc)))
+# end
+# function Base.similar(ma::VectorArray{T}) where T
+#     MatrixArray(similar(Array{T}, axes(ma)))
+# end
+
+# "`A = find_ma(As)` returns the first VectorArray among the arguments."
+# find_ma(bc::Base.Broadcast.Broadcasted) = find_ma(bc.args)
+# find_ma(args::Tuple) = find_ma(find_ma(args[1]), Base.tail(args))
+# find_ma(x) = x
+# find_ma(::Tuple{}) = nothing
+# find_ma(a::MatrixArray, rest) = a
+# find_ma(::Any, rest) = find_ma(rest)
 
 """
 function Matrix(P::MatrixArray{T}) where T <: Number

@@ -22,6 +22,12 @@ using Unitful
         c = AlgebraicArray(vec(a), rsize)
         @test a == c    
 
+        # test `similar`
+        @test similar(c) isa VectorArray
+
+        # custom broadcasting
+        @test all(abs.(c) .> 0)
+        
         # # make an array of arrays
         rsize = (1,2)
         dsize = (2,1)
@@ -32,6 +38,7 @@ using Unitful
         E = AlgebraicArray(Matrix(D),rsize,dsize)
         @test D == E 
 
+        
         @testset "*,+,-,/,\\ and all that" begin
 
             rsize = (3,4)
@@ -90,8 +97,8 @@ using Unitful
 
         @testset "eigenstructure" begin
 
-            rsize = (1,3)
-            dsize = (1,3)
+            rsize = (2,3,4)
+            dsize = (2,3,4)
             x = VectorArray(randn(rsize))
             S = randn_MatrixArray(rsize,dsize)
 
