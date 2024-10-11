@@ -143,32 +143,19 @@ end
 Base.size(A::MatrixArray) = size(parent(A))
 Base.getindex(A::MatrixArray, inds...) = getindex(parent(A), inds...) # need to reverse order?
 Base.setindex!(A::MatrixArray, v, inds...) = setindex!(parent(A), v, inds...) # need to reverse order?
-Base.real(A::MatrixArray) = MatrixArray(real(parent(A)))
 domainsize(A::MatrixArray) = size(parent(A))
 rangesize(A::MatrixArray) = size(first(parent(A)))
 endomorphic(A::MatrixArray) = isequal(rangesize(A), domainsize(A))
 
-# implement broadcast
-# Base.BroadcastStyle(::Type{<:MatrixArray}) = Broadcast.ArrayStyle{MatrixArray}()
+function Base.real(A::MatrixArray)
 
-# function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MatrixArray}}, ::Type{ElType}) where ElType
-#     # Scan the inputs for the ArrayAndChar:
-#     A = find_ma(bc)
-#     # Use the char field of A to create the output
-#     #WrappedDimArray(similar(Array{ElType}, axes(bc))) #, A.char)
-#     MatrixArray(similar(Array{ElType}, axes(bc)))
-# end
-# function Base.similar(ma::VectorArray{T}) where T
-#     MatrixArray(similar(Array{T}, axes(ma)))
-# end
+    for j in eachindex(A)
+        A[j] = real.(A[j])
+    end
+    return A
+        #MatrixArray(real(parent(A)))
+end
 
-# "`A = find_ma(As)` returns the first VectorArray among the arguments."
-# find_ma(bc::Base.Broadcast.Broadcasted) = find_ma(bc.args)
-# find_ma(args::Tuple) = find_ma(find_ma(args[1]), Base.tail(args))
-# find_ma(x) = x
-# find_ma(::Tuple{}) = nothing
-# find_ma(a::MatrixArray, rest) = a
-# find_ma(::Any, rest) = find_ma(rest)
 
 """
 function Matrix(P::MatrixArray{T}) where T <: Number
@@ -207,7 +194,7 @@ Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domainsize(P)
 #     return VectorArray(c)
 # end
 
-# slightly faster as a one-liner
+# slightly faster version in a one-liner form
 Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangesize(A))
 Base.:*(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) * Matrix(B), rangesize(A), domainsize(B))
 Base.:*(a::VectorArray, B::MatrixArray) = AlgebraicArray(vec(a) * Matrix(B), rangesize(a), domainsize(B))

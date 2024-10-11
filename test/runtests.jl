@@ -38,6 +38,8 @@ using Unitful
         E = AlgebraicArray(Matrix(D),rsize,dsize)
         @test D == E 
 
+        # not possible to broadcast to nested array
+        F = real(D)
         
         @testset "*,+,-,/,\\ and all that" begin
 

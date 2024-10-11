@@ -28,10 +28,7 @@ DimensionalData.dims(A::VectorDimArray) = dims(parent(A))
 Base.BroadcastStyle(::Type{<:VectorDimArray}) = Broadcast.ArrayStyle{VectorDimArray}()
 
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{VectorDimArray}}, ::Type{ElType}) where ElType
-    # Scan the inputs for the ArrayAndChar:
     A = find_vda(bc)
-    # Use the char field of A to create the output
-    #WrappedDimArray(similar(Array{ElType}, axes(bc))) #, A.char)
     VectorArray(DimArray(similar(Array{ElType}, axes(bc)), dims(A)))
 end
 function Base.similar(vda::VectorDimArray{T}) where T
@@ -72,9 +69,6 @@ function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Uni
         for j in 1:M 
             P[j] = DimArray(reshape(A[:,j],rsize),rdims)
         end
-        # Ptmp = DimArray(P,ddims)
-        # println(typeof(Ptmp))
-        # return MatrixArray(Ptmp)
         return MatrixArray(DimArray(P,ddims))
     elseif M == 1
         # warning: introduces type instability
@@ -86,6 +80,11 @@ function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Uni
 end
 
 Base.transpose(b::VectorDimArray) = AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangesize(b))
+
+# undefined resource
+# function Base.similar(mda::MatrixDimArray{T}) where T
+#     MatrixArray(similar(parent(mda))) #Array{T}, axes(vda)), dims(vda))
+# end
 
 function  LinearAlgebra.eigen(A::MatrixDimArray)
     F = eigen(Matrix(A))
