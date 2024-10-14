@@ -16,7 +16,7 @@ import DimensionalData: dims
 @dim Eigenmode "eigenmode"
 
 MatrixDimArray = MatrixArray{T, M, N, R} where {M, T, N, R<:AbstractDimArray{T, M}}
-VectorDimArray = VectorArray{T,N,A} where {T, N, A <: DimensionalData.AbstractDimArray}
+VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.AbstractDimArray}
 
 rangesize(A::Union{VectorDimArray,MatrixDimArray}) = dims(parent(A))
 
@@ -53,7 +53,8 @@ function AlgebraicArray(A::AbstractVector, rdims::Union{Tuple,D}) where D <: Dim
     elseif M == 1
         # warning: introduces type instability
         # but useful for inner products
-        return VectorArray(first(A)) # bugfix?
+        #return VectorArray(first(A)) # bugfix?
+        return first(A) # bugfix?
     end
 end
 

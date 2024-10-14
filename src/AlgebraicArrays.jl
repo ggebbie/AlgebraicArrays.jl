@@ -12,7 +12,9 @@ export randn_VectorArray, randn_MatrixArray
 export # export Base methods
     size, show, vec, Matrix, *, first
 export # export more Base methods
-    display, parent, \, /, real, exp #, randn
+    display, parent, \, /, real, exp
+export # export more Base methods
+    randn, fill, ones, zeros
 export # export more Base methods
     getindex, setindex!, BroadcastStyle, similar
 export # export LinearAlgebra methods
@@ -50,9 +52,7 @@ struct VectorArray{T,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
 end
 VectorArray(a::Number) = a # helpful for slices that aren't vectors anymore
 
-         
 parent(b::VectorArray) = b.data
-
 function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
     #println(summary(b))
     show(io,mime,parent(b))
@@ -93,16 +93,44 @@ domainsize(b::VectorArray) = ()
 #Base.real(b::VectorArray) = VectorArray(real(parent(b)))
 Base.transpose(P::VectorArray) = AlgebraicArray( transpose(vec(P)), 1, rangesize(P))
 
-randn_VectorArray(rsize) = VectorArray(randn(rsize))
+function Base.fill(val, rsize::Union{Int,NTuple{N,Int}}, type) where N
+    if type == :VectorArray
+        VectorArray(fill(val, rsize))
+    else
+        error("fill type not implemented")
+    end
+end
+
+function Base.ones(rsize::Union{Int,NTuple{N,Int}}, type) where N
+    if type == :VectorArray
+        VectorArray(ones(rsize))
+    else
+        error("ones type not implemented")
+    end
+end
+
+function Base.zeros(rsize::Union{Int,NTuple{N,Int}}, type) where N
+    if type == :VectorArray
+        VectorArray(zeros(rsize))
+    else
+        error("zeros type not implemented")
+    end
+end
+
+function Base.randn(rsize::Union{Int,NTuple{N,Int}}, type) where N
+    if type == :VectorArray
+        VectorArray(randn(rsize))
+    else
+        error("randn type not implemented")
+    end
+end
 
 # implement broadcast
 Base.BroadcastStyle(::Type{<:VectorArray}) = Broadcast.ArrayStyle{VectorArray}()
 
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{VectorArray}}, ::Type{ElType}) where ElType
-    # Scan the inputs for the ArrayAndChar:
+    # Scan the inputs
     A = find_va(bc)
-    # Use the char field of A to create the output
-    #WrappedDimArray(similar(Array{ElType}, axes(bc))) #, A.char)
     VectorArray(similar(Array{ElType}, axes(bc)))
 end
 function Base.similar(va::VectorArray{T}) where T
@@ -165,8 +193,8 @@ function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
     show(io,mime,Matrix(A))
 end
 Base.size(A::MatrixArray) = size(parent(A))
-Base.getindex(A::MatrixArray, inds...) = getindex(parent(A), inds...) # need to reverse order?
-Base.setindex!(A::MatrixArray, v, inds...) = setindex!(parent(A), v, inds...) # need to reverse order?
+Base.getindex(A::MatrixArray, inds::Vararg = getindex(parent(A), inds...) # need to reverse order?
+Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?
 domainsize(A::MatrixArray) = size(parent(A))
 rangesize(A::MatrixArray) = size(first(parent(A)))
 endomorphic(A::MatrixArray) = isequal(rangesize(A), domainsize(A))

@@ -5,7 +5,8 @@
     @dim SurfaceRegion "surface location"
     @dim InteriorLocation "interior location"
     @dim StateVariable "state variable"
-    surfaceregions = [:NATL,:ANT,:SUBANT]
+    #surfaceregions = [:NATL,:ANT,:SUBANT]
+    surfaceregions = ["NATL","ANT","SUBANT"]
     N = length(surfaceregions)
     years = (1990:1993)
     statevariables = [:θ, :δ¹⁸O] 
@@ -43,9 +44,9 @@
             @test sum(v-x) == length(surfaceregions)
 
             # slice the other way
-            @test x[:,At(:NATL)] isa VectorArray
+            @test x[:,At("NATL")] isa VectorArray
             v = deepcopy(x)
-            v[:,At(:NATL)] = v[:,At(:NATL)] .+ 1.0 
+            v[:,At("NATL")] = v[:,At("NATL")] .+ 1.0 
             @test sum(v-x) == length(years)
             
             # test that these vectors;matrices can be used in algebraic expressions
