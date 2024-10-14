@@ -25,7 +25,7 @@
         # # make an array of arrays
         rsize = (1,2)
         dsize = (2,1)
-        D = randn_MatrixArray(rsize,dsize)*rand(unitlist)
+        D = randn(rsize,dsize, :MatrixArray)*rand(unitlist)
 
         # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
         # turn a MatrixArray back into an array of arrays
@@ -38,7 +38,7 @@
             dsize = (2,3)
 
             # uniform matrix for inner product
-            q = VectorArray(randn(dsize))*u"J"
+            q = randn(dsize, :VectorArray)*u"J"
             qT = transpose(q)
              # same type than q, but type instability in code
             qTT = transpose(qT)
@@ -55,11 +55,11 @@
 
             # asymmetric outer product
             usize = (1,2)
-            u = randn_VectorArray(usize)*u"kg"
+            u = randn(usize, :VectorArray)*u"kg"
             @test q * transpose(u) isa MatrixArray
 
             # another way to make a MatrixArray
-            P = randn_MatrixArray(rsize,dsize) * rand(unitlist)
+            P = randn(rsize,dsize,:MatrixArray) * rand(unitlist)
     
             # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
             @test (P*q) isa VectorArray
@@ -79,8 +79,8 @@
             rsize = (2,3)
             dsize = (2,3)
 
-            S = randn_MatrixArray(rsize,dsize)*u"m"
-            R = randn_MatrixArray(rsize,dsize)*u"K"
+            S = randn(rsize,dsize,:MatrixArray) * u"m"
+            R = randn(rsize,dsize,:MatrixArray) * u"K"
             Q = R * S
             @test isapprox(Matrix(R \ Q), Matrix(S), atol = 1e-8*unit(first(first(S))))
 
@@ -93,7 +93,7 @@
 
             rsize = (1,3)
             dsize = (1,3)
-            S = randn_MatrixArray(rsize,dsize)*rand(unitlist)
+            S = randn(rsize,dsize,:MatrixArray)*rand(unitlist)
 
             @test S isa MatrixArray{T1,N,M,Matrix{Quantity{T2,S,V}}} where {T1,T2,N,M,S,V}
             

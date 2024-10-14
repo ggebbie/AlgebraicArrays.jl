@@ -8,7 +8,8 @@ using ArraysOfArrays
 export VectorArray, MatrixArray, AlgebraicArray, Array
 export VectorDimArray, MatrixDimArray
 export parent, domainsize, rangesize, endomorphic
-export randn_VectorArray, randn_MatrixArray
+#export randn_VectorArray
+export randn_MatrixArray
 export # export Base methods
     size, show, vec, Matrix, *, first
 export # export more Base methods
@@ -24,6 +25,7 @@ import Base: size, show, vec, Matrix
 import Base: +, -, *, first, real , exp
 import Base: display, parent, \, /, Array #, randn
 import Base: getindex, setindex!, BroadcastStyle, similar
+import Base: randn, fill, ones, zeros
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal
 
 """
@@ -93,7 +95,8 @@ domainsize(b::VectorArray) = ()
 #Base.real(b::VectorArray) = VectorArray(real(parent(b)))
 Base.transpose(P::VectorArray) = AlgebraicArray( transpose(vec(P)), 1, rangesize(P))
 
-function Base.fill(val, rsize::Union{Int,NTuple{N,Int}}, type) where N
+#function Base.fill(val, rsize::Union{Int,NTuple{N,Int}}, type) where N
+function Base.fill(val, rsize, type) 
     if type == :VectorArray
         VectorArray(fill(val, rsize))
     else
@@ -101,7 +104,8 @@ function Base.fill(val, rsize::Union{Int,NTuple{N,Int}}, type) where N
     end
 end
 
-function Base.ones(rsize::Union{Int,NTuple{N,Int}}, type) where N
+#function Base.ones(rsize::Union{Int,NTuple{N,Int}}, type) where N
+function Base.ones(rsize, type) 
     if type == :VectorArray
         VectorArray(ones(rsize))
     else
@@ -109,7 +113,8 @@ function Base.ones(rsize::Union{Int,NTuple{N,Int}}, type) where N
     end
 end
 
-function Base.zeros(rsize::Union{Int,NTuple{N,Int}}, type) where N
+#function Base.zeros(rsize::Union{Int,NTuple{N,Int}}, type) where N
+function Base.zeros(rsize, type)
     if type == :VectorArray
         VectorArray(zeros(rsize))
     else
@@ -117,7 +122,8 @@ function Base.zeros(rsize::Union{Int,NTuple{N,Int}}, type) where N
     end
 end
 
-function Base.randn(rsize::Union{Int,NTuple{N,Int}}, type) where N
+#function Base.randn(rsize::Union{Int,NTuple{N,Int}}, type) where N
+function Base.randn(rsize::Union{Int,NTuple{N,Int}},type::Symbol) where N
     if type == :VectorArray
         VectorArray(randn(rsize))
     else
@@ -193,7 +199,7 @@ function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
     show(io,mime,Matrix(A))
 end
 Base.size(A::MatrixArray) = size(parent(A))
-Base.getindex(A::MatrixArray, inds::Vararg = getindex(parent(A), inds...) # need to reverse order?
+Base.getindex(A::MatrixArray, inds::Vararg) = getindex(parent(A), inds...) # need to reverse order?
 Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?
 domainsize(A::MatrixArray) = size(parent(A))
 rangesize(A::MatrixArray) = size(first(parent(A)))
@@ -270,12 +276,23 @@ function matrix right divide
 """
 Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangesize(A), rangesize(B))
 
-function randn_MatrixArray(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2}
-    # make an array of arrays
-    alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
-    # warning, doesn't work for 3D+ arrays
-    return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+# function randn_MatrixArray(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2}
+#     # make an array of arrays
+#     alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
+#     # warning, doesn't work for 3D+ arrays
+#     return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+# end
+function randn(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}},type::Symbol) where {N1,N2}
+    if type == :MatrixArray
+        # make an array of arrays
+        alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
+        # warning, doesn't work for 3D+ arrays
+        return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+    else
+        error("randn not implemented for this type")
+    end
 end
+
 
 function LinearAlgebra.eigen(A::MatrixArray)
     F = eigen(Matrix(A))

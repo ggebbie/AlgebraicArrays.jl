@@ -35,6 +35,15 @@ function Base.similar(vda::VectorDimArray{T}) where T
     VectorArray(similar(parent(vda))) #Array{T}, axes(vda)), dims(vda))
 end
 
+function Base.randn(rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
+    if type == :VectorArray
+        # actually use rand (randn not implemented for DimArray)
+        return VectorArray(rand(rdims))
+    else
+        error("randn not implemented for this type")
+    end
+end
+
 "`A = find_vda(As)` returns the first VectorDimArray among the arguments."
 find_vda(bc::Base.Broadcast.Broadcasted) = find_vda(bc.args)
 find_vda(args::Tuple) = find_vda(find_vda(args[1]), Base.tail(args))

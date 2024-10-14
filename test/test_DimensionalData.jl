@@ -32,8 +32,12 @@
             # x = source_water_solution(surfaceregions,
             #     years,
             #     statevariables);
-
+            
             x = source_water_solution(surfaceregions, years);
+
+            @test fill(2.0,dims(x),:VectorArray) isa VectorArray
+            @test ones(dims(x),:VectorArray) isa VectorArray
+            @test randn(dims(x),:VectorArray) isa VectorArray
 
             ### slicing/broacasting
             #x[Ti=At(1990),:] # currently fails
