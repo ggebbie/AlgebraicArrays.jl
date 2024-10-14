@@ -47,7 +47,7 @@
             # inner product
             @test ustrip(qT * q) ≥ 0
 
-            # dot product is not correct
+            # dot product not defined
             #@test q ⋅ q ≥ 0 
 
             # symmetric outer product

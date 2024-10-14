@@ -28,12 +28,20 @@
     @testset "AlgebraicArrays + DimensionalData.jl" begin
 
         @testset "no units" begin
-            x = source_water_solution(surfaceregions,
-                years,
-                statevariables);
+            # x = source_water_solution(surfaceregions,
+            #     years,
+            #     statevariables);
 
             x = source_water_solution(surfaceregions, years);
 
+            ### slicing
+            #x[Ti=At(1990),:] # currently fails
+            #x[Ti=At(1990)] # currently fails
+            @test x[At(1990),:] isa VectorArray
+            v = deepcopy(x)
+            v[At(1990),:] = v[At(1990),:] .+ 1.0 
+            @test sum(v-x) == length(surfaceregions)
+            
             # test that these vectors;matrices can be used in algebraic expressions
             y = vec(x)
             z = AlgebraicArray(y, dims(parent(x)))
@@ -91,7 +99,7 @@
 
             # check matrix exponential
             @test endomorphic(S)
-            exp(S) # watch out for overflow!
+            @test exp(S) isa MatrixArray # watch out for overflow!
         end
     end
 end #"DimensionalData"

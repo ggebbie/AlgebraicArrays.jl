@@ -24,11 +24,6 @@ import Base: display, parent, \, /, Array #, randn
 import Base: getindex, setindex!, BroadcastStyle, similar
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal
 
-#struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
-struct VectorArray{T,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
-    data:: A
-end
-
 """
     AlgebraicArray(A, rsize)
 
@@ -38,7 +33,6 @@ Construct a `VectorArray` or `MatrixArray` from an AbstractArray.
 - `A::AbstractArray`
 - `rsize`: size of range
 """
-#VectorArray(A::AbstractVector, rsize) = VectorArray(reshape(A,rsize))
 function AlgebraicArray(A::AbstractVector, rsize::Union{Int,NTuple{N,Int}}) where N
     M = prod(rsize)
     if M > 1
@@ -49,6 +43,13 @@ function AlgebraicArray(A::AbstractVector, rsize::Union{Int,NTuple{N,Int}}) wher
         return first(A)
     end
 end
+
+#struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
+struct VectorArray{T,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
+    data:: A
+end
+VectorArray(a::Number) = a # helpful for slices that aren't vectors anymore
+
          
 parent(b::VectorArray) = b.data
 
@@ -62,8 +63,31 @@ function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
 end
 Base.size(b::VectorArray) = size(parent(b))
 Base.vec(b::VectorArray) = vec(parent(b))
-Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
-Base.setindex!(b::VectorArray, v, inds...) = setindex!(parent(b), v, inds...) 
+#Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
+Base.getindex(A::VectorArray, inds::Vararg) = VectorArray(A.data[inds...])
+
+# function Base.getindex(b::VectorArray, inds...)
+#     #I = to_indices(parent(parent(b)), (inds...))
+#     tmp = getindex(parent(b), inds...)
+
+#     # check for any slices
+#     if (length(tmp) > 1) && !isa(tmp, VectorArray)
+#         return VectorArray(tmp)
+#     else
+#         return tmp
+#     end
+#end
+    #     @eval @propagate_inbounds function Base.$f(A::AbstractDimArray, i1::StandardIndices, i2::StandardIndices, Is::StandardIndices...)
+    #         I = to_indices(A, (i1, i2, Is...))
+    #         x = Base.$f(parent(A), I...)
+    #         all(i -> i isa Integer, I) ? x : rebuildsliced(Base.$f, A, x, I)
+    #     end
+    # end
+
+Base.setindex!(b::VectorArray, val, inds::Vararg) = b.data[inds...] = val
+#Base.setindex!(b::VectorArray, v, inds...) = setindex!(parent(b), v, inds...) 
+Base.iterate(b::VectorArray, args...) = iterate(parent(b), args...)
+Base.IndexStyle(b::VectorArray) = Base.IndexStyle(parent(b))
 rangesize(b::VectorArray) = size(parent(b))
 domainsize(b::VectorArray) = ()
 #Base.real(b::VectorArray) = VectorArray(real(parent(b)))
@@ -221,6 +245,7 @@ Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B)
 function randn_MatrixArray(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2}
     # make an array of arrays
     alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
+    # warning, doesn't work for 3D+ arrays
     return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
 end
 

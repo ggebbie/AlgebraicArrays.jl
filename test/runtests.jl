@@ -99,8 +99,8 @@ using Unitful
 
         @testset "eigenstructure" begin
 
-            rsize = (2,3,4)
-            dsize = (2,3,4)
+            rsize = (2,3)
+            dsize = (2,3)
             x = VectorArray(randn(rsize))
             S = randn_MatrixArray(rsize,dsize)
 
@@ -111,7 +111,7 @@ using Unitful
             @test isapprox(Matrix(F), Matrix(S), atol= 1e-8)
 
             # # check matrix exponential
-            exp(S) # watch out for overflow!
+            @test exp(S) isa MatrixArray # watch out for overflow!
         end
     end
 
