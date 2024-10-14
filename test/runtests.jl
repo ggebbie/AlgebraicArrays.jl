@@ -18,6 +18,12 @@ using Unitful
         # can immediately save it as a VectorArray for future calculations
         b = VectorArray(a)
 
+        ### slicing + broadcasting
+        @test b[1,:] isa VectorArray
+        v = deepcopy(b)
+        v[1,:] = v[1,:] .+ 1.0 
+        @test sum(v-b) == rsize[2]
+        
         # internal algorithms must be able to turn into a vector, then bring it back to VectorArray
         c = AlgebraicArray(vec(a), rsize)
         @test a == c    

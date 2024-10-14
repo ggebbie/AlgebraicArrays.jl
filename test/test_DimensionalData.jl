@@ -34,13 +34,19 @@
 
             x = source_water_solution(surfaceregions, years);
 
-            ### slicing
+            ### slicing/broacasting
             #x[Ti=At(1990),:] # currently fails
             #x[Ti=At(1990)] # currently fails
             @test x[At(1990),:] isa VectorArray
             v = deepcopy(x)
             v[At(1990),:] = v[At(1990),:] .+ 1.0 
             @test sum(v-x) == length(surfaceregions)
+
+            # slice the other way
+            @test x[:,At(:NATL)] isa VectorArray
+            v = deepcopy(x)
+            v[:,At(:NATL)] = v[:,At(:NATL)] .+ 1.0 
+            @test sum(v-x) == length(years)
             
             # test that these vectors;matrices can be used in algebraic expressions
             y = vec(x)

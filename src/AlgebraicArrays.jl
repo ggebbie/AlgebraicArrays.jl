@@ -86,7 +86,7 @@ Base.getindex(A::VectorArray, inds::Vararg) = VectorArray(A.data[inds...])
 
 Base.setindex!(b::VectorArray, val, inds::Vararg) = b.data[inds...] = val
 #Base.setindex!(b::VectorArray, v, inds...) = setindex!(parent(b), v, inds...) 
-Base.iterate(b::VectorArray, args...) = iterate(parent(b), args...)
+#Base.iterate(b::VectorArray, args...) = iterate(parent(b), args...)
 Base.IndexStyle(b::VectorArray) = Base.IndexStyle(parent(b))
 rangesize(b::VectorArray) = size(parent(b))
 domainsize(b::VectorArray) = ()
