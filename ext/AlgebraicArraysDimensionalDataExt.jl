@@ -16,8 +16,10 @@ import DimensionalData: dims
 @dim Eigenmode "eigenmode"
 
 MatrixDimArray = MatrixArray{T, M, N, R} where {M, T, N, R<:AbstractDimArray{T, M}}
-VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.AbstractDimArray}
 
+VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.AbstractDimArray}
+#VectorDimArray(array,rdims) = VectorArray(DimArray(array,rdims))
+    
 rangesize(A::Union{VectorDimArray,MatrixDimArray}) = dims(parent(A))
 
 domainsize(b::VectorDimArray) = ()
@@ -25,12 +27,22 @@ domainsize(A::MatrixDimArray) = dims(first(parent(A)))
 DimensionalData.dims(A::VectorDimArray) = dims(parent(A))
 
 # implement broadcast
+
+# function declaration fails test
+#Base.BroadcastStyle(::Type{<:VectorArray{T, N, A}}) where {T, N, A <: DimensionalData.AbstractDimArray} = Broadcast.ArrayStyle{VectorDimArray}()
+
+# passes test 
 Base.BroadcastStyle(::Type{<:VectorDimArray}) = Broadcast.ArrayStyle{VectorDimArray}()
 
+#function opening fails test 
+#function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{VectorArray{T, N, A}}}, ::Type{ElType}) where {ElType, T, N, A <: DimensionalData.AbstractDimArray}
+
+#passes test
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{VectorDimArray}}, ::Type{ElType}) where ElType
-    A = find_vda(bc)
-    VectorArray(DimArray(similar(Array{ElType}, axes(bc)), dims(A)))
+B = find_vda(bc)
+VectorArray(DimArray(similar(Array{ElType}, axes(bc)), dims(B)))
 end
+
 function Base.similar(vda::VectorDimArray{T}) where T
     VectorArray(similar(parent(vda))) #Array{T}, axes(vda)), dims(vda))
 end
