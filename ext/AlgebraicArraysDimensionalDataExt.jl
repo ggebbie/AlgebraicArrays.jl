@@ -16,8 +16,8 @@ import DimensionalData: dims
 @dim Eigenmode "eigenmode"
 
 MatrixDimArray = MatrixArray{T, M, N, R} where {M, T, N, R<:AbstractDimArray{T, M}}
-
 VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.AbstractDimArray}
+
 #VectorDimArray(array,rdims) = VectorArray(DimArray(array,rdims))
     
 rangesize(A::Union{VectorDimArray,MatrixDimArray}) = dims(parent(A))
@@ -28,19 +28,20 @@ DimensionalData.dims(A::VectorDimArray) = dims(parent(A))
 
 # implement broadcast
 
-# function declaration fails test
-#Base.BroadcastStyle(::Type{<:VectorArray{T, N, A}}) where {T, N, A <: DimensionalData.AbstractDimArray} = Broadcast.ArrayStyle{VectorDimArray}()
+# function declaration passes here but not OGFM
+#Base.BroadcastStyle(::Type{<:VectorArray{T, N, A}}) where {T, N, A <: DimensionalData.AbstractDimArray} = Broadcast.ArrayStyle{VectorArray{T, N, A}}()
+Base.BroadcastStyle(::Type{<:VectorArray{T, N, A}}) where {T, N, A <: DimensionalData.AbstractDimArray} = Broadcast.ArrayStyle{VectorDimArray}()
 
 # passes test 
-Base.BroadcastStyle(::Type{<:VectorDimArray}) = Broadcast.ArrayStyle{VectorDimArray}()
+# Base.BroadcastStyle(::Type{<:VectorDimArray}) = Broadcast.ArrayStyle{VectorDimArray}()
 
-#function opening fails test 
+#function opening passes here but not OGFM
 #function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{VectorArray{T, N, A}}}, ::Type{ElType}) where {ElType, T, N, A <: DimensionalData.AbstractDimArray}
 
 #passes test
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{VectorDimArray}}, ::Type{ElType}) where ElType
-B = find_vda(bc)
-VectorArray(DimArray(similar(Array{ElType}, axes(bc)), dims(B)))
+    B = find_vda(bc)
+    VectorArray(DimArray(similar(Array{ElType}, axes(bc)), dims(B)))
 end
 
 function Base.similar(vda::VectorDimArray{T}) where T

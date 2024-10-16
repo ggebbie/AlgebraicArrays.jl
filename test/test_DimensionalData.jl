@@ -32,17 +32,21 @@
             # x = source_water_solution(surfaceregions,
             #     years,
             #     statevariables);
-            
-            x = source_water_solution(surfaceregions, years);
 
-            @test fill(2.0,dims(x),:VectorArray) isa VectorArray
-            @test ones(dims(x),:VectorArray) isa VectorArray
-            @test randn(dims(x),:VectorArray) isa VectorArray
+            const MatrixDimArray = MatrixArray{T, M, N, R} where {M, T, N, R<:AbstractDimArray{T, M}}
+            const VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.AbstractDimArray}
+
+            x = source_water_solution(surfaceregions, years)
+
+            @test x isa VectorDimArray
+            @test fill(2.0,dims(x),:VectorArray) isa VectorDimArray
+            @test ones(dims(x),:VectorArray) isa VectorDimArray
+            @test randn(dims(x),:VectorArray) isa VectorDimArray
 
             ### slicing/broacasting
             #x[Ti=At(1990),:] # currently fails
             #x[Ti=At(1990)] # currently fails
-            @test x[At(1990),:] isa VectorArray
+            @test x[At(1990),:] isa VectorDimArray
             v = deepcopy(x)
             v[At(1990),:] = v[At(1990),:] .+ 1.0 
             @test sum(v-x) == length(surfaceregions)
@@ -52,6 +56,9 @@
             v = deepcopy(x)
             v[:,At("NATL")] = v[:,At("NATL")] .+ 1.0 
             @test sum(v-x) == length(years)
+
+            # dot multiply
+            v .* v isa VectorDimArray
             
             # test that these vectors;matrices can be used in algebraic expressions
             y = vec(x)
@@ -59,9 +66,9 @@
             @test x == z
 
             # make the diagonal elements
-            v = ones(dims(parent(x)))
-            w = VectorArray(v) 
-
+            # v = ones(dims(parent(x)))
+            # w = VectorArray(v) 
+            w = ones(dims(x), :VectorArray)
             D = Diagonal(w)
             DT = transpose(D)
             DTT = transpose(DT)
@@ -77,6 +84,7 @@
         
             q = R * x
             @test q isa VectorArray{T,N,DA} where T where N where DA <: DimensionalData.AbstractDimArray
+            @test q isa VectorDimArray
         
             y = R \ q
             @test isapprox(x, y, atol = 1e-8)
