@@ -2,34 +2,53 @@ using Revise
 using AlgebraicArrays
 using Test
 using ArraysOfArrays
-using DimensionalData
-using DimensionalData:@dim
-using Unitful
+#using DimensionalData
+#using DimensionalData:@dim
+#using Unitful
 
 @testset "AlgebraicArrays.jl" begin
 
     @testset "constructors" begin
 
-        rsize = (2,3)
-
-        @test fill(2.0,rsize,:VectorArray) isa VectorArray
-        @test ones(rsize,:VectorArray) isa VectorArray
-        @test randn(rsize,:VectorArray) isa VectorArray
+        rdims = (2,3)
         
         # investigator makes a field with physical dimensions
-        a = randn(rsize)
+        a = randn(rdims)
 
         # can immediately save it as a VectorArray for future calculations
-        b = VectorArray(a)
+        b = VectorArray(vec(a),rdims)
+
+        # or simply
+        c = VectorArray(a)
+
+        @test b == c
 
         ### slicing + broadcasting
         @test b[1,:] isa VectorArray
+
+        @test similar(b) isa VectorArray
+
         v = deepcopy(b)
-        v[1,:] = v[1,:] .+ 1.0 
-        @test sum(v-b) == rsize[2]
+        # setindex!
+        v[1] += 1.0
+        @test isapprox(v[1] - b[1],1.0)
+
+        # broacast without slice
+        u = deepcopy(b)[1,:]
+        u .+= 1.0 
+
+        v[1,:] .+= 1.0 #fails
+        w = v[1,:]
+        w .+= 1.0 # passes
+        @test sum(v-b) == rdims[2]
 
         # iteration
         @test eachindex(b) == Base.OneTo(prod(size(b)))
+                
+        @test fill(2.0,rsize,:VectorArray) isa VectorArray
+        @test ones(rsize,:VectorArray) isa VectorArray
+        @test randn(rsize,:VectorArray) isa VectorArray
+
         
         # internal algorithms must be able to turn into a vector, then bring it back to VectorArray
         c = AlgebraicArray(vec(a), rsize)
