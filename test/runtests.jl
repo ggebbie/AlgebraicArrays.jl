@@ -27,6 +27,9 @@ using Unitful
         v = deepcopy(b)
         v[1,:] = v[1,:] .+ 1.0 
         @test sum(v-b) == rsize[2]
+
+        # iteration
+        @test eachindex(b) == Base.OneTo(prod(size(b)))
         
         # internal algorithms must be able to turn into a vector, then bring it back to VectorArray
         c = AlgebraicArray(vec(a), rsize)
