@@ -19,7 +19,7 @@ export # export more Base methods
 export # export LinearAlgebra methods
     transpose, adjoint, eigen, Diagonal
     
-import Base: size, show, vec, Matrix, Array
+import Base: size, show, vec, Matrix, Array, axes
 import Base: +, -, *, first, real , exp
 import Base: display, parent, \, /, Array #, randn
 import Base: getindex, setindex!, BroadcastStyle, similar
@@ -39,6 +39,7 @@ rangedims(b::VectorArray) = b.rangedims
 #Base.size(b::VectorArray) = size(parent(b))
 Base.size(b::VectorArray) = rangedims(b)
 Base.vec(b::VectorArray) = parent(b)
+#Base.axes(b::VectorArray) = axes(parent(b))
 
 """
     Array(A, rsize)
@@ -61,18 +62,18 @@ function Array(b::VectorArray)
 end
 
 #Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
-#Base.getindex(b::VectorArray, ind::Int) = VectorArray(parent(b)[ind]) # linear indexing 
-Base.getindex(b::VectorArray, ind::Int) = parent(b)[ind] # linear indexing 
+Base.getindex(b::VectorArray, ind::Int) = VectorArray(parent(b)[ind]) # linear indexing 
+#Base.getindex(b::VectorArray, ind::Int) = parent(b)[ind] # linear indexing 
 # cartesian indexing
-#Base.getindex(b::VectorArray, inds::Vararg) = VectorArray(getindex(Array(b),inds...))
+Base.getindex(b::VectorArray, inds::Vararg) = VectorArray(getindex(Array(b),inds...))
 #Base.getindex(b::VectorArray, inds::Vararg) = getindex(Array(b),inds...)
 #Base.getindex(b::VectorArray, inds::Vararg) = VectorArray(getindex(reshape(parent(b),rangedims(b)),inds...))
-#Base.getindex(b::VectorArray, inds::Vararg) = b[LinearIndices(rangedims(b))[inds...]]
-Base.getindex(b::VectorArray, inds::Vararg) = [b[i] for i in LinearIndices(rangedims(b))[inds...]]
+#Base.getindex(b::VectorArray, inds::Vararg) = b[LinearIndices(rangedims(b))[inds...]] # Stack Overflow 
+#Base.getindex(b::VectorArray, inds::Vararg) = VectorArray([b[i] for i in LinearIndices(rangedims(b))[inds...]])
 
 Base.setindex!(b::VectorArray, val, ind::Int) = parent(b)[ind] = val
-#Base.setindex!(b::VectorArray, val, inds::Vararg) = Array(b)[inds...] = val
-Base.setindex!(b::VectorArray, val, inds::Vararg) = reshape(parent(b),rangedims(b))[inds...] = val
+Base.setindex!(b::VectorArray, val, inds::Vararg) = Array(b)[inds...] = val
+#Base.setindex!(b::VectorArray, val, inds::Vararg) = reshape(parent(b),rangedims(b))[inds...] = val
         
 # #Base.setindex!(b::VectorArray, v, inds...) = setindex!(parent(b), v, inds...) 
 # function Base.setindex!(b::VectorArray, val, inds::Vararg)
