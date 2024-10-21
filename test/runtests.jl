@@ -25,6 +25,10 @@ using Unitful
         ### slicing + broadcasting
         @test b[1,:] isa VectorArray
         v = deepcopy(b)
+        v[1,:] .+= 1.0 
+        @test sum(v-b) == rsize[2]
+
+        v = deepcopy(b)
         v[1,:] = v[1,:] .+ 1.0 
         @test sum(v-b) == rsize[2]
 
