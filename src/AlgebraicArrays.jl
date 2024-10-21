@@ -18,6 +18,8 @@ export # export more Base methods
     randn, fill, ones, zeros
 export # export more Base methods
     getindex, setindex!, BroadcastStyle, similar
+export # export more Base methods
+    IndexStyle, eachindex, iterate 
 export # export LinearAlgebra methods
     transpose, adjoint, eigen, Diagonal
     
@@ -65,10 +67,14 @@ function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
 end
 Base.size(b::VectorArray) = size(parent(b))
 Base.vec(b::VectorArray) = vec(parent(b))
+
 Base.getindex(b::VectorArray, inds::Vararg) = VectorArray(getindex(parent(b), inds...))
-Base.getindex(b::VectorArray; kw...) = getindex(parent(b), kw...)
+Base.getindex(b::VectorArray; kw...) = VectorArray(getindex(parent(b); kw...))
+
 #Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
 #Base.getindex(A::VectorArray, inds::Vararg) = VectorArray(A.data[inds...])
+#Base.dotview(b::VectorArray, inds::Vararg) = VectorArray(dotview(parent(b); inds...))
+#Base.dotview(b::VectorArray, inds::Vararg; kw...) = VectorArray(DimensionalData.dotview(parent(b), inds..., kw...))
 
 # function Base.getindex(b::VectorArray, inds...)
 #     #I = to_indices(parent(parent(b)), (inds...))
@@ -88,8 +94,9 @@ Base.getindex(b::VectorArray; kw...) = getindex(parent(b), kw...)
     #     end
     # end
 
-Base.setindex!(b::VectorArray, val, inds::Vararg) = b.data[inds...] = val
-#Base.setindex!(b::VectorArray, v, inds...) = setindex!(parent(b), v, inds...) 
+#Base.setindex!(b::VectorArray, val, inds::Vararg) = b.data[inds...] = val
+Base.setindex!(b::VectorArray, v, inds...) = setindex!(parent(b), v, inds...) 
+Base.setindex!(b::VectorArray, v; kw...) = setindex!(parent(b), v, kw...) 
 Base.iterate(b::VectorArray, args::Vararg) = iterate(parent(b), args...)
 
 # `VectorArray` is a subtype of AbstractVector which causes issues with eachindex
@@ -207,7 +214,9 @@ function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
 end
 Base.size(A::MatrixArray) = size(parent(A))
 Base.getindex(A::MatrixArray, inds::Vararg) = getindex(parent(A), inds...) # need to reverse order?
+Base.getindex(A::MatrixArray; kw...) = getindex(parent(A), kw...) 
 Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?
+Base.setindex!(A::MatrixArray, v; kw...) = setindex!(parent(A), v, kw...) 
 domainsize(A::MatrixArray) = size(parent(A))
 rangesize(A::MatrixArray) = size(first(parent(A)))
 endomorphic(A::MatrixArray) = isequal(rangesize(A), domainsize(A))

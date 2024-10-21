@@ -28,13 +28,13 @@
 
     @testset "AlgebraicArrays + DimensionalData.jl" begin
 
+        MatrixDimArray = MatrixArray{T, M, N, R} where {M, T, N, R<:AbstractDimArray{T, M}}
+        VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.AbstractDimArray}
+
         @testset "no units" begin
             # x = source_water_solution(surfaceregions,
             #     years,
             #     statevariables);
-
-            MatrixDimArray = MatrixArray{T, M, N, R} where {M, T, N, R<:AbstractDimArray{T, M}}
-            VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.AbstractDimArray}
 
             x = source_water_solution(surfaceregions, years)
 
@@ -44,23 +44,29 @@
             @test randn(dims(x),:VectorArray) isa VectorDimArray
 
             ### slicing/broacasting
-            #x[Ti=At(1990),:] # currently fails
-            #x[Ti=At(1990)] # currently fails
-            getindex(x,(At(1990))) # fails
+            @test x[Ti=At(1990)] isa VectorDimArray
+
+            getindex(x,At(1990),:)
             @test x[At(1990),:] isa VectorDimArray
             v = deepcopy(x)
             v[At(1990),:] = v[At(1990),:] .+ 1.0 
-            v[At(1990),:] .+=  1.0 
             @test sum(v-x) == length(surfaceregions)
 
+            v = deepcopy(x)
+            #v[At(1990),:] .+=  1.0 # fails
+            v[1,:] .+=  1.0 # succeeds
+            @test sum(v-x) == length(surfaceregions)
+            
             # slice the other way
             @test x[:,At("NATL")] isa VectorArray
             v = deepcopy(x)
             v[:,At("NATL")] = v[:,At("NATL")] .+ 1.0 
+            #v[:,At("NATL")] .+= 1.0  #fails
+            #v[SurfaceRegion=At("NATL")] = v[SurfaceRegion=At("NATL")] .+ 1.0 # fails, not recommended
             @test sum(v-x) == length(years)
 
             # dot multiply
-            v .* v isa VectorDimArray
+            @test v .* v isa VectorDimArray
             
             # test that these vectors;matrices can be used in algebraic expressions
             y = vec(x)
@@ -120,7 +126,7 @@
 
             # check matrix exponential
             @test endomorphic(S)
-            @test exp(S) isa MatrixArray # watch out for overflow!
+            @test exp(S) isa MatrixDimArray # watch out for overflow!
         end
     end
 end #"DimensionalData"
