@@ -46,9 +46,11 @@
             ### slicing/broacasting
             #x[Ti=At(1990),:] # currently fails
             #x[Ti=At(1990)] # currently fails
+            getindex(x,(At(1990))) # fails
             @test x[At(1990),:] isa VectorDimArray
             v = deepcopy(x)
             v[At(1990),:] = v[At(1990),:] .+ 1.0 
+            v[At(1990),:] .+=  1.0 
             @test sum(v-x) == length(surfaceregions)
 
             # slice the other way
