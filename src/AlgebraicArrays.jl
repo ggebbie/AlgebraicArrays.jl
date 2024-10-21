@@ -65,8 +65,10 @@ function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
 end
 Base.size(b::VectorArray) = size(parent(b))
 Base.vec(b::VectorArray) = vec(parent(b))
+Base.getindex(b::VectorArray, inds::Vararg) = VectorArray(getindex(parent(b), inds...))
+Base.getindex(b::VectorArray; kw...) = getindex(parent(b), kw...)
 #Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
-Base.getindex(A::VectorArray, inds::Vararg) = VectorArray(A.data[inds...])
+#Base.getindex(A::VectorArray, inds::Vararg) = VectorArray(A.data[inds...])
 
 # function Base.getindex(b::VectorArray, inds...)
 #     #I = to_indices(parent(parent(b)), (inds...))
