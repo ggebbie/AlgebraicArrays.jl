@@ -294,12 +294,6 @@ function matrix right divide
 Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangesize(A), rangesize(B))
 Base.:(/)(A::Union{VectorArray,MatrixArray}, b::Number) = (1/b) * A
 
-# function randn_MatrixArray(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2}
-#     # make an array of arrays
-#     alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
-#     # warning, doesn't work for 3D+ arrays
-#     return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
-# end
 function randn(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}},type::Symbol) where {N1,N2}
     if type == :MatrixArray
         # make an array of arrays
@@ -310,7 +304,6 @@ function randn(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}
         error("randn not implemented for this type")
     end
 end
-
 
 function LinearAlgebra.eigen(A::MatrixArray)
     F = eigen(Matrix(A))
