@@ -22,6 +22,13 @@ function Base.:(\)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat{
     return (Bunit/Aunit) * (ustrip.(A) \ ustrip.(B))
 end
 
+# more type piracy
+function Base.:(\)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat) where {Q1,S1,V1} 
+    #if uniform(A) # already handled by input types
+    Aunit = unit(first(first(A)))
+    return (1/Aunit) * (ustrip.(A) \ B)
+end
+
 # Unitful not handling this case, benign type piracy here
 function Base.:(/)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat) where {Q1,S1,V1} 
     Aunit = unit(first(first(A)))
