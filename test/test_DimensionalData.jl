@@ -126,12 +126,8 @@
             G = randn(rsize,dsize,:MatrixArray) 
             H = randn(dsize,rsize,:MatrixArray) 
             Matrix(G * H)
-
-
         end
 
-
-        
         @testset "eigenstructure" begin 
             x = source_water_solution(surfaceregions,
                 years,
@@ -148,8 +144,6 @@
             #G = real(V * Λ / V) # also works
             G = V * Λ / V
             @test isapprox(Matrix(S), Matrix(G), atol = 1e-8)
-
-
 
             # check matrix exponential
             @test endomorphic(S)
