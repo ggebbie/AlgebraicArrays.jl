@@ -1,5 +1,6 @@
 using Revise
 using AlgebraicArrays
+using LinearAlgebra
 using Test
 using ArraysOfArrays
 using DimensionalData
