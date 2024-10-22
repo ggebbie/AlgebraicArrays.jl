@@ -51,10 +51,9 @@
                 @test x == xTT
 
                 # inner product
-                @test qT * q ≥ 0
-                @test q ⋅ q ≥ 0
-                @test qT * q == q ⋅ q 
-
+                @test xT * x ≥ 0
+                @test x ⋅ x ≥ 0
+                @test xT * x == x ⋅ x 
             end
             
             @testset "slicing and broadcasting" begin
@@ -126,6 +125,7 @@
             G = randn(rsize,dsize,:MatrixArray) 
             H = randn(dsize,rsize,:MatrixArray) 
             Matrix(G * H)
+            
         end
 
         @testset "eigenstructure" begin 
