@@ -22,6 +22,13 @@ function Base.:(\)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat{
     return (Bunit/Aunit) * (ustrip.(A) \ ustrip.(B))
 end
 
+# more type piracy
+function Base.:(\)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat) where {Q1,S1,V1} 
+    #if uniform(A) # already handled by input types
+    Aunit = unit(first(first(A)))
+    return (1/Aunit) * (ustrip.(A) \ B)
+end
+
 # Unitful not handling this case, benign type piracy here
 function Base.:(/)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat) where {Q1,S1,V1} 
     Aunit = unit(first(first(A)))
@@ -46,6 +53,14 @@ function LinearAlgebra.eigen(A::MatrixArray{T1,N,M,Matrix{Quantity{T2,S,V}}}) wh
     values = AlgebraicArray(F.values*Aunit,dsize)
     vectors = AlgebraicArray(F.vectors,rsize,dsize) 
     return Eigen(values, vectors)
+end
+
+# Unitful doesn't cover simple unitful eigenvalues either
+# this type signature should be restricted to uniform matrices
+function LinearAlgebra.eigen(A::AbstractMatrix{Quantity{T,S,V}}) where {T,S,V}
+    Aunit = unit(first(A))
+    F = eigen(ustrip.(A))
+    return Eigen(F.values*Aunit, F.vectors)
 end
 
 #AbstractMatrix(F::Eigen) = F.vectors * Diagonal(F.values) / F.vectors

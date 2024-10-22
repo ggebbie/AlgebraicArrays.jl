@@ -1,19 +1,12 @@
 @testset "Dimensional Data" begin
 
-    #using Revise
-    # using AlgebraicArrays
-    # #using Unitful
-    # #using UnitfulLinearAlgebra
-    # using DimensionalData
-    # using DimensionalData:@dim
-    # using Test
-
     # fixed parameters
     @dim YearCE "years Common Era"
     @dim SurfaceRegion "surface location"
     @dim InteriorLocation "interior location"
     @dim StateVariable "state variable"
-    surfaceregions = [:NATL,:ANT,:SUBANT]
+    #surfaceregions = [:NATL,:ANT,:SUBANT]
+    surfaceregions = ["NATL","ANT","SUBANT"]
     N = length(surfaceregions)
     years = (1990:1993)
     statevariables = [:θ, :δ¹⁸O] 
@@ -35,22 +28,68 @@
 
     @testset "AlgebraicArrays + DimensionalData.jl" begin
 
+        MatrixDimArray = MatrixArray{T, M, N, R} where {M, T, N, R<:AbstractDimArray{T, M}}
+        VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.AbstractDimArray}
+
         @testset "no units" begin
-            x = source_water_solution(surfaceregions,
-                years,
-                statevariables);
+            # x = source_water_solution(surfaceregions,
+            #     years,
+            #     statevariables);
 
-            x = source_water_solution(surfaceregions, years);
+            x = source_water_solution(surfaceregions, years)
 
+            @test x isa VectorDimArray
+            @test fill(2.0,dims(x),:VectorArray) isa VectorDimArray
+            @test ones(dims(x),:VectorArray) isa VectorDimArray
+            @test randn(dims(x),:VectorArray) isa VectorDimArray
+
+            @testset "inner and outer products" begin
+                xT = transpose(x)
+                @test xT isa MatrixDimArray
+
+                xTT = transpose(xT)
+                @test x == xTT
+
+                # inner product
+                @test xT * x ≥ 0
+                @test x ⋅ x ≥ 0
+                @test isapprox(xT * x, x ⋅ x)
+            end
+            
+            @testset "slicing and broadcasting" begin
+                @test x[Ti=At(1990)] isa VectorDimArray
+
+                getindex(x,At(1990),:)
+                @test x[At(1990),:] isa VectorDimArray
+                v = deepcopy(x)
+                v[At(1990),:] = v[At(1990),:] .+ 1.0 
+                @test isapprox(sum(v-x),length(surfaceregions))
+
+                v = deepcopy(x)
+                #v[At(1990),:] .+=  1.0 # fails
+                v[1,:] .+=  1.0 # succeeds
+                @test isapprox(sum(v-x), length(surfaceregions))
+            
+                # slice the other way
+                @test x[:,At("NATL")] isa VectorArray
+                v = deepcopy(x)
+                v[:,At("NATL")] = v[:,At("NATL")] .+ 1.0 
+                #v[:,At("NATL")] .+= 1.0  #fails
+                #v[SurfaceRegion=At("NATL")] = v[SurfaceRegion=At("NATL")] .+ 1.0 # fails, not recommended
+                @test isapprox(sum(v-x), length(years))
+
+                # dot multiply
+                @test v .* v isa VectorDimArray
+                
+            end 
+            
             # test that these vectors;matrices can be used in algebraic expressions
             y = vec(x)
             z = AlgebraicArray(y, dims(parent(x)))
             @test x == z
 
             # make the diagonal elements
-            v = ones(dims(parent(x)))
-            w = VectorArray(v) 
-
+            w = ones(dims(x), :VectorArray)
             D = Diagonal(w)
             DT = transpose(D)
             DTT = transpose(DT)
@@ -66,6 +105,7 @@
         
             q = R * x
             @test q isa VectorArray{T,N,DA} where T where N where DA <: DimensionalData.AbstractDimArray
+            @test q isa VectorDimArray
         
             y = R \ q
             @test isapprox(x, y, atol = 1e-8)
@@ -78,7 +118,15 @@
 
             # square matrices, matrix matrix right divide
             @test isapprox(Matrix(Q / S), Matrix(R), atol = 1e-8)
-        
+
+            # non-square multiplication
+            G = S[1:2,:]
+            rsize = (2,3)
+            dsize = (1,3)
+            G = randn(rsize,dsize,:MatrixArray) 
+            H = randn(dsize,rsize,:MatrixArray) 
+            Matrix(G * H)
+            
         end
 
         @testset "eigenstructure" begin 
@@ -91,7 +139,8 @@
 
             λ, V = eigen(S)
             F = eigen(S)
-
+            @test isapprox(Matrix(F), Matrix(S), atol= 1e-8)
+            
             Λ = Diagonal(λ)
             #G = real(V * Λ / V) # also works
             G = V * Λ / V
@@ -99,7 +148,7 @@
 
             # check matrix exponential
             @test endomorphic(S)
-            exp(S) # watch out for overflow!
+            @test exp(S) isa MatrixDimArray # watch out for overflow!
         end
     end
 end #"DimensionalData"

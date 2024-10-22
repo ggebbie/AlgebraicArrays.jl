@@ -11,7 +11,7 @@ Box models and other gridded datasets can be stored in concise arrays that are o
 
 # A proposed solution
 
-The Julia package `AlgebraicArrays.jl` aims to do the right thing to permit linear algebra operations and then returns the output in the same human-readable output that the investigator originally provided.
+The Julia package `AlgebraicArrays.jl` aims to do the right thing to permit linear algebra operations and then to return the output in the same human-readable output that the investigator originally provided.
 
 # Implementation
 
@@ -21,10 +21,9 @@ The Julia package `AlgebraicArrays.jl` aims to do the right thing to permit line
 
 Thus, a algebraic matrix is stored as an array of nested arrays, where the nesting permits an easy separation for the N dimensions that are in the domain space of the matrix versus the M dimensions that are in the range space. As these dimensions are encoded in the Type information, multiple dispatch is used to extend a series of methods for these new composite types.
 
-
 # Indexing
 
-In accordance with the CR decomposition of a matrix, here we choose to store the outer dimension as the columns of the matrix (i.e., the range space), and the inner dimensions correspond to the rows of the matrix (i.e., the domain space). With this choice, a word of caution is necessary. Accessing the ith row and jth column of `A` cannot be done with `A[i,j]`. Instead one must use nested indices that are in the reverse order of typical mathematical notation `A[j][i]`.
+In accordance with the CR decomposition of a matrix, here we choose to store the outer dimension as the columns of the matrix (i.e., the range space), and the inner dimensions correspond to the rows of the matrix (i.e., the domain space). With this choice, a word of caution is necessary. Accessing the ith row and jth column of `A` cannot be done with `A[i,j]`. There are two methods to achieve the same result. The first is to cast to a Matrix and then index: `Matrix(A)[i,j]`. Or one may use nested indices that are in the reverse order of typical mathematical notation `A[j][i]`.
 
 # Dimensional Data Extension
 
@@ -36,7 +35,7 @@ to load bonus code in the package-extending module `AlgebraicArraysDimensionalDa
 
 # Basic methods
 
-Methods include `*`, `exp`, `/`, and `\`.
+Methods include `*`, `exp`, `/`, `\`, `eigen`, and more.
 
 # Other packages
 

@@ -6,23 +6,29 @@ using ArraysOfArrays
 #using DimensionalData:@dim
 
 export VectorArray, MatrixArray, AlgebraicArray, Array
+export VectorDimArray, MatrixDimArray
 export parent, domainsize, rangesize, endomorphic
-export randn_VectorArray, randn_MatrixArray
+#export randn_VectorArray
+export randn_MatrixArray
 export # export Base methods
     size, show, vec, Matrix, *, first
 export # export more Base methods
-    display, parent, \, /, real, exp #, randn
+    display, parent, \, /, real, exp
+export # export more Base methods
+    randn, fill, ones, zeros
+export # export more Base methods
+    getindex, setindex!, BroadcastStyle, similar
+export # export more Base methods
+    IndexStyle, eachindex, iterate 
 export # export LinearAlgebra methods
     transpose, adjoint, eigen, Diagonal
     
-import Base: size, show, vec, Matrix, *, first, real , exp
-import Base: display, parent, \, /, Array #, randn 
+import Base: size, show, vec, Matrix
+import Base: +, -, *, first, real , exp
+import Base: display, parent, \, /, Array #, randn
+import Base: getindex, setindex!, BroadcastStyle, similar
+import Base: randn, fill, ones, zeros
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal
-
-#struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
-struct VectorArray{T,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
-    data:: A
-end
 
 """
     AlgebraicArray(A, rsize)
@@ -33,7 +39,6 @@ Construct a `VectorArray` or `MatrixArray` from an AbstractArray.
 - `A::AbstractArray`
 - `rsize`: size of range
 """
-#VectorArray(A::AbstractVector, rsize) = VectorArray(reshape(A,rsize))
 function AlgebraicArray(A::AbstractVector, rsize::Union{Int,NTuple{N,Int}}) where N
     M = prod(rsize)
     if M > 1
@@ -44,9 +49,14 @@ function AlgebraicArray(A::AbstractVector, rsize::Union{Int,NTuple{N,Int}}) wher
         return first(A)
     end
 end
-         
-parent(b::VectorArray) = b.data
 
+#struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
+struct VectorArray{T,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
+    data:: A
+end
+VectorArray(a::Number) = a # helpful for slices that aren't vectors anymore
+
+parent(b::VectorArray) = b.data
 function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
     #println(summary(b))
     show(io,mime,parent(b))
@@ -57,14 +67,103 @@ function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
 end
 Base.size(b::VectorArray) = size(parent(b))
 Base.vec(b::VectorArray) = vec(parent(b))
-Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
+
+Base.getindex(b::VectorArray, inds::Vararg) = VectorArray(getindex(parent(b), inds...))
+Base.getindex(b::VectorArray; kw...) = VectorArray(getindex(parent(b); kw...))
+
+#Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
+#Base.getindex(A::VectorArray, inds::Vararg) = VectorArray(A.data[inds...])
+#Base.dotview(b::VectorArray, inds::Vararg) = VectorArray(dotview(parent(b); inds...))
+#Base.dotview(b::VectorArray, inds::Vararg; kw...) = VectorArray(DimensionalData.dotview(parent(b), inds..., kw...))
+
+# function Base.getindex(b::VectorArray, inds...)
+#     #I = to_indices(parent(parent(b)), (inds...))
+#     tmp = getindex(parent(b), inds...)
+
+#     # check for any slices
+#     if (length(tmp) > 1) && !isa(tmp, VectorArray)
+#         return VectorArray(tmp)
+#     else
+#         return tmp
+#     end
+#end
+    #     @eval @propagate_inbounds function Base.$f(A::AbstractDimArray, i1::StandardIndices, i2::StandardIndices, Is::StandardIndices...)
+    #         I = to_indices(A, (i1, i2, Is...))
+    #         x = Base.$f(parent(A), I...)
+    #         all(i -> i isa Integer, I) ? x : rebuildsliced(Base.$f, A, x, I)
+    #     end
+    # end
+
+#Base.setindex!(b::VectorArray, val, inds::Vararg) = b.data[inds...] = val
+Base.setindex!(b::VectorArray, v, inds...) = setindex!(parent(b), v, inds...) 
+Base.setindex!(b::VectorArray, v; kw...) = setindex!(parent(b), v, kw...) 
+Base.iterate(b::VectorArray, args::Vararg) = iterate(parent(b), args...)
+
+# `VectorArray` is a subtype of AbstractVector which causes issues with eachindex
+# What other fundamental operators need adjustment?
+Base.eachindex(b::VectorArray) = eachindex(parent(b))
+
+Base.IndexStyle(b::VectorArray) = Base.IndexStyle(parent(b))
 rangesize(b::VectorArray) = size(parent(b))
 domainsize(b::VectorArray) = ()
-Base.real(b::VectorArray) = VectorArray(real(parent(b)))
-
+#Base.real(b::VectorArray) = VectorArray(real(parent(b)))
 Base.transpose(P::VectorArray) = AlgebraicArray( transpose(vec(P)), 1, rangesize(P))
 
-randn_VectorArray(rsize) = VectorArray(randn(rsize))
+#function Base.fill(val, rsize::Union{Int,NTuple{N,Int}}, type) where N
+function Base.fill(val, rsize, type) 
+    if type == :VectorArray
+        VectorArray(fill(val, rsize))
+    else
+        error("fill type not implemented")
+    end
+end
+
+#function Base.ones(rsize::Union{Int,NTuple{N,Int}}, type) where N
+function Base.ones(rsize, type) 
+    if type == :VectorArray
+        VectorArray(ones(rsize))
+    else
+        error("ones type not implemented")
+    end
+end
+
+#function Base.zeros(rsize::Union{Int,NTuple{N,Int}}, type) where N
+function Base.zeros(rsize, type)
+    if type == :VectorArray
+        VectorArray(zeros(rsize))
+    else
+        error("zeros type not implemented")
+    end
+end
+
+#function Base.randn(rsize::Union{Int,NTuple{N,Int}}, type) where N
+function Base.randn(rsize::Union{Int,NTuple{N,Int}},type::Symbol) where N
+    if type == :VectorArray
+        VectorArray(randn(rsize))
+    else
+        error("randn type not implemented")
+    end
+end
+
+# implement broadcast
+Base.BroadcastStyle(::Type{<:VectorArray}) = Broadcast.ArrayStyle{VectorArray}()
+
+function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{VectorArray}}, ::Type{ElType}) where ElType
+    # Scan the inputs
+    A = find_va(bc)
+    VectorArray(similar(Array{ElType}, axes(bc)))
+end
+function Base.similar(va::VectorArray{T}) where T
+    VectorArray(similar(Array{T}, axes(va)))
+end
+
+"`A = find_va(As)` returns the first VectorArray among the arguments."
+find_va(bc::Base.Broadcast.Broadcasted) = find_va(bc.args)
+find_va(args::Tuple) = find_va(find_va(args[1]), Base.tail(args))
+find_va(x) = x
+find_va(::Tuple{}) = nothing
+find_va(a::VectorArray, rest) = a
+find_va(::Any, rest) = find_va(rest)
 
 #struct MatrixArray{T<:Number,
 struct MatrixArray{T,
@@ -114,11 +213,23 @@ function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
     show(io,mime,Matrix(A))
 end
 Base.size(A::MatrixArray) = size(parent(A))
-Base.getindex(A::MatrixArray, inds...) = getindex(parent(A), inds...) # need to reverse order?
-Base.real(A::MatrixArray) = MatrixArray(real(parent(A)))
+Base.getindex(A::MatrixArray, inds::Vararg) = getindex(parent(A), inds...) # need to reverse order?
+Base.getindex(A::MatrixArray; kw...) = getindex(parent(A), kw...) 
+Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?
+Base.setindex!(A::MatrixArray, v; kw...) = setindex!(parent(A), v, kw...) 
 domainsize(A::MatrixArray) = size(parent(A))
 rangesize(A::MatrixArray) = size(first(parent(A)))
 endomorphic(A::MatrixArray) = isequal(rangesize(A), domainsize(A))
+
+function Base.real(A::MatrixArray)
+
+    # for j in eachindex(A)
+    #     A[j] = real.(A[j])
+    # end
+    # return A
+    #return MatrixArray(real(parent(A)))
+    return AlgebraicArray(real.(Matrix(A)),rangesize(A), domainsize(A))
+end
 
 """
 function Matrix(P::MatrixArray{T}) where T <: Number
@@ -157,7 +268,7 @@ Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domainsize(P)
 #     return VectorArray(c)
 # end
 
-# slightly faster as a one-liner
+# slightly faster version in a one-liner form
 Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangesize(A))
 Base.:*(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) * Matrix(B), rangesize(A), domainsize(B))
 Base.:*(a::VectorArray, B::MatrixArray) = AlgebraicArray(vec(a) * Matrix(B), rangesize(a), domainsize(B))
@@ -168,17 +279,30 @@ Base.:(\ )(A::MatrixArray, b::VectorArray) = AlgebraicArray(Matrix(A) \ vec(b), 
 Base.:(\ )(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) \ Matrix(B), domainsize(A), domainsize(B))
 #     (c isa Number) && (c = [c]) # useful snippet if one-linear fails in some cases
 
+Base.:+(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) + parent(B))
+Base.:+(a::VectorArray, b::VectorArray) = VectorArray(parent(a) + parent(b))
+
+Base.:-(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) - parent(B))
+Base.:-(a::VectorArray, b::VectorArray) = VectorArray(parent(a) - parent(b))
+Base.:-(A::MatrixArray) = -1 * A
+
 """
 function matrix right divide
 
 `A/B = ( B'\\A')'
 """
 Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangesize(A), rangesize(B))
+Base.:(/)(A::Union{VectorArray,MatrixArray}, b::Number) = (1/b) * A
 
-function randn_MatrixArray(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2}
-    # make an array of arrays
-    alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
-    return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+function randn(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}},type::Symbol) where {N1,N2}
+    if type == :MatrixArray
+        # make an array of arrays
+        alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
+        # warning, doesn't work for 3D+ arrays
+        return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+    else
+        error("randn not implemented for this type")
+    end
 end
 
 function LinearAlgebra.eigen(A::MatrixArray)

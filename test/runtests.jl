@@ -13,32 +13,63 @@ using Unitful
 
         rsize = (2,3)
 
+        @test fill(2.0,rsize,:VectorArray) isa VectorArray
+        @test ones(rsize,:VectorArray) isa VectorArray
+        @test randn(rsize,:VectorArray) isa VectorArray
+        
         # investigator makes a field with physical dimensions
         a = randn(rsize)
 
         # can immediately save it as a VectorArray for future calculations
         b = VectorArray(a)
 
+        ### slicing + broadcasting
+        @test b[1,:] isa VectorArray
+        @test b[1:2,:] isa VectorArray
+        @test b[:,2:end] isa VectorArray # end keyword not correct
+        v = deepcopy(b)
+        v[1,:] .+= 1.0 
+        @test isapprox( sum(v-b), rsize[2])
+
+        v = deepcopy(b)
+        v[1,:] = v[1,:] .+ 1.0 
+        @test isapprox(sum(v-b), rsize[2])
+
+        # iteration
+        @test eachindex(b) == Base.OneTo(prod(size(b)))
+        
         # internal algorithms must be able to turn into a vector, then bring it back to VectorArray
         c = AlgebraicArray(vec(a), rsize)
         @test a == c    
 
+        # test `similar`
+        @test similar(c) isa VectorArray
+
+        # custom broadcasting
+        @test all(abs.(c) .> 0)
+        
         # # make an array of arrays
         rsize = (1,2)
         dsize = (2,1)
-        D = randn_MatrixArray(rsize,dsize)
+        D = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize)
+
+        @test rangesize(D) == rsize
+        @test domainsize(D) == dsize
 
         # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
         # turn a MatrixArray back into an array of arrays
         E = AlgebraicArray(Matrix(D),rsize,dsize)
         @test D == E 
 
+        # not possible to broadcast to nested array
+        F = real(D)
+        
         @testset "*,+,-,/,\\ and all that" begin
 
             rsize = (3,4)
             dsize = (2,3)
 
-            q = VectorArray(randn(dsize))
+            q = randn(dsize,:VectorArray) #VectorArray(randn(dsize))
             qT = transpose(q)
              # same type than q, but type instability in code
             qTT = transpose(qT)
@@ -48,18 +79,19 @@ using Unitful
             @test qT * q ≥ 0
 
             # dot product is not correct
-            #@test q ⋅ q ≥ 0 
+            @test q ⋅ q ≥ 0 
+            @test qT * q == q ⋅ q 
 
             # symmetric outer product
             @test q * qT isa MatrixArray
 
             # asymmetric outer product
             usize = (1,2)
-            u = randn_VectorArray(usize)
+            u = randn(usize,:VectorArray) # formerly randn_VectorArray(usize)
             @test q * transpose(u) isa MatrixArray
 
             # another way to make a MatrixArray
-            P = randn_MatrixArray(rsize,dsize)
+            P = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize)
     
             # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
             @test (P*q) isa VectorArray
@@ -79,22 +111,28 @@ using Unitful
             rsize = (2,3)
             dsize = (2,3)
 
-            S = randn_MatrixArray(rsize,dsize)
-            R = randn_MatrixArray(rsize,dsize)
+            S = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize) 
+            R = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize)
             Q = R * S
             @test isapprox(Matrix(R \ Q), Matrix(S), atol = 1e-8)
-
+            
             # # square matrices, matrix matrix right divide
             @test isapprox(Matrix(Q / S), Matrix(R), atol = 1e-8)
 
+            # non-square multiplication
+            rsize = (2,3)
+            dsize = (1,3)
+            G = randn(rsize,dsize,:MatrixArray) 
+            H = randn(dsize,rsize,:MatrixArray) 
+            Matrix(G * H)
         end
 
         @testset "eigenstructure" begin
 
-            rsize = (1,3)
-            dsize = (1,3)
-            x = VectorArray(randn(rsize))
-            S = randn_MatrixArray(rsize,dsize)
+            rsize = (2,3)
+            dsize = (2,3)
+            x = randn(rsize,:VectorArray) #VectorArray(randn(rsize))
+            S = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize)
 
             vals, vecs = eigen(S)
             F = eigen(S)
@@ -103,7 +141,7 @@ using Unitful
             @test isapprox(Matrix(F), Matrix(S), atol= 1e-8)
 
             # # check matrix exponential
-            exp(S) # watch out for overflow!
+            @test exp(S) isa MatrixArray # watch out for overflow!
         end
     end
 
