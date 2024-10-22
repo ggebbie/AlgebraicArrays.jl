@@ -48,6 +48,14 @@ function LinearAlgebra.eigen(A::MatrixArray{T1,N,M,Matrix{Quantity{T2,S,V}}}) wh
     return Eigen(values, vectors)
 end
 
+# Unitful doesn't cover simple unitful eigenvalues either
+# this type signature should be restricted to uniform matrices
+function LinearAlgebra.eigen(A::AbstractMatrix{Quantity{T,S,V}}) where {T,S,V}
+    Aunit = unit(first(A))
+    F = eigen(ustrip.(A))
+    return Eigen(F.values*Aunit, F.vectors)
+end
+
 #AbstractMatrix(F::Eigen) = F.vectors * Diagonal(F.values) / F.vectors
 
 end # module
