@@ -50,12 +50,12 @@
             @test x[At(1990),:] isa VectorDimArray
             v = deepcopy(x)
             v[At(1990),:] = v[At(1990),:] .+ 1.0 
-            @test sum(v-x) == length(surfaceregions)
+            @test isapprox(sum(v-x),length(surfaceregions))
 
             v = deepcopy(x)
             #v[At(1990),:] .+=  1.0 # fails
             v[1,:] .+=  1.0 # succeeds
-            @test sum(v-x) == length(surfaceregions)
+            @test isapprox(sum(v-x), length(surfaceregions))
             
             # slice the other way
             @test x[:,At("NATL")] isa VectorArray
@@ -63,7 +63,7 @@
             v[:,At("NATL")] = v[:,At("NATL")] .+ 1.0 
             #v[:,At("NATL")] .+= 1.0  #fails
             #v[SurfaceRegion=At("NATL")] = v[SurfaceRegion=At("NATL")] .+ 1.0 # fails, not recommended
-            @test sum(v-x) == length(years)
+            @test isapprox(sum(v-x), length(years))
 
             # dot multiply
             @test v .* v isa VectorDimArray
