@@ -223,13 +223,13 @@ endomorphic(A::MatrixArray) = isequal(rangesize(A), domainsize(A))
 
 function Base.real(A::MatrixArray)
 
-    for j in eachindex(A)
-        A[j] = real.(A[j])
-    end
-    return A
-        #MatrixArray(real(parent(A)))
+    # for j in eachindex(A)
+    #     A[j] = real.(A[j])
+    # end
+    # return A
+    #return MatrixArray(real(parent(A)))
+    return AlgebraicArray(real.(Matrix(A)),rangesize(A), domainsize(A))
 end
-
 
 """
 function Matrix(P::MatrixArray{T}) where T <: Number
@@ -284,6 +284,7 @@ Base.:+(a::VectorArray, b::VectorArray) = VectorArray(parent(a) + parent(b))
 
 Base.:-(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) - parent(B))
 Base.:-(a::VectorArray, b::VectorArray) = VectorArray(parent(a) - parent(b))
+Base.:-(A::MatrixArray) = -1 * A
 
 """
 function matrix right divide
@@ -291,6 +292,7 @@ function matrix right divide
 `A/B = ( B'\\A')'
 """
 Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangesize(A), rangesize(B))
+Base.:(/)(A::Union{VectorArray,MatrixArray}, b::Number) = (1/b) * A
 
 # function randn_MatrixArray(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2}
 #     # make an array of arrays
