@@ -43,28 +43,43 @@
             @test ones(dims(x),:VectorArray) isa VectorDimArray
             @test randn(dims(x),:VectorArray) isa VectorDimArray
 
-            ### slicing/broacasting
-            @test x[Ti=At(1990)] isa VectorDimArray
+            @testset "inner and outer products" begin
+                xT = transpose(x)
+                @test xT isa MatrixDimArray
 
-            getindex(x,At(1990),:)
-            @test x[At(1990),:] isa VectorDimArray
-            v = deepcopy(x)
-            v[At(1990),:] = v[At(1990),:] .+ 1.0 
-            @test isapprox(sum(v-x),length(surfaceregions))
+                xTT = transpose(xT)
+                @test x == xTT
 
-            v = deepcopy(x)
-            #v[At(1990),:] .+=  1.0 # fails
-            v[1,:] .+=  1.0 # succeeds
-            @test isapprox(sum(v-x), length(surfaceregions))
+                # inner product
+                @test qT * q ≥ 0
+                @test q ⋅ q ≥ 0
+                @test qT * q == q ⋅ q 
+
+            end
             
-            # slice the other way
-            @test x[:,At("NATL")] isa VectorArray
-            v = deepcopy(x)
-            v[:,At("NATL")] = v[:,At("NATL")] .+ 1.0 
-            #v[:,At("NATL")] .+= 1.0  #fails
-            #v[SurfaceRegion=At("NATL")] = v[SurfaceRegion=At("NATL")] .+ 1.0 # fails, not recommended
-            @test isapprox(sum(v-x), length(years))
+            @testset "slicing and broadcasting" begin
+                @test x[Ti=At(1990)] isa VectorDimArray
 
+                getindex(x,At(1990),:)
+                @test x[At(1990),:] isa VectorDimArray
+                v = deepcopy(x)
+                v[At(1990),:] = v[At(1990),:] .+ 1.0 
+                @test isapprox(sum(v-x),length(surfaceregions))
+
+                v = deepcopy(x)
+                #v[At(1990),:] .+=  1.0 # fails
+                v[1,:] .+=  1.0 # succeeds
+                @test isapprox(sum(v-x), length(surfaceregions))
+            
+                # slice the other way
+                @test x[:,At("NATL")] isa VectorArray
+                v = deepcopy(x)
+                v[:,At("NATL")] = v[:,At("NATL")] .+ 1.0 
+                #v[:,At("NATL")] .+= 1.0  #fails
+                #v[SurfaceRegion=At("NATL")] = v[SurfaceRegion=At("NATL")] .+ 1.0 # fails, not recommended
+                @test isapprox(sum(v-x), length(years))
+
+            end 
             # dot multiply
             @test v .* v isa VectorDimArray
             
@@ -74,8 +89,6 @@
             @test x == z
 
             # make the diagonal elements
-            # v = ones(dims(parent(x)))
-            # w = VectorArray(v) 
             w = ones(dims(x), :VectorArray)
             D = Diagonal(w)
             DT = transpose(D)
@@ -105,9 +118,20 @@
 
             # square matrices, matrix matrix right divide
             @test isapprox(Matrix(Q / S), Matrix(R), atol = 1e-8)
-        
+
+            # non-square multiplication
+            G = S[1:2,:]
+            rsize = (2,3)
+            dsize = (1,3)
+            G = randn(rsize,dsize,:MatrixArray) 
+            H = randn(dsize,rsize,:MatrixArray) 
+            Matrix(G * H)
+
+
         end
 
+
+        
         @testset "eigenstructure" begin 
             x = source_water_solution(surfaceregions,
                 years,
@@ -118,11 +142,14 @@
 
             λ, V = eigen(S)
             F = eigen(S)
-
+            @test isapprox(Matrix(F), Matrix(S), atol= 1e-8)
+            
             Λ = Diagonal(λ)
             #G = real(V * Λ / V) # also works
             G = V * Λ / V
             @test isapprox(Matrix(S), Matrix(G), atol = 1e-8)
+
+
 
             # check matrix exponential
             @test endomorphic(S)

@@ -24,6 +24,8 @@ using Unitful
 
         ### slicing + broadcasting
         @test b[1,:] isa VectorArray
+        @test b[1:2,:] isa VectorArray
+        @test b[:,2:end] isa VectorArray # end keyword not correct
         v = deepcopy(b)
         v[1,:] .+= 1.0 
         @test isapprox( sum(v-b), rsize[2])
@@ -50,6 +52,9 @@ using Unitful
         dsize = (2,1)
         D = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize)
 
+        @test rangesize(D) == rsize
+        @test domainsize(D) == dsize
+
         # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
         # turn a MatrixArray back into an array of arrays
         E = AlgebraicArray(Matrix(D),rsize,dsize)
@@ -73,7 +78,8 @@ using Unitful
             @test qT * q ≥ 0
 
             # dot product is not correct
-            #@test q ⋅ q ≥ 0 
+            @test q ⋅ q ≥ 0 
+            @test qT * q == q ⋅ q 
 
             # symmetric outer product
             @test q * qT isa MatrixArray
@@ -108,10 +114,16 @@ using Unitful
             R = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize)
             Q = R * S
             @test isapprox(Matrix(R \ Q), Matrix(S), atol = 1e-8)
-
+            
             # # square matrices, matrix matrix right divide
             @test isapprox(Matrix(Q / S), Matrix(R), atol = 1e-8)
 
+            # non-square multiplication
+            rsize = (2,3)
+            dsize = (1,3)
+            G = randn(rsize,dsize,:MatrixArray) 
+            H = randn(dsize,rsize,:MatrixArray) 
+            Matrix(G * H)
         end
 
         @testset "eigenstructure" begin

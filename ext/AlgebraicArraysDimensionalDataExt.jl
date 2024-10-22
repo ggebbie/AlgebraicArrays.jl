@@ -20,10 +20,12 @@ VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.Abstract
 
 #VectorDimArray(array,rdims) = VectorArray(DimArray(array,rdims))
     
-rangesize(A::Union{VectorDimArray,MatrixDimArray}) = dims(parent(A))
+rangesize(A::VectorDimArray) = dims(parent(A))
+rangesize(A::MatrixDimArray) = dims(first(parent(A)))
 
+domainsize(A::MatrixDimArray) = dims(parent(A))
 domainsize(b::VectorDimArray) = ()
-domainsize(A::MatrixDimArray) = dims(first(parent(A)))
+
 DimensionalData.dims(A::VectorDimArray) = dims(parent(A))
 
 # implement broadcast
@@ -89,7 +91,9 @@ function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Uni
 
     if M > 1
         P = Array{DimArray{T,N}}(undef,dsize)
-        for j in 1:M 
+        for j in 1:M
+            println("j")
+            println(j)
             P[j] = DimArray(reshape(A[:,j],rsize),rdims)
         end
         return MatrixArray(DimArray(P,ddims))
