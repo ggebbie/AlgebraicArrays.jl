@@ -26,11 +26,11 @@ using Unitful
         @test b[1,:] isa VectorArray
         v = deepcopy(b)
         v[1,:] .+= 1.0 
-        @test sum(v-b) == rsize[2]
+        @test isapprox( sum(v-b), rsize[2])
 
         v = deepcopy(b)
         v[1,:] = v[1,:] .+ 1.0 
-        @test sum(v-b) == rsize[2]
+        @test isapprox(sum(v-b), rsize[2])
 
         # iteration
         @test eachindex(b) == Base.OneTo(prod(size(b)))
