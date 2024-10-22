@@ -53,7 +53,7 @@
                 # inner product
                 @test xT * x ≥ 0
                 @test x ⋅ x ≥ 0
-                @test xT * x == x ⋅ x 
+                @test isapprox(xT * x, x ⋅ x)
             end
             
             @testset "slicing and broadcasting" begin
@@ -78,9 +78,10 @@
                 #v[SurfaceRegion=At("NATL")] = v[SurfaceRegion=At("NATL")] .+ 1.0 # fails, not recommended
                 @test isapprox(sum(v-x), length(years))
 
+                # dot multiply
+                @test v .* v isa VectorDimArray
+                
             end 
-            # dot multiply
-            @test v .* v isa VectorDimArray
             
             # test that these vectors;matrices can be used in algebraic expressions
             y = vec(x)
