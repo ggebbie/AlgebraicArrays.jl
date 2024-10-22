@@ -92,8 +92,6 @@ function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Uni
     if M > 1
         P = Array{DimArray{T,N}}(undef,dsize)
         for j in 1:M
-            println("j")
-            println(j)
             P[j] = DimArray(reshape(A[:,j],rsize),rdims)
         end
         return MatrixArray(DimArray(P,ddims))
