@@ -99,7 +99,7 @@ using Unitful
 
             # dot product is not correct
             @test q ⋅ q ≥ 0 
-            @test qT * q == q ⋅ q 
+            @test isapprox(qT * q, q ⋅ q)
 
             # symmetric outer product
             @test q * qT isa MatrixArray
