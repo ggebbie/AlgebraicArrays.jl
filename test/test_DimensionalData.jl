@@ -102,7 +102,42 @@
             RTT = transpose(RT)
             @test R == RTT
             @test R ≠ RT
-        
+
+            @testset "matrix slicing" begin
+                @test R[1] isa VectorDimArray
+                @test R[2,1] isa VectorDimArray
+                @test R[1:2,1] isa MatrixDimArray
+                @test R[1:2] isa MatrixDimArray
+
+                R2 = deepcopy(R)
+                R2[2,1] .+= 1.0 
+                @test all(isapprox.(sum(R2-R), 1.0))
+
+                # iteration uses CartesianIndices not linear indices, would need to set `iterate` function 
+                # @test eachindex(D) == Base.OneTo(prod(size(b)))
+
+                @test R[2,1][1,1] isa Number
+                @test R[:][1,1] isa VectorDimArray
+                @test rowvector(R,1,1) isa MatrixDimArray
+
+                @test R[At(1990),At("NATL")] isa VectorDimArray
+                @test R[At(1990:1991),At("NATL")] isa MatrixDimArray
+                @test R[At(1990:1991),:] isa MatrixDimArray
+
+                R2 = deepcopy(R)
+                #R2[At(1990),At("NATL")] .+= 1.0 #fails
+                parent(R2)[At(1990),At("NATL")] .+= 1.0 #workaround 
+                @test all(isapprox.(sum(R2-R), 1.0))
+
+                # iteration uses CartesianIndices not linear indices, would need to set `iterate` function 
+                # @test eachindex(D) == Base.OneTo(prod(size(b)))
+
+                @test R[At(1990),At("NATL")][At(1990),At("NATL")] isa Number
+                #@test R[:][At(1990),At("NATL")] isa VectorDimArray # fails, upstream DD issue?
+                @test R[:,:][At(1990),At("NATL")] isa VectorDimArray
+                @test rowvector(R,At(1990),At("NATL")) isa MatrixDimArray
+            end
+            
             q = R * x
             @test q isa VectorArray{T,N,DA} where T where N where DA <: DimensionalData.AbstractDimArray
             @test q isa VectorDimArray

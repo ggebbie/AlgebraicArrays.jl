@@ -2,14 +2,10 @@ module AlgebraicArrays
 
 using LinearAlgebra
 using ArraysOfArrays
-#using DimensionalData
-#using DimensionalData:@dim
 
 export VectorArray, MatrixArray, AlgebraicArray, Array
 export VectorDimArray, MatrixDimArray
-export parent, domainsize, rangesize, endomorphic
-#export randn_VectorArray
-export randn_MatrixArray
+export parent, domainsize, rangesize, endomorphic, rowvector
 export # export Base methods
     size, show, vec, Matrix, *, first
 export # export more Base methods
@@ -49,6 +45,8 @@ function AlgebraicArray(A::AbstractVector, rsize::Union{Int,NTuple{N,Int}}) wher
         return first(A)
     end
 end
+# unknown whether `B` is a VectorArray or MatrixArray.
+AlgebraicArray(B::A) where {T,N,A<:AbstractArray{T,N}} = VectorArray(B)
 
 #struct VectorArray{T<:Number,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
 struct VectorArray{T,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
@@ -174,10 +172,13 @@ struct MatrixArray{T,
     data::C
 end
 
+# unknown whether `B` is a VectorArray or MatrixArray.
+AlgebraicArray(B::C) where {T,M,N,R<:AbstractArray{T,M},C<:AbstractArray{R,N}} = MatrixArray(B)
+
 """
     AlgebraicArray(A,rsize,dsize)
 
-Construct a `VectoArray` or `MatrixArray` from an AbstractArray.
+Construct a `VectorArray` or `MatrixArray` from an AbstractArray.
 
 # Arguments
 - `A::AbstractArray`
@@ -213,7 +214,15 @@ function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
     show(io,mime,Matrix(A))
 end
 Base.size(A::MatrixArray) = size(parent(A))
-Base.getindex(A::MatrixArray, inds::Vararg) = getindex(parent(A), inds...) # need to reverse order?
+
+function Base.getindex(A::MatrixArray, inds::Vararg)
+    Aslice = getindex(parent(A), inds...)
+    return AlgebraicArray(Aslice)
+end
+
+rowvector(A::MatrixArray, rowindex::Vararg) = transpose(A[:][rowindex...])
+
+    
 Base.getindex(A::MatrixArray; kw...) = getindex(parent(A), kw...) 
 Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?
 Base.setindex!(A::MatrixArray, v; kw...) = setindex!(parent(A), v, kw...) 
@@ -232,9 +241,9 @@ function Base.real(A::MatrixArray)
 end
 
 """
-function Matrix(P::MatrixArray{T}) where T <: Number
+function Matrix(P::MatrixArray{T}) where T
 """
-function Matrix(P::MatrixArray{T}) where T #<: Number
+function Matrix(P::MatrixArray{T}) where T
     N = length(P) # number of columns/ outer dims
     M = length(first(P)) # number of rows, take first inner element as example
 

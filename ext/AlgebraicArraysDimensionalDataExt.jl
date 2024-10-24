@@ -5,9 +5,9 @@ using DimensionalData
 using DimensionalData:@dim
 using LinearAlgebra
 
-export VectorDimArray, MatrixDimArray, dims
+export VectorDimArray, MatrixDimArray, dims, rowvector, AlgebraicArray
 
-import AlgebraicArrays: rangesize, domainsize, AlgebraicArray
+import AlgebraicArrays: rangesize, domainsize, AlgebraicArray, rowvector
 import LinearAlgebra: eigen
 import Base: exp, transpose
 import DimensionalData: dims
@@ -128,5 +128,8 @@ function Base.exp(A::MatrixDimArray)
     eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually
     return AlgebraicArray(exp(Matrix(A)),rangesize(A),domainsize(A)) # wrap with same labels and format as A
 end
+
+rowvector(A::MatrixDimArray{T,M,N}, rowindex::Vararg) where {T,M,N} = transpose(A[fill(:,N)...][rowindex...])
+#rowvector(A::MatrixDimArray, rowindex::Vararg) = transpose(A[fill(:,N)...][rowindex...])
 
 end #module
