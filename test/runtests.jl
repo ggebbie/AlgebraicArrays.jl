@@ -23,20 +23,21 @@ using Unitful
         # can immediately save it as a VectorArray for future calculations
         b = VectorArray(a)
 
-        ### slicing + broadcasting
-        @test b[1,:] isa VectorArray
-        @test b[1:2,:] isa VectorArray
-        @test b[:,2:end] isa VectorArray # end keyword not correct
-        v = deepcopy(b)
-        v[1,:] .+= 1.0 
-        @test isapprox( sum(v-b), rsize[2])
+        @testset "vector broadcasting and slicing" begin
+            @test b[1,:] isa VectorArray
+            @test b[1:2,:] isa VectorArray
+            @test b[:,2:end] isa VectorArray # end keyword not correct
+            v = deepcopy(b)
+            v[1,:] .+= 1.0 
+            @test isapprox( sum(v-b), rsize[2])
 
-        v = deepcopy(b)
-        v[1,:] = v[1,:] .+ 1.0 
-        @test isapprox(sum(v-b), rsize[2])
+            v = deepcopy(b)
+            v[1,:] = v[1,:] .+ 1.0 
+            @test isapprox(sum(v-b), rsize[2])
 
-        # iteration
-        @test eachindex(b) == Base.OneTo(prod(size(b)))
+            # iteration
+            @test eachindex(b) == Base.OneTo(prod(size(b)))
+        end
         
         # internal algorithms must be able to turn into a vector, then bring it back to VectorArray
         c = AlgebraicArray(vec(a), rsize)
@@ -61,6 +62,24 @@ using Unitful
         E = AlgebraicArray(Matrix(D),rsize,dsize)
         @test D == E 
 
+        @testset "matrix slicing" begin
+            @test D[1] isa VectorArray
+            @test D[2,1] isa VectorArray
+            @test D[1:2,1] isa MatrixArray
+            @test D[1:2] isa MatrixArray
+
+            D2 = deepcopy(D)
+            D2[2,1] .+= 1.0 
+            @test all(isapprox.(sum(D2-D), 1.0))
+
+            # iteration uses CartesianIndices not linear indices, would need to set `iterate` function 
+            # @test eachindex(D) == Base.OneTo(prod(size(b)))
+
+            @test D[2,1][1,1] isa Number
+            @test D[:][1,1] isa VectorArray
+            @test rowvector(D,1,1) isa MatrixArray
+        end
+        
         # not possible to broadcast to nested array
         F = real(D)
         
