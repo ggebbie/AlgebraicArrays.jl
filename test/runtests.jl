@@ -6,7 +6,7 @@ using ArraysOfArrays
 using DimensionalData
 using DimensionalData:@dim
 using Unitful
-using UnitfulLinearAlgebra
+#using UnitfulLinearAlgebra
 
 # fixed parameters
 @dim YearCE "years Common Era"
