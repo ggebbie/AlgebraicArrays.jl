@@ -129,7 +129,12 @@ function Base.exp(A::MatrixDimArray)
     return AlgebraicArray(exp(Matrix(A)),rangedims(A),domaindims(A)) # wrap with same labels and format as A
 end
 
-rowvector(A::MatrixDimArray{T,M,N}, rowindex::Vararg) where {T,M,N} = transpose(A[fill(:,N)...][rowindex...])
+#rowvector(A::MatrixDimArray{T,M,N}, rowindex::Vararg) where {T,M,N} = transpose(A[fill(:,N)...][rowindex...])
 #rowvector(A::MatrixDimArray, rowindex::Vararg) = transpose(A[fill(:,N)...][rowindex...])
+function rowvector(A::MatrixDimArray{T,M,N}, rowindex::Vararg) where {T,M,N}
+    DA = DimArray([A[j][rowindex...] for j in eachindex(A)],domaindims(A))
+    return transpose(VectorArray(DA))
+end
+
 
 end #module

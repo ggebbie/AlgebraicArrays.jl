@@ -220,8 +220,7 @@ function Base.getindex(A::MatrixArray, inds::Vararg)
     return AlgebraicArray(Aslice)
 end
 
-rowvector(A::MatrixArray, rowindex::Vararg) = transpose(A[:][rowindex...])
-
+rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowindex...] for j in eachindex(A)]))
     
 Base.getindex(A::MatrixArray; kw...) = getindex(parent(A), kw...) 
 Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?

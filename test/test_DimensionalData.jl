@@ -134,8 +134,14 @@
 
                 @test R[At(1990),At("NATL")][At(1990),At("NATL")] isa Number
                 #@test R[:][At(1990),At("NATL")] isa VectorDimArray # fails, upstream DD issue?
-                @test R[:,:][At(1990),At("NATL")] isa VectorDimArray
                 @test rowvector(R,At(1990),At("NATL")) isa MatrixDimArray
+
+                # setindex!
+                R[At(1990),At("NATL")][At(1990),At("NATL")] = 0.0
+                # set columns to be equal
+                #parent(R)[At(1990),At("NATL")] .= R[At(1990),At("AABW")]  # fails, but works with numerical indices
+                @test all(isapprox.(transpose(Matrix(R)[1,:]), Matrix(rowvector(R,1))))
+
             end
             
             q = R * x
