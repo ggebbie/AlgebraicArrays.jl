@@ -42,7 +42,7 @@
     @test D == DTT
 
     R = AlgebraicArray(rand(length(x),length(x)),
-        rangesize(x), rangesize(x))*u"mol"    
+        rangedims(x), rangedims(x))*u"mol"    
     RT = transpose(R)
     RTT = transpose(RT)
     @test R == RTT

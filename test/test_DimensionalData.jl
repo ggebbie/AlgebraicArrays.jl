@@ -97,7 +97,7 @@
             @test D == DTT
 
             R = AlgebraicArray(rand(length(x),length(x)),
-                rangesize(x), rangesize(x))    
+                rangedims(x), rangedims(x))    
             RT = transpose(R)
             RTT = transpose(RT)
             @test R == RTT
@@ -146,7 +146,7 @@
             @test isapprox(x, y, atol = 1e-8)
 
             S = AlgebraicArray(rand(length(x),length(x)),
-                rangesize(x), rangesize(x))    
+                rangedims(x), rangedims(x))    
             Q = R * S
             U = R \ Q 
             @test isapprox(Matrix(U), Matrix(S), atol = 1e-8)
@@ -170,7 +170,7 @@
                 statevariables)
 
             S = AlgebraicArray(rand(length(x),length(x)),
-                rangesize(x), rangesize(x))    
+                rangedims(x), rangedims(x))    
 
             λ, V = eigen(S)
             F = eigen(S)

@@ -7,7 +7,7 @@ using LinearAlgebra
 
 export VectorDimArray, MatrixDimArray, dims, rowvector, AlgebraicArray
 
-import AlgebraicArrays: rangesize, domainsize, AlgebraicArray, rowvector
+import AlgebraicArrays: rangedims, domaindims, AlgebraicArray, rowvector
 import LinearAlgebra: eigen
 import Base: exp, transpose
 import DimensionalData: dims
@@ -20,11 +20,11 @@ VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.Abstract
 
 #VectorDimArray(array,rdims) = VectorArray(DimArray(array,rdims))
     
-rangesize(A::VectorDimArray) = dims(parent(A))
-rangesize(A::MatrixDimArray) = dims(first(parent(A)))
+rangedims(A::VectorDimArray) = dims(parent(A))
+rangedims(A::MatrixDimArray) = dims(first(parent(A)))
 
-domainsize(A::MatrixDimArray) = dims(parent(A))
-domainsize(b::VectorDimArray) = ()
+domaindims(A::MatrixDimArray) = dims(parent(A))
+domaindims(b::VectorDimArray) = ()
 
 DimensionalData.dims(A::VectorDimArray) = dims(parent(A))
 
@@ -104,7 +104,7 @@ function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Uni
     end
 end
 
-Base.transpose(b::VectorDimArray) = AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangesize(b))
+Base.transpose(b::VectorDimArray) = AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangedims(b))
 
 # undefined resource
 # function Base.similar(mda::MatrixDimArray{T}) where T
@@ -116,7 +116,7 @@ function  LinearAlgebra.eigen(A::MatrixDimArray)
     #dsize = length(F.values)
     eigen_dims = Eigenmode(1:length(F.values))
 
-    rsize = rangesize(A)
+    rsize = rangedims(A)
     values = AlgebraicArray(F.values, eigen_dims)
     vectors = AlgebraicArray(F.vectors,rsize,eigen_dims) 
     return Eigen(values, vectors)
@@ -126,7 +126,7 @@ function Base.exp(A::MatrixDimArray)
     # A must be endomorphic (check type signature someday)
     !endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
     eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually
-    return AlgebraicArray(exp(Matrix(A)),rangesize(A),domainsize(A)) # wrap with same labels and format as A
+    return AlgebraicArray(exp(Matrix(A)),rangedims(A),domaindims(A)) # wrap with same labels and format as A
 end
 
 rowvector(A::MatrixDimArray{T,M,N}, rowindex::Vararg) where {T,M,N} = transpose(A[fill(:,N)...][rowindex...])

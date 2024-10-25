@@ -54,8 +54,8 @@ using Unitful
         dsize = (2,1)
         D = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize)
 
-        @test rangesize(D) == rsize
-        @test domainsize(D) == dsize
+        @test rangedims(D) == rsize
+        @test domaindims(D) == dsize
 
         # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
         # turn a MatrixArray back into an array of arrays

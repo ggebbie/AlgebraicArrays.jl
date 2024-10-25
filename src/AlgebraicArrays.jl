@@ -5,7 +5,7 @@ using ArraysOfArrays
 
 export VectorArray, MatrixArray, AlgebraicArray, Array
 export VectorDimArray, MatrixDimArray
-export parent, domainsize, rangesize, endomorphic, rowvector
+export parent, domaindims, rangedims, endomorphic, rowvector
 export # export Base methods
     size, show, vec, Matrix, *, first
 export # export more Base methods
@@ -102,10 +102,10 @@ Base.iterate(b::VectorArray, args::Vararg) = iterate(parent(b), args...)
 Base.eachindex(b::VectorArray) = eachindex(parent(b))
 
 Base.IndexStyle(b::VectorArray) = Base.IndexStyle(parent(b))
-rangesize(b::VectorArray) = size(parent(b))
-domainsize(b::VectorArray) = ()
+rangedims(b::VectorArray) = size(parent(b))
+domaindims(b::VectorArray) = ()
 #Base.real(b::VectorArray) = VectorArray(real(parent(b)))
-Base.transpose(P::VectorArray) = AlgebraicArray( transpose(vec(P)), 1, rangesize(P))
+Base.transpose(P::VectorArray) = AlgebraicArray( transpose(vec(P)), 1, rangedims(P))
 
 #function Base.fill(val, rsize::Union{Int,NTuple{N,Int}}, type) where N
 function Base.fill(val, rsize, type) 
@@ -226,9 +226,9 @@ rowvector(A::MatrixArray, rowindex::Vararg) = transpose(A[:][rowindex...])
 Base.getindex(A::MatrixArray; kw...) = getindex(parent(A), kw...) 
 Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?
 Base.setindex!(A::MatrixArray, v; kw...) = setindex!(parent(A), v, kw...) 
-domainsize(A::MatrixArray) = size(parent(A))
-rangesize(A::MatrixArray) = size(first(parent(A)))
-endomorphic(A::MatrixArray) = isequal(rangesize(A), domainsize(A))
+domaindims(A::MatrixArray) = size(parent(A))
+rangedims(A::MatrixArray) = size(first(parent(A)))
+endomorphic(A::MatrixArray) = isequal(rangedims(A), domaindims(A))
 
 function Base.real(A::MatrixArray)
 
@@ -237,7 +237,7 @@ function Base.real(A::MatrixArray)
     # end
     # return A
     #return MatrixArray(real(parent(A)))
-    return AlgebraicArray(real.(Matrix(A)),rangesize(A), domainsize(A))
+    return AlgebraicArray(real.(Matrix(A)),rangedims(A), domaindims(A))
 end
 
 """
@@ -265,9 +265,9 @@ end
 Array(P::MatrixArray) = Matrix(P)
 
 # a pattern for any function
-Base.transpose(P::MatrixArray) = AlgebraicArray( transpose(Matrix(P)), domainsize(P), rangesize(P))
+Base.transpose(P::MatrixArray) = AlgebraicArray( transpose(Matrix(P)), domaindims(P), rangedims(P))
 
-Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domainsize(P), rangesize(P))
+Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domaindims(P), rangedims(P))
 
 # function Base.:*(A::MatrixArray, b::VectorArray)
 #     c = zero(first(A))
@@ -278,14 +278,14 @@ Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domainsize(P)
 # end
 
 # slightly faster version in a one-liner form
-Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangesize(A))
-Base.:*(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) * Matrix(B), rangesize(A), domainsize(B))
-Base.:*(a::VectorArray, B::MatrixArray) = AlgebraicArray(vec(a) * Matrix(B), rangesize(a), domainsize(B))
-Base.:*(a::Number, B::MatrixArray) = AlgebraicArray(a * Matrix(B), rangesize(B), domainsize(B))
+Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangedims(A))
+Base.:*(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) * Matrix(B), rangedims(A), domaindims(B))
+Base.:*(a::VectorArray, B::MatrixArray) = AlgebraicArray(vec(a) * Matrix(B), rangedims(a), domaindims(B))
+Base.:*(a::Number, B::MatrixArray) = AlgebraicArray(a * Matrix(B), rangedims(B), domaindims(B))
 Base.:*(B::MatrixArray, a::Number) = a * B
 
-Base.:(\ )(A::MatrixArray, b::VectorArray) = AlgebraicArray(Matrix(A) \ vec(b), domainsize(A))
-Base.:(\ )(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) \ Matrix(B), domainsize(A), domainsize(B))
+Base.:(\ )(A::MatrixArray, b::VectorArray) = AlgebraicArray(Matrix(A) \ vec(b), domaindims(A))
+Base.:(\ )(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) \ Matrix(B), domaindims(A), domaindims(B))
 #     (c isa Number) && (c = [c]) # useful snippet if one-linear fails in some cases
 
 Base.:+(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) + parent(B))
@@ -300,7 +300,7 @@ function matrix right divide
 
 `A/B = ( B'\\A')'
 """
-Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangesize(A), rangesize(B))
+Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangedims(A), rangedims(B))
 Base.:(/)(A::Union{VectorArray,MatrixArray}, b::Number) = (1/b) * A
 
 function randn(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}},type::Symbol) where {N1,N2}
@@ -317,19 +317,19 @@ end
 function LinearAlgebra.eigen(A::MatrixArray)
     F = eigen(Matrix(A))
     dsize = length(F.values)
-    rsize = rangesize(A)
+    rsize = rangedims(A)
     values = AlgebraicArray(F.values,dsize)
     vectors = AlgebraicArray(F.vectors,rsize,dsize) 
     return Eigen(values, vectors)
 end
 
-Diagonal(a::VectorArray) = AlgebraicArray(Diagonal(vec(a)), rangesize(a), rangesize(a))
+Diagonal(a::VectorArray) = AlgebraicArray(Diagonal(vec(a)), rangedims(a), rangedims(a))
 
 function exp(A::MatrixArray)
     # A must be endomorphic (check type signature someday)
     !endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
     eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually
-    return AlgebraicArray(exp(Matrix(A)),rangesize(A),domainsize(A)) # wrap with same labels and format as A
+    return AlgebraicArray(exp(Matrix(A)),rangedims(A),domaindims(A)) # wrap with same labels and format as A
 end
 
 end # module AlgebraicArrays
