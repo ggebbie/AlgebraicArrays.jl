@@ -8,8 +8,8 @@ import Base: *, (\)
 import Unitful: ustrip, unit
 import LinearAlgebra: eigen
 
-Base.:*(a::Unitful.Units, b::VectorArray) = AlgebraicArray(a * vec(b), rangesize(b))
-Base.:*(a::Unitful.Units, B::MatrixArray) = AlgebraicArray(a * Matrix(B), rangesize(B), domainsize(B))
+Base.:*(a::Unitful.Units, b::VectorArray) = AlgebraicArray(a * vec(b), rangedims(b))
+Base.:*(a::Unitful.Units, B::MatrixArray) = AlgebraicArray(a * Matrix(B), rangedims(B), domaindims(B))
 Base.:*(B::Union{VectorArray,MatrixArray}, a::Unitful.Units) = a * B
 
 # Unitful doesn't handle matrix left divide between Quantity and non-Quantity
@@ -42,14 +42,14 @@ function Base.:(/)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat{
 end
 
 # caution: dot broadcast added here on rhs, not lhs
-Unitful.ustrip(A::MatrixArray) = AlgebraicArray(ustrip.(Matrix(A)), rangesize(A), domainsize(A))
+Unitful.ustrip(A::MatrixArray) = AlgebraicArray(ustrip.(Matrix(A)), rangedims(A), domaindims(A))
 
 function LinearAlgebra.eigen(A::MatrixArray{T1,N,M,Matrix{Quantity{T2,S,V}}}) where {T1,T2,N,M,S,V}
 
     Aunit = unit(first(first(A)))
     F = eigen(ustrip.(Matrix(A)))
     dsize = length(F.values)
-    rsize = rangesize(A)
+    rsize = rangedims(A)
     values = AlgebraicArray(F.values*Aunit,dsize)
     vectors = AlgebraicArray(F.vectors,rsize,dsize) 
     return Eigen(values, vectors)

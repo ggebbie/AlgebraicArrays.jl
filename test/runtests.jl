@@ -52,10 +52,10 @@ using Unitful
         # # make an array of arrays
         rsize = (1,2)
         dsize = (2,1)
-        D = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize)
+        D = randn(rsize,dsize,:MatrixArray)
 
-        @test rangesize(D) == rsize
-        @test domainsize(D) == dsize
+        @test rangedims(D) == rsize
+        @test domaindims(D) == dsize
 
         # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
         # turn a MatrixArray back into an array of arrays
@@ -76,8 +76,16 @@ using Unitful
             # @test eachindex(D) == Base.OneTo(prod(size(b)))
 
             @test D[2,1][1,1] isa Number
-            @test D[:][1,1] isa VectorArray
             @test rowvector(D,1,1) isa MatrixArray
+            @test all(isapprox.(transpose(Matrix(D)[1,:]), Matrix(rowvector(D,1,1))))
+            
+            # setindex!
+            D[2,1][1,1] = 0.0
+            # set columns to be equal
+            D[2,1] .= D[1,1]
+            # set rows to be equal
+            #rowvector(D,1) .= 0.0 # fails, use comprehension instead
+            
         end
         
         # not possible to broadcast to nested array
