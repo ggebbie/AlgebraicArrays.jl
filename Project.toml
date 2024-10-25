@@ -9,14 +9,16 @@ DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+UnitfulLinearAlgebra = "c14bd059-d406-4571-8f61-9bd20e53c30b"
 
 [extensions]
 AlgebraicArraysDimensionalDataExt = ["DimensionalData"]
 AlgebraicArraysUnitfulExt = ["Unitful"]
 
 [compat]
-DimensionalData = "0.28.3"
+DimensionalData = "0.27"
 Unitful = "1.21.0"
+UnitfulLinearAlgebra = "0.3.8"
 julia = "1.10"
 
 [extras]

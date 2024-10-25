@@ -124,7 +124,7 @@ end
 
 function Base.exp(A::MatrixDimArray)
     # A must be endomorphic (check type signature someday)
-    !endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
+    !AlgebraicArrays.endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
     eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually
     return AlgebraicArray(exp(Matrix(A)),rangedims(A),domaindims(A)) # wrap with same labels and format as A
 end

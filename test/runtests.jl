@@ -6,6 +6,7 @@ using ArraysOfArrays
 using DimensionalData
 using DimensionalData:@dim
 using Unitful
+using UnitfulLinearAlgebra
 
 @testset "AlgebraicArrays.jl" begin
 

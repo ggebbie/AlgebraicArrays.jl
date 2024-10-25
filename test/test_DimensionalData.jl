@@ -188,7 +188,7 @@
             @test isapprox(Matrix(S), Matrix(G), atol = 1e-8)
 
             # check matrix exponential
-            @test endomorphic(S)
+            @test AlgebraicArrays.endomorphic(S)
             @test exp(S) isa MatrixDimArray # watch out for overflow!
         end
     end
