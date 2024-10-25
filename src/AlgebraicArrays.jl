@@ -265,9 +265,10 @@ Array(P::MatrixArray) = Matrix(P)
 
 # a pattern for any function
 Base.transpose(P::MatrixArray) = AlgebraicArray( transpose(Matrix(P)), domaindims(P), rangedims(P))
-
 Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domaindims(P), rangedims(P))
+Base.similar(P::MatrixArray) = AlgebraicArray( similar(Matrix(P)), rangedims(P), domaindims(P))
 
+# CR format for multiplication
 # function Base.:*(A::MatrixArray, b::VectorArray)
 #     c = zero(first(A))
 #     for j in eachindex(A)
@@ -280,11 +281,14 @@ Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domaindims(P)
 Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangedims(A))
 Base.:*(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) * Matrix(B), rangedims(A), domaindims(B))
 Base.:*(a::VectorArray, B::MatrixArray) = AlgebraicArray(vec(a) * Matrix(B), rangedims(a), domaindims(B))
+Base.:*(a::Number, b::VectorArray) = AlgebraicArray(a * vec(b), rangedims(b))
+Base.:*(b::VectorArray, a::Number) = a * b
 Base.:*(a::Number, B::MatrixArray) = AlgebraicArray(a * Matrix(B), rangedims(B), domaindims(B))
 Base.:*(B::MatrixArray, a::Number) = a * B
 
 Base.:(\ )(A::MatrixArray, b::VectorArray) = AlgebraicArray(Matrix(A) \ vec(b), domaindims(A))
 Base.:(\ )(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) \ Matrix(B), domaindims(A), domaindims(B))
+Base.:(/)(A::MatrixArray, b::Number) = AlgebraicArray(Matrix(A)/b, rangedims(A), domaindims(A))
 #     (c isa Number) && (c = [c]) # useful snippet if one-linear fails in some cases
 
 Base.:+(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) + parent(B))
@@ -326,7 +330,7 @@ Diagonal(a::VectorArray) = AlgebraicArray(Diagonal(vec(a)), rangedims(a), ranged
 
 function exp(A::MatrixArray)
     # A must be endomorphic (check type signature someday)
-    !endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
+    !AlgebraicArrays.endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
     eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually
     return AlgebraicArray(exp(Matrix(A)),rangedims(A),domaindims(A)) # wrap with same labels and format as A
 end
