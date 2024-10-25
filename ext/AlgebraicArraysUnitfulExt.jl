@@ -40,6 +40,7 @@ function Base.:(/)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat{
     Bunit = unit(first(first(B)))
     return (Aunit/Bunit) * (ustrip.(A) / ustrip.(B))
 end
+Base.:(/)(A::MatrixArray, b::Unitful.Units) = AlgebraicArray(Matrix(A)/b, rangedims(A), domaindims(A))
 
 # caution: dot broadcast added here on rhs, not lhs
 Unitful.ustrip(A::MatrixArray) = AlgebraicArray(ustrip.(Matrix(A)), rangedims(A), domaindims(A))

@@ -1,10 +1,5 @@
 @testset "Dimensional Data" begin
 
-    # fixed parameters
-    @dim YearCE "years Common Era"
-    @dim SurfaceRegion "surface location"
-    @dim InteriorLocation "interior location"
-    @dim StateVariable "state variable"
     #surfaceregions = [:NATL,:ANT,:SUBANT]
     surfaceregions = ["NATL","ANT","SUBANT"]
     N = length(surfaceregions)
@@ -102,7 +97,8 @@
             RTT = transpose(RT)
             @test R == RTT
             @test R ≠ RT
-
+            @test similar(R) isa MatrixDimArray
+            
             @testset "matrix slicing" begin
                 @test R[1] isa VectorDimArray
                 @test R[2,1] isa VectorDimArray

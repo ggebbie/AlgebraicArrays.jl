@@ -3,13 +3,14 @@
     using Unitful
     
     @testset "constructors" begin
-        unitlist = [u"kg", u"K", u"m"]
+        unitlist = [u"kg" u"K" u"m";
+                    u"kg" u"K" u"m"]
         rsize = (2,3)
         
         # investigator makes a field with physical dimensions
 
         # not uniform
-        nu = randn(rsize).*rand(unitlist,rsize)
+        nu = randn(rsize).*unitlist ; #rand(unitlist,rsize)
         @test !isa(nu,Matrix{Quantity{T,S,V}} where {T,S,V})
         
         a = randn(rsize)*rand(unitlist) # uniform
