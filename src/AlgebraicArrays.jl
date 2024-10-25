@@ -265,7 +265,6 @@ Array(P::MatrixArray) = Matrix(P)
 
 # a pattern for any function
 Base.transpose(P::MatrixArray) = AlgebraicArray( transpose(Matrix(P)), domaindims(P), rangedims(P))
-
 Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domaindims(P), rangedims(P))
 Base.similar(P::MatrixArray) = AlgebraicArray( similar(Matrix(P)), rangedims(P), domaindims(P))
 
@@ -282,6 +281,7 @@ Base.similar(P::MatrixArray) = AlgebraicArray( similar(Matrix(P)), rangedims(P),
 Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangedims(A))
 Base.:*(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) * Matrix(B), rangedims(A), domaindims(B))
 Base.:*(a::VectorArray, B::MatrixArray) = AlgebraicArray(vec(a) * Matrix(B), rangedims(a), domaindims(B))
+Base.:*(a::Number, b::VectorArray) = AlgebraicArray(a * vec(b), rangedims(b))
 Base.:*(a::Number, B::MatrixArray) = AlgebraicArray(a * Matrix(B), rangedims(B), domaindims(B))
 Base.:*(B::MatrixArray, a::Number) = a * B
 
