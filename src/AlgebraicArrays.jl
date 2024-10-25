@@ -267,7 +267,9 @@ Array(P::MatrixArray) = Matrix(P)
 Base.transpose(P::MatrixArray) = AlgebraicArray( transpose(Matrix(P)), domaindims(P), rangedims(P))
 
 Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domaindims(P), rangedims(P))
+Base.similar(P::MatrixArray) = AlgebraicArray( similar(Matrix(P)), rangedims(P), domaindims(P))
 
+# CR format for multiplication
 # function Base.:*(A::MatrixArray, b::VectorArray)
 #     c = zero(first(A))
 #     for j in eachindex(A)
