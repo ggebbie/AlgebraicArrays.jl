@@ -17,14 +17,14 @@ export # export more Base methods
 export # export more Base methods
     IndexStyle, eachindex, iterate 
 export # export LinearAlgebra methods
-    transpose, adjoint, eigen, Diagonal
+    transpose, adjoint, eigen, Diagonal, diag
     
 import Base: size, show, vec, Matrix
 import Base: +, -, *, first, real , exp
 import Base: display, parent, \, /, Array #, randn
 import Base: getindex, setindex!, BroadcastStyle, similar
 import Base: randn, fill, ones, zeros
-import LinearAlgebra: transpose, adjoint, eigen, Diagonal
+import LinearAlgebra: transpose, adjoint, eigen, Diagonal, diag
 
 """
     AlgebraicArray(A, rsize)
@@ -231,6 +231,17 @@ Base.IndexStyle(A::MatrixArray) = Base.IndexStyle(parent(A))
 domaindims(A::MatrixArray) = size(parent(A))
 rangedims(A::MatrixArray) = size(first(parent(A)))
 endomorphic(A::MatrixArray) = isequal(rangedims(A), domaindims(A))
+
+# revisit and make performant
+function LinearAlgebra.diag(A::MatrixArray)
+    if endomorphic(A)
+        return AlgebraicArray(diag(Matrix(A)),rangedims(A))
+    else
+        # unclear what to do about dimensions in this case
+        # punt and return a vector, warning: type unstable
+        return diag(Matrix(A))
+    end
+end 
 
 function Base.real(A::MatrixArray)
 
