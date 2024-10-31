@@ -327,9 +327,30 @@ Base.:(/)(A::MatrixArray, b::Number) = AlgebraicArray(Matrix(A)/b, rangedims(A),
 Base.:+(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) + parent(B))
 Base.:+(a::VectorArray, b::VectorArray) = VectorArray(parent(a) + parent(b))
 
+# special case: A is a wrapped scalar
+# certainly not performant, but this is just a 1x1 matrix
+function Base.:+(A::MatrixArray, b::Number)
+    # a wrapped scalar 
+    if (prod(domaindims(A)) ==1) && (prod(rangedims(A)) == 1)
+        return MatrixArray([first(first(A)) + b;;], rangedims(A), domaindims(A))
+    else
+        error("Matrix and scalar addition only possible with 1x1 Matrix")
+    end 
+end 
+
 Base.:-(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) - parent(B))
 Base.:-(a::VectorArray, b::VectorArray) = VectorArray(parent(a) - parent(b))
 Base.:-(A::MatrixArray) = -1 * A
+# special case: A is a wrapped scalar
+# certainly not performant, but this is just a 1x1 matrix
+function Base.:-(A::MatrixArray, b::Number)
+    # a wrapped scalar 
+    if (prod(domaindims(A)) ==1) && (prod(rangedims(A)) == 1)
+        return MatrixArray([first(first(A)) - b;;], rangedims(A), domaindims(A))
+    else
+        error("Matrix and scalar subtraction only possible with 1x1 Matrix")
+    end 
+end 
 
 """
 function matrix right divide
