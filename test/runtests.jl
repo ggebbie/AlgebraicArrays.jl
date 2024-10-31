@@ -64,6 +64,16 @@ using Unitful
         @test rangedims(D) == rsize
         @test domaindims(D) == dsize
 
+        # diag
+        rsize = (1,2)
+        J = randn(rsize,rsize,:MatrixArray)
+        @test !endomorphic(D)
+        @test endomorphic(J) 
+        @test diag(J) isa VectorArray
+        @test !(diag(D) isa VectorArray)
+        id = rand(1:prod(rsize))
+        @test diag(J)[id] == J[id][id]
+        
         # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
         # turn a MatrixArray back into an array of arrays
         E = AlgebraicArray(Matrix(D),rsize,dsize)
@@ -182,8 +192,8 @@ using Unitful
         end
     end
 
-    #include("test_DimensionalData.jl")
-    #include("test_unitful.jl")
-    #include("test_DimensionalData_Unitful.jl")
+    include("test_DimensionalData.jl")
+    include("test_unitful.jl")
+    include("test_DimensionalData_Unitful.jl")
     
 end

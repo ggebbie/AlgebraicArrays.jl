@@ -193,7 +193,7 @@ end
 # unknown whether `B` is a VectorArray or MatrixArray.
 AlgebraicArray(B::C) where {T,M,N,R<:AbstractArray{T,M},C<:AbstractArray{R,N}} = MatrixArray(B)
 # looks like a matrix, but only has one column
-AlgebraicArray(B::C) where {T,M,R<:AbstractArray{T,M},C<:AbstractArray{R,1}} = VectorArray(first(B))
+#AlgebraicArray(B::C) where {T,M,R<:AbstractArray{T,M},C<:AbstractArray{R,1}} = VectorArray(first(B))
 
 """
     AlgebraicArray(A,rsize,dsize)
@@ -245,7 +245,7 @@ rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowind
 Base.getindex(A::MatrixArray; kw...) = getindex(parent(A), kw...) 
 Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?
 Base.setindex!(A::MatrixArray, v; kw...) = setindex!(parent(A), v, kw...) 
-Base.IndexStyle(A::MatrixArray) = Base.IndexStyle(parent(A))
+#Base.IndexStyle(A::MatrixArray) = Base.IndexStyle(parent(A))
 domaindims(A::MatrixArray) = size(parent(A))
 rangedims(A::MatrixArray) = size(first(parent(A)))
 endomorphic(A::MatrixArray) = isequal(rangedims(A), domaindims(A))
