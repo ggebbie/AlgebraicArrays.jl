@@ -55,9 +55,9 @@ end
 VectorArray(a::Number) = a # helpful for slices that aren't vectors anymore
 
 # force a VectorArray if really needed
-# function VectorArray(A::AbstractVector, rsize::Union{Int,NTuple{N,Int}}) where N
-#     return VectorArray(reshape(A,rsize))
-# end
+function VectorArray(A::AbstractVector, rsize::Union{Int,NTuple{N,Int}}) where N
+    return VectorArray(reshape(A,rsize))
+end
 
 parent(b::VectorArray) = b.data
 function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
@@ -179,16 +179,16 @@ end
 
 # sometimes a singleton matrix is needed
 # force it to happen with this constructor
-# function MatrixArray(A::AbstractMatrix{T},rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2,T} # <: Number 
+function MatrixArray(A::AbstractMatrix{T},rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2,T} # <: Number 
 
-#     M = prod(dsize)
-#     N = length(rsize)
-#     P = Array{Array{T,N}}(undef,dsize)
-#     for j in 1:M 
-#         P[j] = reshape(A[:,j],rsize)
-#     end
-#     return MatrixArray(P)
-# end
+    M = prod(dsize)
+    N = length(rsize)
+    P = Array{Array{T,N}}(undef,dsize)
+    for j in 1:M 
+        P[j] = reshape(A[:,j],rsize)
+    end
+    return MatrixArray(P)
+end
 
 # unknown whether `B` is a VectorArray or MatrixArray.
 AlgebraicArray(B::C) where {T,M,N,R<:AbstractArray{T,M},C<:AbstractArray{R,N}} = MatrixArray(B)
