@@ -402,7 +402,8 @@ function LinearAlgebra.eigen(A::MatrixArray)
     return Eigen(values, vectors)
 end
 
-Diagonal(a::VectorArray) = AlgebraicArray(Diagonal(vec(a)), rangedims(a), rangedims(a))
+# force it to return a MatrixArray
+Diagonal(a::VectorArray) = MatrixArray(Diagonal(vec(a)), rangedims(a), rangedims(a))
 
 function exp(A::MatrixArray)
     # A must be endomorphic (check type signature someday)
