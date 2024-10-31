@@ -354,7 +354,8 @@ function randn(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple
     M = prod(dsize)
     N = length(rsize)
 
-    if M > 1
+    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
+    if (M > 1) || (type == :MatrixArray)
         P = Array{Array{T,N}}(undef,dsize)
         for j in 1:M 
             P[j] = randn(rsize) # reshape(A[:,j],rsize)
