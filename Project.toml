@@ -16,7 +16,7 @@ AlgebraicArraysUnitfulExt = ["Unitful"]
 [compat]
 DimensionalData = "0.27,0.28"
 Unitful = "1.21.0"
-julia = "1.10"
+julia = "1.10,1.11"
 
 [extras]
 ArraysOfArrays = "65a8f2f4-9b39-5baf-92e2-a9cc46fdf018"
