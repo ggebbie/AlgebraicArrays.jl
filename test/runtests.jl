@@ -2,11 +2,9 @@ using Revise
 using AlgebraicArrays
 using LinearAlgebra
 using Test
-using ArraysOfArrays
 using DimensionalData
 using DimensionalData:@dim
 using Unitful
-#using UnitfulLinearAlgebra
 
 # fixed parameters
 @dim YearCE "years Common Era"

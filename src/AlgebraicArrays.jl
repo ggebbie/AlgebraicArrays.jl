@@ -1,7 +1,6 @@
 module AlgebraicArrays
 
 using LinearAlgebra
-using ArraysOfArrays
 
 export VectorArray, MatrixArray, AlgebraicArray, Array
 export VectorDimArray, MatrixDimArray
