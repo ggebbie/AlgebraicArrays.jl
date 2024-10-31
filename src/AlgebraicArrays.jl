@@ -54,6 +54,11 @@ struct VectorArray{T,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
 end
 VectorArray(a::Number) = a # helpful for slices that aren't vectors anymore
 
+# force a VectorArray if really needed
+# function VectorArray(A::AbstractVector, rsize::Union{Int,NTuple{N,Int}}) where N
+#     return VectorArray(reshape(A,rsize))
+# end
+
 parent(b::VectorArray) = b.data
 function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
     #println(summary(b))
@@ -171,6 +176,19 @@ struct MatrixArray{T,
     C<:AbstractArray{R,N}} <: AbstractArray{T,2}
     data::C
 end
+
+# sometimes a singleton matrix is needed
+# force it to happen with this constructor
+# function MatrixArray(A::AbstractMatrix{T},rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2,T} # <: Number 
+
+#     M = prod(dsize)
+#     N = length(rsize)
+#     P = Array{Array{T,N}}(undef,dsize)
+#     for j in 1:M 
+#         P[j] = reshape(A[:,j],rsize)
+#     end
+#     return MatrixArray(P)
+# end
 
 # unknown whether `B` is a VectorArray or MatrixArray.
 AlgebraicArray(B::C) where {T,M,N,R<:AbstractArray{T,M},C<:AbstractArray{R,N}} = MatrixArray(B)
@@ -322,16 +340,37 @@ function matrix right divide
 Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangedims(A), rangedims(B))
 Base.:(/)(A::Union{VectorArray,MatrixArray}, b::Number) = (1/b) * A
 
-function randn(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}},type::Symbol) where {N1,N2}
-    if type == :MatrixArray
-        # make an array of arrays
-        alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
-        # warning, doesn't work for 3D+ arrays
-        return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+# function randn(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}},type::Symbol) where {N1,N2}
+#     if type == :MatrixArray
+#         # make an array of arrays
+#         alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
+#         # warning, doesn't work for 3D+ arrays
+#         return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+#         #return MatrixArray(Matrix(nestedview(randn(alldims),dsize)))
+#     else
+#         error("randn not implemented for this type")
+#     end
+# end
+function randn(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
+    M = prod(dsize)
+    N = length(rsize)
+
+    if M > 1
+        P = Array{Array{T,N}}(undef,dsize)
+        for j in 1:M 
+            P[j] = randn(rsize) # reshape(A[:,j],rsize)
+        end
+        return MatrixArray(P)
+    elseif M == 1
+        # warning: introduces type instability
+        # but useful for transpose of row vector
+        return VectorArray(randn(rsize))
     else
-        error("randn not implemented for this type")
+        error("incompatible number of columns") 
     end
 end
+# make Float64 the default
+randn(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} = randn(Float64, rsize,dsize, type)
 
 function LinearAlgebra.eigen(A::MatrixArray)
     F = eigen(Matrix(A))

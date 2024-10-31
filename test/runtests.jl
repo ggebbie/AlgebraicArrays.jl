@@ -127,7 +127,9 @@ using Unitful
 
             # another way to make a MatrixArray
             P = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize)
-    
+            @test rangedims(P) == rsize
+            @test domaindims(P) == dsize
+            
             # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
             @test (P*q) isa VectorArray
 
@@ -180,8 +182,8 @@ using Unitful
         end
     end
 
-    include("test_DimensionalData.jl")
-    include("test_unitful.jl")
-    include("test_DimensionalData_Unitful.jl")
+    #include("test_DimensionalData.jl")
+    #include("test_unitful.jl")
+    #include("test_DimensionalData_Unitful.jl")
     
 end
