@@ -104,6 +104,21 @@ function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Uni
     end
 end
 
+# force output to be `MatrixArray` even in funny/limiting cases
+function MatrixArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Union{Tuple,D2}) where T where D1 <: DimensionalData.Dimension where D2 <: DimensionalData.Dimension
+
+    rsize = size(rdims)
+    dsize = size(ddims)
+    M = prod(dsize)
+    N = length(rsize)
+
+    P = Array{DimArray{T,N}}(undef,dsize)
+    for j in 1:M
+        P[j] = DimArray(reshape(A[:,j],rsize),rdims)
+    end
+    return MatrixArray(DimArray(P,ddims))
+end
+
 Base.transpose(b::VectorDimArray) = AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangedims(b))
 
 # undefined resource
