@@ -82,6 +82,13 @@ function AlgebraicArray(A::AbstractVector, rdims::Union{Tuple,D}) where D <: Dim
     end
 end
 
+# force-construct a VectorArray if you know what you want
+function VectorArray(A::AbstractVector, rdims::Union{Tuple,D}) where D <: DimensionalData.Dimension
+    rsize = size(rdims)
+    M = prod(rsize)
+    return VectorArray(DimArray(reshape(A,rsize),rdims))
+end
+
 function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Union{Tuple,D2}) where T where D1 <: DimensionalData.Dimension where D2 <: DimensionalData.Dimension
 #function AlgebraicArray(A::AbstractVector, rdims::Tuple)
     rsize = size(rdims)

@@ -326,6 +326,8 @@ Base.:(/)(A::MatrixArray, b::Number) = AlgebraicArray(Matrix(A)/b, rangedims(A),
 
 Base.:+(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) + parent(B))
 Base.:+(a::VectorArray, b::VectorArray) = VectorArray(parent(a) + parent(b))
+Base.:+(A::MatrixArray, B::VectorArray) = MatrixArray(Matrix(A) + vec(B), rangedims(A), domaindims(A))
+Base.:+(A::VectorArray, B::MatrixArray) = B + A
 
 # special case: A is a wrapped scalar
 # certainly not performant, but this is just a 1x1 matrix
