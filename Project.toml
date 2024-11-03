@@ -1,10 +1,9 @@
 name = "AlgebraicArrays"
 uuid = "8af735f6-f3e5-4048-bdaa-40a2355e9eea"
 authors = ["G Jake Gebbie <ggebbie@whoi.edu>"]
-version = "1.0.4-DEV"
+version = "1.0.5-DEV"
 
 [deps]
-ArraysOfArrays = "65a8f2f4-9b39-5baf-92e2-a9cc46fdf018"
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
