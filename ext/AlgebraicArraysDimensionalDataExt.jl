@@ -82,6 +82,13 @@ function AlgebraicArray(A::AbstractVector, rdims::Union{Tuple,D}) where D <: Dim
     end
 end
 
+# force-construct a VectorArray if you know what you want
+function VectorArray(A::AbstractVector, rdims::Union{Tuple,D}) where D <: DimensionalData.Dimension
+    rsize = size(rdims)
+    M = prod(rsize)
+    return VectorArray(DimArray(reshape(A,rsize),rdims))
+end
+
 function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Union{Tuple,D2}) where T where D1 <: DimensionalData.Dimension where D2 <: DimensionalData.Dimension
 #function AlgebraicArray(A::AbstractVector, rdims::Tuple)
     rsize = size(rdims)
@@ -102,6 +109,21 @@ function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Uni
     else
         error("incompatible number of columns") 
     end
+end
+
+# force output to be `MatrixArray` even in funny/limiting cases
+function MatrixArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Union{Tuple,D2}) where T where D1 <: DimensionalData.Dimension where D2 <: DimensionalData.Dimension
+
+    rsize = size(rdims)
+    dsize = size(ddims)
+    M = prod(dsize)
+    N = length(rsize)
+
+    P = Array{DimArray{T,N}}(undef,dsize)
+    for j in 1:M
+        P[j] = DimArray(reshape(A[:,j],rsize),rdims)
+    end
+    return MatrixArray(DimArray(P,ddims))
 end
 
 Base.transpose(b::VectorDimArray) = AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangedims(b))

@@ -1,7 +1,6 @@
 module AlgebraicArrays
 
 using LinearAlgebra
-using ArraysOfArrays
 
 export VectorArray, MatrixArray, AlgebraicArray, Array
 export VectorDimArray, MatrixDimArray
@@ -17,14 +16,14 @@ export # export more Base methods
 export # export more Base methods
     IndexStyle, eachindex, iterate 
 export # export LinearAlgebra methods
-    transpose, adjoint, eigen, Diagonal
+    transpose, adjoint, eigen, Diagonal, diag
     
 import Base: size, show, vec, Matrix
 import Base: +, -, *, first, real , exp
 import Base: display, parent, \, /, Array #, randn
 import Base: getindex, setindex!, BroadcastStyle, similar
 import Base: randn, fill, ones, zeros
-import LinearAlgebra: transpose, adjoint, eigen, Diagonal
+import LinearAlgebra: transpose, adjoint, eigen, Diagonal, diag
 
 """
     AlgebraicArray(A, rsize)
@@ -53,6 +52,11 @@ struct VectorArray{T,N,A<:AbstractArray{T,N}} <: AbstractArray{T,1}
     data:: A
 end
 VectorArray(a::Number) = a # helpful for slices that aren't vectors anymore
+
+# force a VectorArray if really needed
+function VectorArray(A::AbstractVector, rsize::Union{Int,NTuple{N,Int}}) where N
+    return VectorArray(reshape(A,rsize))
+end
 
 parent(b::VectorArray) = b.data
 function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
@@ -172,8 +176,23 @@ struct MatrixArray{T,
     data::C
 end
 
+# sometimes a singleton matrix is needed
+# force it to happen with this constructor
+function MatrixArray(A::AbstractMatrix{T},rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}) where {N1,N2,T} # <: Number 
+
+    M = prod(dsize)
+    N = length(rsize)
+    P = Array{Array{T,N}}(undef,dsize)
+    for j in 1:M 
+        P[j] = reshape(A[:,j],rsize)
+    end
+    return MatrixArray(P)
+end
+
 # unknown whether `B` is a VectorArray or MatrixArray.
 AlgebraicArray(B::C) where {T,M,N,R<:AbstractArray{T,M},C<:AbstractArray{R,N}} = MatrixArray(B)
+# looks like a matrix, but only has one column
+#AlgebraicArray(B::C) where {T,M,R<:AbstractArray{T,M},C<:AbstractArray{R,1}} = VectorArray(first(B))
 
 """
     AlgebraicArray(A,rsize,dsize)
@@ -225,9 +244,21 @@ rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowind
 Base.getindex(A::MatrixArray; kw...) = getindex(parent(A), kw...) 
 Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?
 Base.setindex!(A::MatrixArray, v; kw...) = setindex!(parent(A), v, kw...) 
+#Base.IndexStyle(A::MatrixArray) = Base.IndexStyle(parent(A))
 domaindims(A::MatrixArray) = size(parent(A))
 rangedims(A::MatrixArray) = size(first(parent(A)))
 endomorphic(A::MatrixArray) = isequal(rangedims(A), domaindims(A))
+
+# revisit and make performant
+function LinearAlgebra.diag(A::MatrixArray)
+    if endomorphic(A)
+        return AlgebraicArray(diag(Matrix(A)),rangedims(A))
+    else
+        # unclear what to do about dimensions in this case
+        # punt and return a vector, warning: type unstable
+        return diag(Matrix(A))
+    end
+end 
 
 function Base.real(A::MatrixArray)
 
@@ -236,6 +267,8 @@ function Base.real(A::MatrixArray)
     # end
     # return A
     #return MatrixArray(real(parent(A)))
+
+    # perhaps not performant but works
     return AlgebraicArray(real.(Matrix(A)),rangedims(A), domaindims(A))
 end
 
@@ -293,10 +326,33 @@ Base.:(/)(A::MatrixArray, b::Number) = AlgebraicArray(Matrix(A)/b, rangedims(A),
 
 Base.:+(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) + parent(B))
 Base.:+(a::VectorArray, b::VectorArray) = VectorArray(parent(a) + parent(b))
+Base.:+(A::MatrixArray, B::VectorArray) = MatrixArray(Matrix(A) + vec(B), rangedims(A), domaindims(A))
+Base.:+(A::VectorArray, B::MatrixArray) = B + A
+
+# special case: A is a wrapped scalar
+# certainly not performant, but this is just a 1x1 matrix
+function Base.:+(A::MatrixArray, b::Number)
+    # a wrapped scalar 
+    if (prod(domaindims(A)) ==1) && (prod(rangedims(A)) == 1)
+        return MatrixArray([first(first(A)) + b;;], rangedims(A), domaindims(A))
+    else
+        error("Matrix and scalar addition only possible with 1x1 Matrix")
+    end 
+end 
 
 Base.:-(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) - parent(B))
 Base.:-(a::VectorArray, b::VectorArray) = VectorArray(parent(a) - parent(b))
 Base.:-(A::MatrixArray) = -1 * A
+# special case: A is a wrapped scalar
+# certainly not performant, but this is just a 1x1 matrix
+function Base.:-(A::MatrixArray, b::Number)
+    # a wrapped scalar 
+    if (prod(domaindims(A)) ==1) && (prod(rangedims(A)) == 1)
+        return MatrixArray([first(first(A)) - b;;], rangedims(A), domaindims(A))
+    else
+        error("Matrix and scalar subtraction only possible with 1x1 Matrix")
+    end 
+end 
 
 """
 function matrix right divide
@@ -306,16 +362,38 @@ function matrix right divide
 Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangedims(A), rangedims(B))
 Base.:(/)(A::Union{VectorArray,MatrixArray}, b::Number) = (1/b) * A
 
-function randn(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}},type::Symbol) where {N1,N2}
-    if type == :MatrixArray
-        # make an array of arrays
-        alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
-        # warning, doesn't work for 3D+ arrays
-        return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+# function randn(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}},type::Symbol) where {N1,N2}
+#     if type == :MatrixArray
+#         # make an array of arrays
+#         alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
+#         # warning, doesn't work for 3D+ arrays
+#         return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
+#         #return MatrixArray(Matrix(nestedview(randn(alldims),dsize)))
+#     else
+#         error("randn not implemented for this type")
+#     end
+# end
+function randn(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
+    M = prod(dsize)
+    N = length(rsize)
+
+    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
+    if (M > 1) || (type == :MatrixArray)
+        P = Array{Array{T,N}}(undef,dsize)
+        for j in 1:M 
+            P[j] = randn(rsize) # reshape(A[:,j],rsize)
+        end
+        return MatrixArray(P)
+    elseif M == 1
+        # warning: introduces type instability
+        # but useful for transpose of row vector
+        return VectorArray(randn(rsize))
     else
-        error("randn not implemented for this type")
+        error("incompatible number of columns") 
     end
 end
+# make Float64 the default
+randn(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} = randn(Float64, rsize,dsize, type)
 
 function LinearAlgebra.eigen(A::MatrixArray)
     F = eigen(Matrix(A))
@@ -326,7 +404,8 @@ function LinearAlgebra.eigen(A::MatrixArray)
     return Eigen(values, vectors)
 end
 
-Diagonal(a::VectorArray) = AlgebraicArray(Diagonal(vec(a)), rangedims(a), rangedims(a))
+# force it to return a MatrixArray
+Diagonal(a::VectorArray) = MatrixArray(Diagonal(vec(a)), rangedims(a), rangedims(a))
 
 function exp(A::MatrixArray)
     # A must be endomorphic (check type signature someday)
