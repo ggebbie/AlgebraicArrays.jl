@@ -113,7 +113,7 @@
                 # @test eachindex(D) == Base.OneTo(prod(size(b)))
 
                 @test R[2,1][1,1] isa Number
-                @test R[:][1,1] isa VectorDimArray
+                @test R[:][1,1] isa VectorDimArray # actually this is not the same as rowvector and is incorrect
                 @test rowvector(R,1,1) isa MatrixDimArray
 
                 @test R[At(1990),At("NATL")] isa VectorDimArray
