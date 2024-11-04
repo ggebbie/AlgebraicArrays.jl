@@ -106,6 +106,7 @@ Base.iterate(b::VectorArray, args::Vararg) = iterate(parent(b), args...)
 Base.eachindex(b::VectorArray) = eachindex(parent(b))
 
 Base.IndexStyle(b::VectorArray) = Base.IndexStyle(parent(b))
+Base.axes(b::VectorArray,d) = axes(parent(b),d)
 rangedims(b::VectorArray) = size(parent(b))
 domaindims(b::VectorArray) = ()
 #Base.real(b::VectorArray) = VectorArray(real(parent(b)))
