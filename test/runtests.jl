@@ -1,4 +1,4 @@
-#using Revise
+using Revise
 using AlgebraicArrays
 using LinearAlgebra
 using Test
@@ -58,20 +58,31 @@ using Unitful
         rsize = (1,2)
         dsize = (2,1)
         D = randn(rsize,dsize,:MatrixArray)
+        @test !endomorphic(D)
+        @test !(diag(D) isa VectorArray)
 
         @test rangedims(D) == rsize
         @test domaindims(D) == dsize
 
-        # diag
-        rsize = (1,2)
-        J = randn(rsize,rsize,:MatrixArray)
-        @test !endomorphic(D)
+        funks = [:randn,:zeros,:ones]
+        for fnk in funks
+        #J = randn(rsize,rsize,:MatrixArray)
+            rsize = (1,2)
+            #J = @eval $fnk((1,2),(1,2),:MatrixArray)
+            J = @eval $fnk($rsize, $rsize,:MatrixArray)
+            @test endomorphic(J) 
+            @test diag(J) isa VectorArray
+            id = rand(1:prod(rsize))
+            @test diag(J)[id] == J[id][id]
+        end
+
+        #fill
+        J = fill(1, rsize, rsize,:MatrixArray)
         @test endomorphic(J) 
         @test diag(J) isa VectorArray
-        @test !(diag(D) isa VectorArray)
         id = rand(1:prod(rsize))
         @test diag(J)[id] == J[id][id]
-        
+
         # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
         # turn a MatrixArray back into an array of arrays
         E = AlgebraicArray(Matrix(D),rsize,dsize)

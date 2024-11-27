@@ -120,6 +120,28 @@ function Base.fill(val, rsize, type)
         error("fill type not implemented")
     end
 end
+function Base.fill(val, rsize::Union{Int,NTuple{N1,Int}},
+    dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
+
+    T = eltype(val)
+    M = prod(dsize)
+    N = length(rsize)
+
+    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
+    if (M > 1) || (type == :MatrixArray)
+        P = Array{Array{T,N}}(undef,dsize)
+        for j in 1:M 
+            P[j] = fill(val, rsize) # reshape(A[:,j],rsize)
+        end
+        return MatrixArray(P)
+    elseif M == 1
+        # warning: introduces type instability
+        # but useful for transpose of row vector
+        return VectorArray(fill(val, rsize))
+    else
+        error("incompatible number of columns") 
+    end
+end
 
 #function Base.ones(rsize::Union{Int,NTuple{N,Int}}, type) where N
 function Base.ones(rsize, type) 
@@ -130,23 +152,90 @@ function Base.ones(rsize, type)
     end
 end
 
-#function Base.zeros(rsize::Union{Int,NTuple{N,Int}}, type) where N
-function Base.zeros(rsize, type)
+function Base.ones(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
+    M = prod(dsize)
+    N = length(rsize)
+
+    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
+    if (M > 1) || (type == :MatrixArray)
+        P = Array{Array{T,N}}(undef,dsize)
+        for j in 1:M 
+            P[j] = ones(rsize) # reshape(A[:,j],rsize)
+        end
+        return MatrixArray(P)
+    elseif M == 1
+        # warning: introduces type instability
+        # but useful for transpose of row vector
+        return VectorArray(ones(rsize))
+    else
+        error("incompatible number of columns") 
+    end
+end
+Base.ones(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} =
+    ones(Float64, rsize, dsize, type)
+
+function Base.zeros(rsize::Union{Int,NTuple{N,Int}}, type::Symbol) where N
+#function Base.zeros(rsize, type)
     if type == :VectorArray
         VectorArray(zeros(rsize))
     else
-        error("zeros type not implemented")
+        error("type not implemented for zeros")
     end
 end
+
+function Base.zeros(T::Type, rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
+    M = prod(dsize)
+    N = length(rsize)
+
+    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
+    if (M > 1) || (type == :MatrixArray)
+        P = Array{Array{T,N}}(undef,dsize)
+        for j in 1:M 
+            P[j] = zeros(rsize) # reshape(A[:,j],rsize)
+        end
+        return MatrixArray(P)
+    elseif M == 1
+        # warning: introduces type instability
+        # but useful for transpose of row vector
+        return VectorArray(zeros(rsize))
+    else
+        error("incompatible number of columns") 
+    end
+end
+# make Float64 the default
+Base.zeros(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} =
+    zeros(Float64, rsize, dsize, type)
 
 #function Base.randn(rsize::Union{Int,NTuple{N,Int}}, type) where N
 function Base.randn(rsize::Union{Int,NTuple{N,Int}},type::Symbol) where N
     if type == :VectorArray
         VectorArray(randn(rsize))
     else
-        error("randn type not implemented")
+        error("inconsistent arguments for type")
     end
 end
+
+function randn(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
+    M = prod(dsize)
+    N = length(rsize)
+
+    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
+    if (M > 1) || (type == :MatrixArray)
+        P = Array{Array{T,N}}(undef,dsize)
+        for j in 1:M 
+            P[j] = randn(rsize) # reshape(A[:,j],rsize)
+        end
+        return MatrixArray(P)
+    elseif M == 1
+        # warning: introduces type instability
+        # but useful for transpose of row vector
+        return VectorArray(randn(rsize))
+    else
+        error("incompatible number of columns") 
+    end
+end
+# make Float64 the default
+Base.randn(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} = randn(Float64, rsize,dsize, type)
 
 # implement broadcast
 Base.BroadcastStyle(::Type{<:VectorArray}) = Broadcast.ArrayStyle{VectorArray}()
@@ -363,38 +452,6 @@ function matrix right divide
 Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangedims(A), rangedims(B))
 Base.:(/)(A::Union{VectorArray,MatrixArray}, b::Number) = (1/b) * A
 
-# function randn(rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}},type::Symbol) where {N1,N2}
-#     if type == :MatrixArray
-#         # make an array of arrays
-#         alldims = Tuple(vcat([i for i in rsize],[j for j in dsize]))
-#         # warning, doesn't work for 3D+ arrays
-#         return MatrixArray(Matrix(nestedview(randn(alldims),length(dsize))))
-#         #return MatrixArray(Matrix(nestedview(randn(alldims),dsize)))
-#     else
-#         error("randn not implemented for this type")
-#     end
-# end
-function randn(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
-    M = prod(dsize)
-    N = length(rsize)
-
-    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
-    if (M > 1) || (type == :MatrixArray)
-        P = Array{Array{T,N}}(undef,dsize)
-        for j in 1:M 
-            P[j] = randn(rsize) # reshape(A[:,j],rsize)
-        end
-        return MatrixArray(P)
-    elseif M == 1
-        # warning: introduces type instability
-        # but useful for transpose of row vector
-        return VectorArray(randn(rsize))
-    else
-        error("incompatible number of columns") 
-    end
-end
-# make Float64 the default
-randn(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} = randn(Float64, rsize,dsize, type)
 
 function LinearAlgebra.eigen(A::MatrixArray)
     F = eigen(Matrix(A))
