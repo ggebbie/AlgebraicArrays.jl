@@ -124,33 +124,23 @@ function Base.fill(val, rsize::Union{Int,NTuple{N1,Int}},
     dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
 
     !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
-    # T = eltype(val)
-    # M = prod(dsize)
-    # N = length(rsize)
-
     M = prod(rsize)
     N = prod(dsize)
     return AlgebraicArray(fill(val, M, N), rsize, dsize)
-
-    # if (M > 1) || (type == :MatrixArray)
-    #     P = Array{Array{T,N}}(undef,dsize)
-    #     for j in 1:M 
-    #         P[j] = fill(val, rsize) # reshape(A[:,j],rsize)
-    #     end
-    #     return MatrixArray(P)
-    # elseif M == 1
-    #     # warning: introduces type instability
-    #     # but useful for transpose of row vector
-    #     return VectorArray(fill(val, rsize))
-    # else
-    #     error("incompatible number of columns") 
-    # end
 end
 
 function Base.zeros(rsize::Union{Int,NTuple{N,Int}}, type::Symbol) where N
 #function Base.zeros(rsize, type)
     if type == :VectorArray
         VectorArray(zeros(rsize))
+    else
+        error("type not implemented for zeros")
+    end
+end
+function Base.zeros(T::Type, rsize::Union{Int,NTuple{N,Int}}, type::Symbol) where N
+#function Base.zeros(rsize, type)
+    if type == :VectorArray
+        VectorArray(zeros(T,rsize))
     else
         error("type not implemented for zeros")
     end
@@ -171,6 +161,13 @@ function Base.ones(rsize::Union{Int,NTuple{N,Int}}, type::Symbol) where N
         error("type not implemented for ones")
     end
 end
+function Base.ones(T::Type, rsize::Union{Int,NTuple{N,Int}}, type::Symbol) where N
+    if type == :VectorArray
+        VectorArray(ones(T, rsize))
+    else
+        error("type not implemented for ones")
+    end
+end
 function Base.ones(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
     M = prod(rsize)
     N = prod(dsize)
@@ -187,6 +184,13 @@ function Base.randn(rsize::Union{Int,NTuple{N,Int}},type::Symbol) where N
         error("inconsistent arguments for type")
     end
 end
+function Base.randn(T::Type, rsize::Union{Int,NTuple{N,Int}},type::Symbol) where N
+    if type == :VectorArray
+        VectorArray(randn(T, rsize))
+    else
+        error("inconsistent arguments for type")
+    end
+end
 function Base.randn(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
     M = prod(rsize)
     N = prod(dsize)
@@ -199,6 +203,13 @@ Base.randn(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, t
 function Base.rand(rsize::Union{Int,NTuple{N,Int}},type::Symbol) where N
     if type == :VectorArray
         VectorArray(rand(rsize...)) # rand has different behavior with Tuples
+    else
+        error("inconsistent arguments for type")
+    end
+end
+function Base.rand(T::Type,rsize::Union{Int,NTuple{N,Int}},type::Symbol) where N
+    if type == :VectorArray
+        VectorArray(rand(T,rsize...)) # rand has different behavior with Tuples
     else
         error("inconsistent arguments for type")
     end
