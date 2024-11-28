@@ -201,6 +201,31 @@ using Unitful
             # # check matrix exponential
             @test exp(S) isa MatrixArray # watch out for overflow!
         end
+
+        @testset "Cholesky decomposition" begin
+    
+            # outer product to make a multipliable matrix
+
+            A = zeros((2,2),(2,2),:MatrixArray)
+            for i = 1:4
+                a = VectorArray(randn(4),(2,2))
+                global A += a*transpose(a)
+            end
+            
+            # Cholesky decomposition
+            Q = cholesky(A)
+            test1 = transpose(Q.U)*Q.U
+            @test within(B,test1,1e-6)
+            @test within(B,Q.L*transpose(Q.L),1e-10)
+
+            # do operations directly with Q?
+            ynd = [0.5, 0.8]
+            y = UnitfulMatrix(ynd)
+            Qnodims.U\ynd
+            Q.U\ y  # includes units
+    
+        end
+
     end
 
     include("test_DimensionalData.jl")

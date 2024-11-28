@@ -16,14 +16,14 @@ export # export more Base methods
 export # export more Base methods
     IndexStyle, eachindex, iterate 
 export # export LinearAlgebra methods
-    transpose, adjoint, eigen, Diagonal, diag
+    transpose, adjoint, eigen, Diagonal, diag, cholesky
     
 import Base: size, show, vec, Matrix
 import Base: +, -, *, first, real , exp
 import Base: display, parent, \, /, Array #, randn
 import Base: getindex, setindex!, BroadcastStyle, similar
 import Base: rand, randn, fill, ones, zeros
-import LinearAlgebra: transpose, adjoint, eigen, Diagonal, diag
+import LinearAlgebra: transpose, adjoint, eigen, Diagonal, diag, cholesky
 
 """
     AlgebraicArray(A, rsize)
@@ -456,6 +456,12 @@ function exp(A::MatrixArray)
     !AlgebraicArrays.endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
     eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually
     return AlgebraicArray(exp(Matrix(A)),rangedims(A),domaindims(A)) # wrap with same labels and format as A
+end
+
+function LinearAlgebra.cholesky(A::MatrixArray)
+    C = LinearAlgebra.cholesky(Matrix(A))
+    factors = MatrixArray(C.factors,rangedims(A),domaindims(A))
+    return Cholesky(factors,C.uplo,C.info)
 end
 
 end # module AlgebraicArrays
