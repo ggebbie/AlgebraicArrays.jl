@@ -143,23 +143,6 @@ function Base.fill(val, rsize::Union{Int,NTuple{N1,Int}},
     end
 end
 
-# function Base.ones(rsize::Union{Int,NTuple{N,Int}}, type) where N
-#     if type == :VectorArray
-#         VectorArray(ones(rsize))
-#     else
-#         error("ones type not implemented")
-#     end
-# end
-
-# function Base.ones(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
-#     M = prod(rsize)
-#     N = prod(dsize)
-
-#     return AlgebraicArray(ones(T, M, N), rsize, dsize)
-# end
-# Base.ones(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} =
-#     ones(Float64, rsize, dsize, type)
-
 function Base.zeros(rsize::Union{Int,NTuple{N,Int}}, type::Symbol) where N
 #function Base.zeros(rsize, type)
     if type == :VectorArray
@@ -177,9 +160,7 @@ end
 Base.zeros(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} =
     zeros(Float64, rsize, dsize, type)
 
-## copy zeros for ones
 function Base.ones(rsize::Union{Int,NTuple{N,Int}}, type::Symbol) where N
-#function Base.zeros(rsize, type)
     if type == :VectorArray
         VectorArray(ones(rsize))
     else
@@ -195,29 +176,6 @@ end
 Base.ones(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} =
     ones(Float64, rsize, dsize, type)
 
-
-# function Base.zeros(T::Type, rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
-#     M = prod(dsize)
-#     N = length(rsize)
-
-#     !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
-#     if (M > 1) || (type == :MatrixArray)
-#         P = Array{Array{T,N}}(undef,dsize)
-#         for j in 1:M 
-#             P[j] = zeros(rsize) # reshape(A[:,j],rsize)
-#         end
-#         return MatrixArray(P)
-#     elseif M == 1
-#         # warning: introduces type instability
-#         # but useful for transpose of row vector
-#         return VectorArray(zeros(rsize))
-#     else
-#         error("incompatible number of columns") 
-#     end
-# end
-
-    
-#function Base.randn(rsize::Union{Int,NTuple{N,Int}}, type) where N
 function Base.randn(rsize::Union{Int,NTuple{N,Int}},type::Symbol) where N
     if type == :VectorArray
         VectorArray(randn(rsize))
@@ -234,27 +192,6 @@ end
 # make Float64 the default
 Base.randn(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} = randn(Float64, rsize,dsize, type)
 
-# function randn(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
-#     M = prod(dsize)
-#     N = length(rsize)
-
-#     !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
-#     if (M > 1) || (type == :MatrixArray)
-#         P = Array{Array{T,N}}(undef,dsize)
-#         for j in 1:M 
-#             P[j] = randn(rsize) # reshape(A[:,j],rsize)
-#         end
-#         return MatrixArray(P)
-#     elseif M == 1
-#         # warning: introduces type instability
-#         # but useful for transpose of row vector
-#         return VectorArray(randn(rsize))
-#     else
-#         error("incompatible number of columns") 
-#     end
-# end
-
-#function Base.rand(rsize::Union{Int,NTuple{N,Int}}, type) where N
 function Base.rand(rsize::Union{Int,NTuple{N,Int}},type::Symbol) where N
     if type == :VectorArray
         VectorArray(rand(rsize...)) # rand has different behavior with Tuples

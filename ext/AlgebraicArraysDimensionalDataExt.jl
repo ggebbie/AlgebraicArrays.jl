@@ -259,5 +259,4 @@ function rowvector(A::MatrixDimArray{T,M,N}, rowindex::Vararg) where {T,M,N}
     return transpose(VectorArray(DA))
 end
 
-
 end #module
