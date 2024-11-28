@@ -10,7 +10,7 @@ export # export Base methods
 export # export more Base methods
     display, parent, \, /, real, exp
 export # export more Base methods
-    randn, fill, ones, zeros
+    rand, randn, fill, ones, zeros
 export # export more Base methods
     getindex, setindex!, BroadcastStyle, similar
 export # export more Base methods
@@ -22,7 +22,7 @@ import Base: size, show, vec, Matrix
 import Base: +, -, *, first, real , exp
 import Base: display, parent, \, /, Array #, randn
 import Base: getindex, setindex!, BroadcastStyle, similar
-import Base: randn, fill, ones, zeros
+import Base: rand, randn, fill, ones, zeros
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal, diag
 
 """
@@ -231,6 +231,8 @@ function Base.randn(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,N
 
     return AlgebraicArray(randn(T, M, N), rsize, dsize)
 end
+# make Float64 the default
+Base.randn(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} = randn(Float64, rsize,dsize, type)
 
 # function randn(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
 #     M = prod(dsize)
@@ -251,8 +253,23 @@ end
 #         error("incompatible number of columns") 
 #     end
 # end
+
+#function Base.rand(rsize::Union{Int,NTuple{N,Int}}, type) where N
+function Base.rand(rsize::Union{Int,NTuple{N,Int}},type::Symbol) where N
+    if type == :VectorArray
+        VectorArray(rand(rsize...)) # rand has different behavior with Tuples
+    else
+        error("inconsistent arguments for type")
+    end
+end
+function Base.rand(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
+    M = prod(rsize)
+    N = prod(dsize)
+
+    return AlgebraicArray(rand(T, M, N), rsize, dsize)
+end
 # make Float64 the default
-Base.randn(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} = randn(Float64, rsize,dsize, type)
+Base.rand(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} = rand(Float64, rsize, dsize, type)
 
 # implement broadcast
 Base.BroadcastStyle(::Type{<:VectorArray}) = Broadcast.ArrayStyle{VectorArray}()

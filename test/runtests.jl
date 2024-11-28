@@ -21,6 +21,8 @@ using Unitful
         @test fill(2.0,rsize,:VectorArray) isa VectorArray
         @test ones(rsize,:VectorArray) isa VectorArray
         @test randn(rsize,:VectorArray) isa VectorArray
+        @test zeros(rsize,:VectorArray) isa VectorArray
+        @test rand(rsize,:VectorArray) isa VectorArray
         
         # investigator makes a field with physical dimensions
         a = randn(rsize)

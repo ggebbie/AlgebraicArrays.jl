@@ -6,10 +6,12 @@ using DimensionalData:@dim
 using LinearAlgebra
 
 export VectorDimArray, MatrixDimArray, dims, rowvector, AlgebraicArray
+export rand, randn, zeros, ones
 
 import AlgebraicArrays: rangedims, domaindims, AlgebraicArray, rowvector
 import LinearAlgebra: eigen
 import Base: exp, transpose
+import Base: rand, randn, zeros, ones
 import DimensionalData: dims
 
 @dim RowVector "singular dimension"
@@ -50,13 +52,112 @@ function Base.similar(vda::VectorDimArray{T}) where T
     VectorArray(similar(parent(vda))) #Array{T}, axes(vda)), dims(vda))
 end
 
-function Base.randn(rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
+### rand
+function Base.rand(rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
     if type == :VectorArray
         # actually use rand (randn not implemented for DimArray)
         return VectorArray(rand(rdims))
     else
         error("randn not implemented for this type")
     end
+end
+function Base.rand(T::Type, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
+
+    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
+    rsize = size(rdims)
+    dsize = size(ddims)
+    M = prod(rsize)
+    N = prod(dsize)
+    A = rand(M,N)
+    return AlgebraicArray(A, rdims, ddims)
+end
+# make Float64 the default
+Base.rand(rdims::Union{Tuple, D}, ddims::Union{Tuple, D}, type::Symbol) where D <: DimensionalData.Dimension =
+    rand(Float64, rdims, ddims, type)
+
+### randn
+function Base.randn(rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
+    if type == :VectorArray
+        return AlgebraicArray(randn(prod(size(rdims))), rdims)
+    else
+        error("randn not implemented for this type")
+    end
+end
+function Base.randn(T::Type, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
+
+    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
+    rsize = size(rdims)
+    dsize = size(ddims)
+    M = prod(rsize)
+    N = prod(dsize)
+    A = randn(M,N)
+    return AlgebraicArray(A, rdims, ddims)
+end
+# make Float64 the default
+Base.randn(rdims::Union{Tuple, D}, ddims::Union{Tuple, D}, type::Symbol) where D <: DimensionalData.Dimension =
+    randn(Float64, rdims, ddims, type)
+
+### ones
+function Base.ones(rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
+    if type == :VectorArray
+        return AlgebraicArray(ones(prod(size(rdims))), rdims)
+    else
+        error("ones not implemented for this type")
+    end
+end
+function Base.ones(T::Type, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
+
+    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
+    rsize = size(rdims)
+    dsize = size(ddims)
+    M = prod(rsize)
+    N = prod(dsize)
+    A = ones(M,N)
+    return AlgebraicArray(A, rdims, ddims)
+end
+# make Float64 the default
+Base.ones(rdims::Union{Tuple, D}, ddims::Union{Tuple, D}, type::Symbol) where D <: DimensionalData.Dimension =
+    ones(Float64, rdims, ddims, type)
+
+### zeros
+function Base.zeros(rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
+    if type == :VectorArray
+        return AlgebraicArray(zeros(prod(size(rdims))), rdims)
+    else
+        error("randn not implemented for this type")
+    end
+end
+function Base.zeros(T::Type, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
+
+    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
+    rsize = size(rdims)
+    dsize = size(ddims)
+    M = prod(rsize)
+    N = prod(dsize)
+    A = zeros(M,N)
+    return AlgebraicArray(A, rdims, ddims)
+end
+# make Float64 the default
+Base.zeros(rdims::Union{Tuple, D}, ddims::Union{Tuple, D}, type::Symbol) where D <: DimensionalData.Dimension =
+    zeros(Float64, rdims, ddims, type)
+
+### fill
+function Base.fill(val, rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
+    if type == :VectorArray
+        return VectorArray(fill(val, rdims)) #AlgebraicArray(fill(prod(size(rdims))), rdims)
+    else
+        error("randn not implemented for this type")
+    end
+end
+function Base.fill(val, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
+
+    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
+    rsize = size(rdims)
+    dsize = size(ddims)
+    M = prod(rsize)
+    N = prod(dsize)
+    A = fill(val, M, N)
+    return AlgebraicArray(A, rdims, ddims)
 end
 
 "`A = find_vda(As)` returns the first VectorDimArray among the arguments."
