@@ -98,7 +98,29 @@
             @test R == RTT
             @test R ≠ RT
             @test similar(R) isa MatrixDimArray
-            
+
+            @testset "matrix construction" begin
+
+                funks = [:randn,:zeros,:ones]
+                for fnk in funks
+                    #J = randn(rsize,rsize,:MatrixArray)
+                    rsize = dims(parent(x))
+                    #J = @eval $fnk((1,2),(1,2),:MatrixArray)
+                    J = @eval $fnk($rsize, $rsize,:MatrixArray)
+                    @test endomorphic(J) 
+                    @test diag(J) isa VectorArray
+                    id = rand(1:length(J))
+                    @test diag(J)[id] == J[id][id]
+                end
+
+                #fill
+                J = fill(1, rsize, rsize,:MatrixArray)
+                @test endomorphic(J) 
+                @test diag(J) isa VectorArray
+                id = rand(1:length(J))
+                @test diag(J)[id] == J[id][id]
+            end
+
             @testset "matrix slicing" begin
                 @test R[1] isa VectorDimArray
                 @test R[2,1] isa VectorDimArray
