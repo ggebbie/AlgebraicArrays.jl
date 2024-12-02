@@ -148,7 +148,11 @@ end
 function Base.zeros(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
     M = prod(rsize)
     N = prod(dsize)
-    return AlgebraicArray(zeros(T, M, N), rsize, dsize)
+    if type == :AlgebraicArray
+        return AlgebraicArray(ones(T, M, N), rsize, dsize)
+    elseif type == :MatrixArray
+        return MatrixArray(ones(T, M, N), rsize, dsize)
+    end
 end
 # make Float64 the default
 Base.zeros(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} =
@@ -171,7 +175,11 @@ end
 function Base.ones(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
     M = prod(rsize)
     N = prod(dsize)
-    return AlgebraicArray(ones(T, M, N), rsize, dsize)
+    if type == :AlgebraicArray
+        return AlgebraicArray(ones(T, M, N), rsize, dsize)
+    elseif type == :MatrixArray
+        return MatrixArray(ones(T, M, N), rsize, dsize)
+    end
 end
 # make Float64 the default
 Base.ones(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} =
@@ -191,14 +199,18 @@ function Base.randn(T::Type, rsize::Union{Int,NTuple{N,Int}},type::Symbol) where
         error("inconsistent arguments for type")
     end
 end
-function Base.randn(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
+function Base.randn(T::Type, rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} # <: Number 
     M = prod(rsize)
     N = prod(dsize)
 
-    return AlgebraicArray(randn(T, M, N), rsize, dsize)
+    if type == :AlgebraicArray
+        return AlgebraicArray(randn(T, M, N), rsize, dsize)
+    elseif type == :MatrixArray
+        return MatrixArray(randn(T, M, N), rsize, dsize)
+    end
 end
 # make Float64 the default
-Base.randn(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} = randn(Float64, rsize,dsize, type)
+Base.randn(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} = randn(Float64, rsize, dsize, type)
 
 function Base.rand(rsize::Union{Int,NTuple{N,Int}},type::Symbol) where N
     if type == :VectorArray
@@ -218,7 +230,11 @@ function Base.rand(T::Type, rsize::Union{Int,NTuple{N1,Int}},dsize::Union{Int,NT
     M = prod(rsize)
     N = prod(dsize)
 
-    return AlgebraicArray(rand(T, M, N), rsize, dsize)
+    if type == :AlgebraicArray
+        return AlgebraicArray(rand(T, M, N), rsize, dsize)
+    elseif type == :MatrixArray
+        return MatrixArray(rand(T, M, N), rsize, dsize)
+    end
 end
 # make Float64 the default
 Base.rand(rsize::Union{Int,NTuple{N1,Int}}, dsize::Union{Int,NTuple{N2,Int}}, type::Symbol) where {N1,N2} = rand(Float64, rsize, dsize, type)
