@@ -77,7 +77,12 @@ function Base.rand(T::Type, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::
     M = prod(rsize)
     N = prod(dsize)
     A = rand(T,M,N)
-    return AlgebraicArray(A, rdims, ddims)
+    if type == :AlgebraicArray
+        return AlgebraicArray(A, rdims, ddims)
+    elseif type == :MatrixArray
+        return MatrixArray(A, rdims, ddims)
+    end
+    #return AlgebraicArray(A, rdims, ddims)
 end
 # make Float64 the default
 Base.rand(rdims::Union{Tuple, D}, ddims::Union{Tuple, D}, type::Symbol) where D <: DimensionalData.Dimension =
@@ -106,7 +111,12 @@ function Base.randn(T::Type, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type:
     M = prod(rsize)
     N = prod(dsize)
     A = randn(T,M,N)
-    return AlgebraicArray(A, rdims, ddims)
+    if type == :AlgebraicArray
+        return AlgebraicArray(A, rdims, ddims)
+    elseif type == :MatrixArray
+        return MatrixArray(A, rdims, ddims)
+    end
+    #return AlgebraicArray(A, rdims, ddims)
 end
 # make Float64 the default
 Base.randn(rdims::Union{Tuple, D}, ddims::Union{Tuple, D}, type::Symbol) where D <: DimensionalData.Dimension =
@@ -135,7 +145,12 @@ function Base.ones(T::Type, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::
     M = prod(rsize)
     N = prod(dsize)
     A = ones(M,N)
-    return AlgebraicArray(A, rdims, ddims)
+    if type == :AlgebraicArray
+        return AlgebraicArray(A, rdims, ddims)
+    elseif type == :MatrixArray
+        return MatrixArray(A, rdims, ddims)
+    end
+    #return AlgebraicArray(A, rdims, ddims)
 end
 # make Float64 the default
 Base.ones(rdims::Union{Tuple, D}, ddims::Union{Tuple, D}, type::Symbol) where D <: DimensionalData.Dimension =
@@ -163,8 +178,13 @@ function Base.zeros(T::Type, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type:
     dsize = size(ddims)
     M = prod(rsize)
     N = prod(dsize)
-    A = zeros(M,N)
-    return AlgebraicArray(A, rdims, ddims)
+    A = zeros(T, M, N)
+    if type == :AlgebraicArray
+        return AlgebraicArray(A, rdims, ddims)
+    elseif type == :MatrixArray
+        return MatrixArray(A, rdims, ddims)
+    end
+    #return AlgebraicArray(A, rdims, ddims)
 end
 # make Float64 the default
 Base.zeros(rdims::Union{Tuple, D}, ddims::Union{Tuple, D}, type::Symbol) where D <: DimensionalData.Dimension =
@@ -186,7 +206,12 @@ function Base.fill(val, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symb
     M = prod(rsize)
     N = prod(dsize)
     A = fill(val, M, N)
-    return AlgebraicArray(A, rdims, ddims)
+    if type == :AlgebraicArray
+        return AlgebraicArray(A, rdims, ddims)
+    elseif type == :MatrixArray
+        return MatrixArray(A, rdims, ddims)
+    end
+    #return AlgebraicArray(A, rdims, ddims)
 end
 
 "`A = find_vda(As)` returns the first VectorDimArray among the arguments."
