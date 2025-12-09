@@ -1,7 +1,7 @@
 name = "AlgebraicArrays"
 uuid = "8af735f6-f3e5-4048-bdaa-40a2355e9eea"
 authors = ["G Jake Gebbie <ggebbie@whoi.edu>"]
-version = "1.0.8-DEV"
+version = "1.0.9-DEV"
 
 [deps]
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
@@ -9,22 +9,24 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
+[weakdeps]
+DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
 [extensions]
 AlgebraicArraysDimensionalDataExt = ["DimensionalData"]
 AlgebraicArraysUnitfulExt = ["Unitful"]
 
 [compat]
-ArraysOfArrays = "0.6.5"
 DimensionalData = "0.27,0.28,0.29"
 Revise = "3.6.4"
 Unitful = "1.21.0"
 julia = "1.10,1.11"
 
 [extras]
-ArraysOfArrays = "65a8f2f4-9b39-5baf-92e2-a9cc46fdf018"
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [targets]
-test = ["Test", "ArraysOfArrays", "DimensionalData", "Unitful"]
+test = ["Test", "DimensionalData", "Unitful"]
