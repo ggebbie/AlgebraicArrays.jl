@@ -1,4 +1,3 @@
-using Revise
 using AlgebraicArrays
 using LinearAlgebra
 using Test
