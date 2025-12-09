@@ -1,0 +1,10 @@
+[deps]
+AlgebraicArrays = "8af735f6-f3e5-4048-bdaa-40a2355e9eea"
+DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
+[sources]
+AlgebraicArrays = {path = ".."}
