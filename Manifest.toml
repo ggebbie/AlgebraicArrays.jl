@@ -2,7 +2,7 @@
 
 julia_version = "1.12.2"
 manifest_format = "2.0"
-project_hash = "777541c5ad2907dfcdeb8f198b3487f2ad2b5f25"
+project_hash = "a4c462fc13336596a796f7dc2e158a7a0895e94f"
 
 [[deps.AlgebraicArrays]]
 deps = ["LinearAlgebra", "Revise"]

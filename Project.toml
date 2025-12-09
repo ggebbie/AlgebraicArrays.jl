@@ -1,12 +1,11 @@
 name = "AlgebraicArrays"
 uuid = "8af735f6-f3e5-4048-bdaa-40a2355e9eea"
-authors = ["G Jake Gebbie <ggebbie@whoi.edu>"]
 version = "1.0.9-DEV"
+authors = ["G Jake Gebbie <ggebbie@whoi.edu>"]
 
 [deps]
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [weakdeps]
@@ -19,7 +18,6 @@ AlgebraicArraysUnitfulExt = ["Unitful"]
 
 [compat]
 DimensionalData = "0.27,0.28,0.29"
-Revise = "3.6.4"
 Unitful = "1.21.0"
 julia = "1.10,1.11"
 
