@@ -19,7 +19,7 @@ AlgebraicArraysUnitfulExt = ["Unitful"]
 [compat]
 DimensionalData = "0.27,0.28,0.29"
 Unitful = "1.21.0"
-julia = "1.10,1.11"
+julia = "1.10,1.11,1.12"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
