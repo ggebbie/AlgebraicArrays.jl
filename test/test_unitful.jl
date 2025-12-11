@@ -104,6 +104,12 @@
 
         end
 
+        @testset "diagonal divide: issue 21" begin
+            M = 2
+            # this issue popped up in Julia 1.12
+            Da = Diagonal(rand(M)u"K")
+            @test (Da\ Da) == I(M)  # dispatch ambiguity?         
+        end
     end
 
 end

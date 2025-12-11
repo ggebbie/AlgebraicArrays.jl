@@ -29,6 +29,14 @@ function Base.:(\)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat)
     return (1/Aunit) * (ustrip.(A) \ B)
 end
 
+# handle issue 21
+function Base.:(\)(A::LinearAlgebra.Diagonal{Unitful.Quantity{Q1, S1, V1}, V} where V<:AbstractArray{Unitful.Quantity{Q1, S1, V1}, 1}, B::AbstractArray{Unitful.Quantity{Q2, S2, V2}, 2}) where {Q2, S2, V2, Q1, S1, V1}
+#function Base.:(\)(A::Diagonal{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat) where {Q1,S1,V1} 
+    #if uniform(A) # already handled by input types
+    Aunit = unit(first(first(A)))
+    return (1/Aunit) * (ustrip.(A) \ B)
+end
+
 # Unitful not handling this case, benign type piracy here
 function Base.:(/)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat) where {Q1,S1,V1} 
     Aunit = unit(first(first(A)))
