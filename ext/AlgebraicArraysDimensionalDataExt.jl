@@ -9,6 +9,7 @@ export VectorDimArray, MatrixDimArray, dims, rowvector, AlgebraicArray
 export rand, randn, zeros, ones
 
 import AlgebraicArrays: rangedims, domaindims, AlgebraicArray, rowvector
+import AlgebraicArrays: MatrixArray, VectorArray 
 import LinearAlgebra: eigen
 import Base: exp, transpose
 import Base: rand, randn, zeros, ones

@@ -1,6 +1,6 @@
 name = "AlgebraicArrays"
 uuid = "8af735f6-f3e5-4048-bdaa-40a2355e9eea"
-version = "1.0.10-DEV"
+version = "1.0.11-DEV"
 authors = ["G Jake Gebbie <ggebbie@whoi.edu>"]
 
 [deps]
