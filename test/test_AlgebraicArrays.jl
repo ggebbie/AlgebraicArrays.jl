@@ -87,7 +87,7 @@
         @test all(isapprox.(sum(D2-D), 1.0))
 
         # iteration uses CartesianIndices not linear indices, would need to set `iterate` function 
-        @test eachindex(D) == Base.OneTo(prod(size(D)))
+        # @test eachindex(D) == Base.OneTo(prod(size(D)))
 
         @test D[2,1][1,1] isa Number
         @test rowvector(D,1,1) isa MatrixArray

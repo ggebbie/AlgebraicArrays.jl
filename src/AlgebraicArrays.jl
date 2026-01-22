@@ -338,7 +338,9 @@ function Base.getindex(A::MatrixArray, inds::Vararg)
     return AlgebraicArray(Aslice)
 end
 
-rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowindex...] for j in eachindex(A)]))
+rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowindex...] for j in eachindex(parent(A))]))
+# rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowindex...] for j in 1:prod(rangedims(A))]))
+# rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowindex...] for j in eachindex(A)]))
     
 Base.getindex(A::MatrixArray; kw...) = getindex(parent(A), kw...) 
 Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?
@@ -350,8 +352,8 @@ endomorphic(A::MatrixArray) = isequal(rangedims(A), domaindims(A))
 
 # key for making `==` work
 # Base.iterate(A::MatrixArray, args::Vararg) = iterate(parent(A), args...)
-Base.iterate(A::MatrixArray, args::Vararg) = iterate(Matrix(A), args...)
-Base.eachindex(A::MatrixArray) = eachindex(Matrix(A))
+Base.iterate(A::MatrixArray, args::Vararg) = iterate(parent(A), args...)
+Base.eachindex(A::MatrixArray) = eachindex(parent(A))
 Base.axes(A::MatrixArray,d) = axes(parent(A),d)
 
 # late addition, wasn't necessary before
