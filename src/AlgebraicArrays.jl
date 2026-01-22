@@ -348,21 +348,14 @@ domaindims(A::MatrixArray) = size(parent(A))
 rangedims(A::MatrixArray) = size(first(parent(A)))
 endomorphic(A::MatrixArray) = isequal(rangedims(A), domaindims(A))
 
-# ### new stuff here 
-Base.iterate(A::MatrixArray, args::Vararg) = iterate(parent(A), args...)
+# key for making `==` work
+# Base.iterate(A::MatrixArray, args::Vararg) = iterate(parent(A), args...)
+Base.iterate(A::MatrixArray, args::Vararg) = iterate(Matrix(A), args...)
+Base.eachindex(A::MatrixArray) = eachindex(Matrix(A))
+Base.axes(A::MatrixArray,d) = axes(parent(A),d)
 
-# # `VectorArray` is a subtype of AbstractVector which causes issues with eachindex
-# # What other fundamental operators need adjustment?
-# Base.eachindex(b::VectorArray) = eachindex(parent(b))
-
-# Base.IndexStyle(b::VectorArray) = Base.IndexStyle(parent(b))
-# Base.axes(b::VectorArray,d) = axes(parent(b),d)
-# rangedims(b::VectorArray) = size(parent(b))
-# domaindims(b::VectorArray) = ()
-# #Base.real(b::VectorArray) = VectorArray(real(parent(b)))
-# Base.transpose(P::VectorArray) = AlgebraicArray( transpose(vec(P)), 1, rangedims(P))
-
-
+# late addition, wasn't necessary before
+Base.sum(A::MatrixArray) = sum(sum(parent(A)))
 
 # revisit and make performant
 function LinearAlgebra.diag(A::MatrixArray)

@@ -83,11 +83,11 @@
         @test D[1:2] isa MatrixArray
 
         D2 = deepcopy(D)
-        D2[2,1] .+= 1.0 
+        D2[2,1][1,1] += 1.0
         @test all(isapprox.(sum(D2-D), 1.0))
 
         # iteration uses CartesianIndices not linear indices, would need to set `iterate` function 
-        # @test eachindex(D) == Base.OneTo(prod(size(b)))
+        @test eachindex(D) == Base.OneTo(prod(size(D)))
 
         @test D[2,1][1,1] isa Number
         @test rowvector(D,1,1) isa MatrixArray
