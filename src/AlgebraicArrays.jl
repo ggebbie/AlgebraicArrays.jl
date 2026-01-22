@@ -67,8 +67,12 @@ function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
     println(io,"*operating algebraically as*")
     show(io,mime,vec(b))
 end
-Base.size(b::VectorArray) = size(parent(b))
+
 Base.vec(b::VectorArray) = vec(parent(b))
+
+# make consistent with AbstractArray interface
+Base.size(b::VectorArray) = size(vec(b))
+# Base.size(b::VectorArray) = size(parent(b))
 
 Base.getindex(b::VectorArray, inds::Vararg) = VectorArray(getindex(parent(b), inds...))
 Base.getindex(b::VectorArray; kw...) = VectorArray(getindex(parent(b); kw...))
@@ -324,7 +328,10 @@ function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
     println(io,"*operating algebraically as*")
     show(io,mime,Matrix(A))
 end
-Base.size(A::MatrixArray) = size(parent(A))
+
+# make consistent with AbstractArray interface
+Base.size(A::MatrixArray) = (prod(domaindims(A)), prod(rangedims(A)))
+# Base.size(A::MatrixArray) = size(parent(A))
 
 function Base.getindex(A::MatrixArray, inds::Vararg)
     Aslice = getindex(parent(A), inds...)
@@ -336,10 +343,26 @@ rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowind
 Base.getindex(A::MatrixArray; kw...) = getindex(parent(A), kw...) 
 Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?
 Base.setindex!(A::MatrixArray, v; kw...) = setindex!(parent(A), v, kw...) 
-#Base.IndexStyle(A::MatrixArray) = Base.IndexStyle(parent(A))
+Base.IndexStyle(A::MatrixArray) = Base.IndexStyle(parent(A))
 domaindims(A::MatrixArray) = size(parent(A))
 rangedims(A::MatrixArray) = size(first(parent(A)))
 endomorphic(A::MatrixArray) = isequal(rangedims(A), domaindims(A))
+
+# ### new stuff here 
+Base.iterate(A::MatrixArray, args::Vararg) = iterate(parent(A), args...)
+
+# # `VectorArray` is a subtype of AbstractVector which causes issues with eachindex
+# # What other fundamental operators need adjustment?
+# Base.eachindex(b::VectorArray) = eachindex(parent(b))
+
+# Base.IndexStyle(b::VectorArray) = Base.IndexStyle(parent(b))
+# Base.axes(b::VectorArray,d) = axes(parent(b),d)
+# rangedims(b::VectorArray) = size(parent(b))
+# domaindims(b::VectorArray) = ()
+# #Base.real(b::VectorArray) = VectorArray(real(parent(b)))
+# Base.transpose(P::VectorArray) = AlgebraicArray( transpose(vec(P)), 1, rangedims(P))
+
+
 
 # revisit and make performant
 function LinearAlgebra.diag(A::MatrixArray)
@@ -368,8 +391,8 @@ end
 function Matrix(P::MatrixArray{T}) where T
 """
 function Matrix(P::MatrixArray{T}) where T
-    N = length(P) # number of columns/ outer dims
-    M = length(first(P)) # number of rows, take first inner element as example
+    N = prod(rangedims(P)) # length(P) # number of columns/ outer dims
+    M = prod(domaindims(P)) # length(first(P)) # nnumber of rows, take first inner element as example
 
     A = Array{T}(undef,M,N)
     if N > 1  

@@ -19,7 +19,8 @@
         @test b[1:2,:] isa VectorArray
         @test b[:,2:end] isa VectorArray # end keyword not correct
         v = deepcopy(b)
-        v[1,:] .+= 1.0 
+        parent(v)[1,:] .+= 1.0 # works
+        # v[1,:] .+= 1.0 # doesn't work
         @test isapprox( sum(v-b), rsize[2])
 
         v = deepcopy(b)
@@ -31,8 +32,8 @@
     end
         
     # internal algorithms must be able to turn into a vector, then bring it back to VectorArray
-    c = AlgebraicArray(vec(a), rsize)
-    @test a == c    
+    c = AlgebraicArray(vec(b), rsize)
+    @test b == c
 
     # test `similar`
     @test similar(c) isa VectorArray
@@ -43,7 +44,7 @@
     # # make an array of arrays
     rsize = (1,2)
     dsize = (2,1)
-    D = randn(rsize,dsize,:MatrixArray)
+    D = randn(rsize, dsize, :MatrixArray)
     @test !endomorphic(D)
     @test !(diag(D) isa VectorArray)
 
