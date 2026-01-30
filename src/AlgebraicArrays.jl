@@ -338,8 +338,8 @@ function Base.getindex(A::MatrixArray, inds::Vararg)
     return AlgebraicArray(Aslice)
 end
 
-rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowindex...] for j in eachindex(parent(A))]))
-# rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowindex...] for j in 1:prod(rangedims(A))]))
+# rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowindex...] for j in eachindex(parent(A))]))
+rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowindex...] for j in 1:prod(rangedims(A))]))
 # rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowindex...] for j in eachindex(A)]))
     
 Base.getindex(A::MatrixArray; kw...) = getindex(parent(A), kw...) 
