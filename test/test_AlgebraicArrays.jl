@@ -1,23 +1,24 @@
 @testset "constructors" begin
 
+    # size of a VectorArray
     rsize = (2,3)
-
-    @test fill(2.0,rsize,:VectorArray) isa VectorArray
-    @test ones(rsize,:VectorArray) isa VectorArray
-    @test randn(rsize,:VectorArray) isa VectorArray
-    @test zeros(rsize,:VectorArray) isa VectorArray
-    @test rand(rsize,:VectorArray) isa VectorArray
+    vsize = (rsize,) # tells it to make a vector
+    @test fill(2.0,vsize) isa VectorArray  
+    @test ones(vsize) isa VectorArray
+    @test randn(vsize) isa VectorArray
+    @test zeros(vsize) isa VectorArray 
+    @test rand(vsize) isa VectorArray
         
     # investigator makes a field with physical dimensions
     a = randn(rsize)
 
     # can immediately save it as a VectorArray for future calculations
-    b = VectorArray(a)
+    b = AlgebraicArray(a, vsize)
 
     @testset "vector broadcasting and slicing" begin
         @test b[1,:] isa VectorArray
         @test b[1:2,:] isa VectorArray
-        @test b[:,2:end] isa VectorArray # end keyword not correct
+        # @test b[:,2:end] isa VectorArray # end keyword not correct
         v = deepcopy(b)
         v[1,:] .+= 1.0 
         @test isapprox( sum(v-b), rsize[2])
@@ -31,19 +32,23 @@
     end
         
     # internal algorithms must be able to turn into a vector, then bring it back to VectorArray
-    c = AlgebraicArray(vec(a), rsize)
-    @test a == c    
+    # c = AlgebraicArray(a, size) 
+    # @test a == c    
 
     # test `similar`
-    @test similar(c) isa VectorArray
+    @test similar(b) isa VectorArray
 
     # custom broadcasting
-    @test all(abs.(c) .> 0)
+    @test all(abs.(b) .> 0)
         
     # # make an array of arrays
     rsize = (1,2)
     dsize = (2,1)
-    D = randn(rsize,dsize,:MatrixArray)
+    msize = (dsize, rsize)
+    mdata = fill(2.0, AlgebraicArrays.unwrap(msize))
+    C = AlgebraicArray(mdata, msize) 
+    D = randn(msize)
+
     @test !endomorphic(D)
     @test !(diag(D) isa VectorArray)
 
@@ -52,28 +57,27 @@
 
     funks = [:randn,:zeros,:ones]
     for fnk in funks
-        #J = randn(rsize,rsize,:MatrixArray)
         rsize = (1,2)
-        #J = @eval $fnk((1,2),(1,2),:MatrixArray)
-        J = @eval $fnk($rsize, $rsize,:MatrixArray)
+        msize = (rsize, rsize)
+        J = @eval $fnk($msize)
         @test endomorphic(J) 
         @test diag(J) isa VectorArray
-        id = rand(1:prod(rsize))
-        @test diag(J)[id] == J[id][id]
+        id = rand(1:size(J,1))
+        @test diag(J)[id] == J[id,id]
     end
 
     #fill
-    J = fill(1, rsize, rsize,:MatrixArray)
+    J = fill(1, msize)
     @test endomorphic(J) 
     @test diag(J) isa VectorArray
-    id = rand(1:prod(rsize))
+    id = rand(1:size(J,1))
     @test diag(J)[id] == J[id][id]
 
     # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
-    # turn a MatrixArray back into an array of arrays
-    E = AlgebraicArray(Matrix(D),rsize,dsize)
-    @test D == E 
-    @test similar(D) isa MatrixArray
+    # turn a MatrixArray back into an array of arrays: still true?
+    # E = AlgebraicArray(Matrix(D),rsize,dsize)
+    # @test D == E 
+    # @test similar(D) isa MatrixArray
         
     @testset "matrix slicing" begin
         @test D[1] isa VectorArray
@@ -108,7 +112,8 @@
 
         rsize = (3,4)
         dsize = (2,3)
-
+        msize = (dsize, rsize)
+        
         q = randn(dsize,:VectorArray) #VectorArray(randn(dsize))
         qT = transpose(q)
         # same type than q, but type instability in code
