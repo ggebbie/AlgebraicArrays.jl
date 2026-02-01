@@ -198,19 +198,20 @@
         rsize = (2,3)
         dsize = (2,3)
 
-        S = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize) 
-        R = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize)
+        S = randn((rsize,dsize))
+        R = randn((rsize,dsize))
+        
         Q = R * S
-        @test isapprox(Matrix(R \ Q), Matrix(S), atol = 1e-8)
+        @test isapprox(R \ Q, S, atol = 1e-8)
             
         # # square matrices, matrix matrix right divide
-        @test isapprox(Matrix(Q / S), Matrix(R), atol = 1e-8)
+        @test isapprox(Q / S, R, atol = 1e-8)
 
         # non-square multiplication
         rsize = (2,3)
         dsize = (1,3)
-        G = randn(rsize,dsize,:MatrixArray) 
-        H = randn(dsize,rsize,:MatrixArray) 
+        G = randn((rsize,dsize))
+        H = randn((dsize,rsize))
         Matrix(G * H)
     end
 

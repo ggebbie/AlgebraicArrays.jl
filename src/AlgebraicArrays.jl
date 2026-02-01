@@ -48,7 +48,6 @@ struct AlgebraicArray{T,D,N} <: AbstractArray{T,D}
             ynew = y
         end
         N == Dnew ? need_reshape = true : need_reshape = false  # passing algebraic data
-        println(need_reshape)
         if need_reshape  # passing algebraic data
             x2 = reshape(x, unwrap(ynew))
             return new{T,Dnew,ndims(x2)}(x2,ynew)
@@ -108,13 +107,13 @@ Base.setindex!(b::VectorArray, val, inds::Vararg) = b.data[inds...] = val
 Base.vec(b::VectorArray) = vec(b.data)
 matrix_or_vec(b::VectorArray) = vec(b.data)
 
-function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
+function Base.show(io::IO, mime::MIME"text/plain", b::AlgebraicArray)
     #println(summary(b))
     show(io,mime,parent(b))
     println(io,"")
     println(io,"============================")
     println(io,"*operating algebraically as*")
-    show(io,mime,vec(b))
+    show(io,mime,matrix_or_vec(b))
 end
 
 domaindims(q::VectorArray) = ()
@@ -351,13 +350,13 @@ end
 # end
 
 # parent(A::MatrixArray) = A.data
-function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
-    show(io,mime,parent(A))
-    println(io,"")
-    println(io,"============================")
-    println(io,"*operating algebraically as*")
-    show(io,mime,Matrix(A))
-end
+# function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
+#     show(io,mime,parent(A))
+#     println(io,"")
+#     println(io,"============================")
+#     println(io,"*operating algebraically as*")
+#     show(io,mime,Matrix(A))
+# end
 
 # Base.size(A::MatrixArray) = size(parent(A))
 Base.Matrix(P::MatrixArray) = reshape( P.data, size(P))
@@ -443,6 +442,14 @@ Base.:(\ )(A::AlgebraicArray, B::AlgebraicArray) =
     (return AlgebraicArray(matrix_or_vec(A) \ matrix_or_vec(B), (domaindims(A), domaindims(B)))) :
     (error("AlgebraicArrays.jl: left divide not conformable"))
 
+# needed?
+# Base.:(/)(A::MatrixArray, b::Number) = AlgebraicArray(Matrix(A)/b, rangedims(A), domaindims(A))
+
+# missing an explicit conformability test here
+Base.:(/)(A::AlgebraicArray, B::AlgebraicArray) = AlgebraicArray( matrix_or_vec(A) / matrix_or_vec(B), (rangedims(A), rangedims(B)))
+
+# Base.:(/)(A::Union{VectorArray,MatrixArray}, b::Number) = (1/b) * A
+
 
 # Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domaindims(P), rangedims(P))
 # Base.similar(P::MatrixArray) = AlgebraicArray( similar(Matrix(P)), rangedims(P), domaindims(P))
@@ -514,8 +521,6 @@ end
 
 # `A/B = ( B'\\A')'
 # """
-# Base.:(/)(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) / Matrix(B), rangedims(A), rangedims(B))
-# Base.:(/)(A::Union{VectorArray,MatrixArray}, b::Number) = (1/b) * A
 
 
 # function LinearAlgebra.eigen(A::MatrixArray)
