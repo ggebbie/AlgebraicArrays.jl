@@ -225,7 +225,7 @@
         vals, vecs = eigen(S)
         F = eigen(S)
 
-        Diagonal(vals)
+        @test Diagonal(vals) isa MatrixArray
         @test isapprox(Matrix(F), Matrix(S), atol= 1e-8)
 
         # # check matrix exponential

@@ -471,15 +471,16 @@ function LinearAlgebra.eigen(A::MatrixArray)
     return Eigen(values, vectors)
 end
 
-# # force it to return a MatrixArray
-# Diagonal(a::VectorArray) = MatrixArray(Diagonal(vec(a)), rangedims(a), rangedims(a))
+# # force `Diagonal` to return an AlgebraicArray
+Diagonal(a::VectorArray) = AlgebraicArray(Diagonal(vec(a)), (rangedims(a), rangedims(a)))
 
-# function exp(A::MatrixArray)
-#     # A must be endomorphic (check type signature someday)
-#     !AlgebraicArrays.endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
-#     eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually
-#     return AlgebraicArray(exp(Matrix(A)),rangedims(A),domaindims(A)) # wrap with same labels and format as A
-# end
+function exp(A::MatrixArray)
+    # A must be endomorphic (check type signature someday)
+    !AlgebraicArrays.endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
+    eA = exp(Matrix(A))
+    # wrap with same labels and format as A
+    return AlgebraicArray(exp(Matrix(A)),(rangedims(A),domaindims(A)))
+end
 
 # #########
 
