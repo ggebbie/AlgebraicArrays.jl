@@ -192,7 +192,7 @@
         @test P * P★ isa MatrixArray
 
         r = P * q
-        @test isapprox(vec(P \ r), vec(q), atol = 1e-8) # sometimes failed w/o `vec`
+        @test isapprox(P \ r, q, atol = 1e-8) # sometimes failed w/o `vec`
 
         # square matrices
         rsize = (2,3)

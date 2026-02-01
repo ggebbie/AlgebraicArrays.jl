@@ -118,8 +118,9 @@ function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
 end
 
 domaindims(q::VectorArray) = ()
-Base.transpose(q::VectorArray) =
-    AlgebraicArray( transpose(vec(q)), (domaindims(q), rangedims(q)))
+
+# Base.transpose(q::VectorArray) =
+#     AlgebraicArray( transpose(vec(q)), (domaindims(q), rangedims(q)))
 
 # #Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
 # #Base.getindex(A::VectorArray, inds::Vararg) = VectorArray(A.data[inds...])
@@ -431,10 +432,17 @@ end
 domaindims(P::MatrixArray) = last(P.dims)
 
 # # a pattern for any function
-Base.transpose(P::MatrixArray) =
-    AlgebraicArray( transpose(Matrix(P)), (domaindims(P), rangedims(P)))
-Base.adjoint(P::MatrixArray) =
-    AlgebraicArray( adjoint(Matrix(P)), (domaindims(P), rangedims(P)))
+Base.transpose(P::AlgebraicArray) =
+    AlgebraicArray( transpose(matrix_or_vec(P)), (domaindims(P), rangedims(P)))
+
+Base.adjoint(P::AlgebraicArray) =
+    AlgebraicArray( adjoint(matrix_or_vec(P)), (domaindims(P), rangedims(P)))
+
+Base.:(\ )(A::AlgebraicArray, B::AlgebraicArray) =
+    (rangedims(A) == rangedims(B)) ? 
+    (return AlgebraicArray(matrix_or_vec(A) \ matrix_or_vec(B), (domaindims(A), domaindims(B)))) :
+    (error("AlgebraicArrays.jl: left divide not conformable"))
+
 
 # Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domaindims(P), rangedims(P))
 # Base.similar(P::MatrixArray) = AlgebraicArray( similar(Matrix(P)), rangedims(P), domaindims(P))
