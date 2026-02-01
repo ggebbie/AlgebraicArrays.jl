@@ -190,13 +190,15 @@ Base.BroadcastStyle(::Type{<:VectorArray{T, N, A}}) where {T, N, A <: Dimensiona
 #     zeros(Float64, rdims, ddims, type)
 
 # ### fill
-# function Base.fill(val, rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-#     if type == :VectorArray
-#         return VectorArray(fill(val, rdims)) #AlgebraicArray(fill(prod(size(rdims))), rdims)
-#     else
-#         error("randn not implemented for this type")
-#     end
-# end
+function Base.fill(val, dims::NTuple{D,Tuple}) where D <: DimensionalData.Dimension
+    return AlgebraicArray(fill(val, rdims),(size(rdims),))
+    #AlgebraicArray(fill(prod(size(rdims))), rdims)
+end
+# Base.fill(val::T, dims::NTuple{D,Tuple}) where {T,D} =
+#     AlgebraicArray(fill(val, AlgebraicArrays.unwrap(dims)), dims)
+
+
+
 # function Base.fill(val, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
 
 #     !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")

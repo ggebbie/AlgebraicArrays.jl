@@ -10,21 +10,26 @@
     function source_water_solution(surfaceregions,years)
         m = length(years)
         n = length(surfaceregions)
-        return VectorArray(DimArray(randn(m,n),(Ti(years),SurfaceRegion(surfaceregions))))
+        da = DimArray(randn(m,n),(Ti(years),SurfaceRegion(surfaceregions)))
+
+        # wrap it with an AlgebraicArray
+        return AlgebraicArray(da, (size(da),))
+        # return VectorArray(DimArray(randn(m,n),(Ti(years),SurfaceRegion(surfaceregions))))
     end
 
     function source_water_solution(surfaceregions, years, statevar)
         m = length(years)
         n = length(surfaceregions)
         mat = cat(randn(m, n, 1), randn(m, n, 1); dims = 3)
-        x = VectorArray(DimArray(mat, (Ti(years), SurfaceRegion(surfaceregions), StateVariable(statevar))))
+        da = DimArray(mat, (Ti(years), SurfaceRegion(surfaceregions), StateVariable(statevar)))
+        x = VectorArray(da, (size(da),))
         return x
     end
 
     @testset "AlgebraicArrays + DimensionalData.jl" begin
 
-        MatrixDimArray = MatrixArray{T, M, N, R} where {M, T, N, R<:AbstractDimArray{T, M}}
-        VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.AbstractDimArray}
+        MatrixDimArray = MatrixArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
+        VectorDimArray = VectorArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
 
         @testset "no units" begin
             # x = source_water_solution(surfaceregions,
@@ -34,7 +39,7 @@
             x = source_water_solution(surfaceregions, years)
 
             @test x isa VectorDimArray
-            @test fill(2.0,dims(x),:VectorArray) isa VectorDimArray
+            @test fill(2.0,(dims(x),)) isa VectorDimArray
             @test ones(dims(x),:VectorArray) isa VectorDimArray
             @test randn(dims(x),:VectorArray) isa VectorDimArray
 
