@@ -38,12 +38,22 @@ struct AlgebraicArray{T,D,N} <: AbstractArray{T,D}
         if D > 2
             error("tensors not handled")
         end
-
-        if N == D  # passing algebraic data
-            x2 = reshape(x, unwrap(y))
-            return new{T,D,ndims(x2)}(x2,y)
+        if isempty(last(y))
+            # matrix should be dropped to a vector
+            # in accordance with base julia
+            Dnew = D - 1
+            ynew = (first(y),)
         else
-            return new{T,D,N}(x,y)
+            Dnew = D
+            ynew = y
+        end
+        N == Dnew ? need_reshape = true : need_reshape = false  # passing algebraic data
+        println(need_reshape)
+        if need_reshape  # passing algebraic data
+            x2 = reshape(x, unwrap(ynew))
+            return new{T,Dnew,ndims(x2)}(x2,ynew)
+        else
+            return new{T,Dnew,N}(x,ynew)
         end
     end
 end
@@ -61,6 +71,9 @@ unwrap(d::NTuple{D,Tuple}) where D  =
 
 parent(A::AlgebraicArray) = A.data
 Base.size(A::AlgebraicArray) = prod.(A.dims)
+
+rangedims(A::AlgebraicArray) = first(A.dims)
+endomorphic(A::AlgebraicArray) = isequal(rangedims(A), domaindims(A))
 
 # subset of all AArrays is a VArray (VectorArray)
 VectorArray{T,N} = AlgebraicArray{T,1,N}
@@ -93,6 +106,7 @@ Base.setindex!(b::VectorArray, val, inds::Vararg) = b.data[inds...] = val
 # end
 
 Base.vec(b::VectorArray) = vec(b.data)
+matrix_or_vec(b::VectorArray) = vec(b.data)
 
 function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
     #println(summary(b))
@@ -102,6 +116,10 @@ function Base.show(io::IO, mime::MIME"text/plain", b::VectorArray)
     println(io,"*operating algebraically as*")
     show(io,mime,vec(b))
 end
+
+domaindims(q::VectorArray) = ()
+Base.transpose(q::VectorArray) =
+    AlgebraicArray( transpose(vec(q)), (domaindims(q), rangedims(q)))
 
 # #Base.getindex(b::VectorArray, inds...) = getindex(parent(b), inds...)
 # #Base.getindex(A::VectorArray, inds::Vararg) = VectorArray(A.data[inds...])
@@ -339,8 +357,10 @@ function Base.show(io::IO, mime::MIME"text/plain", A::MatrixArray)
     println(io,"*operating algebraically as*")
     show(io,mime,Matrix(A))
 end
+
 # Base.size(A::MatrixArray) = size(parent(A))
-Matrix(P::MatrixArray) = reshape( P.data, size(P))
+Base.Matrix(P::MatrixArray) = reshape( P.data, size(P))
+matrix_or_vec(P::MatrixArray) = reshape( P.data, size(P))
 
 # function Base.getindex(A::MatrixArray, inds::Vararg)
 #     Aslice = getindex(parent(A), inds...)
@@ -360,10 +380,6 @@ end
 # Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?
 # Base.setindex!(A::MatrixArray, v; kw...) = setindex!(parent(A), v, kw...) 
 # #Base.IndexStyle(A::MatrixArray) = Base.IndexStyle(parent(A))
-
-domaindims(A::MatrixArray) = first(A.dims)
-rangedims(A::MatrixArray) = last(A.dims)
-endomorphic(A::MatrixArray) = isequal(rangedims(A), domaindims(A))
 
 function LinearAlgebra.diag(A::MatrixArray)
     if endomorphic(A)
@@ -412,8 +428,12 @@ end
 
 # Array(P::MatrixArray) = Matrix(P)
 
+domaindims(P::MatrixArray) = last(P.dims)
+
 # # a pattern for any function
-Base.transpose(P::MatrixArray) = AlgebraicArray( transpose(Matrix(P)), domaindims(P), rangedims(P))
+Base.transpose(P::MatrixArray) =
+    AlgebraicArray( transpose(Matrix(P)), (domaindims(P), rangedims(P)))
+
 # Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domaindims(P), rangedims(P))
 # Base.similar(P::MatrixArray) = AlgebraicArray( similar(Matrix(P)), rangedims(P), domaindims(P))
 
@@ -427,6 +447,13 @@ Base.transpose(P::MatrixArray) = AlgebraicArray( transpose(Matrix(P)), domaindim
 # # end
 
 # # slightly faster version in a one-liner form
+function Base.:*(A::AlgebraicArray, b::AlgebraicArray)
+    if rangedims(b) == domaindims(A)
+        return AlgebraicArray(matrix_or_vec(A)*matrix_or_vec(b), (rangedims(A), domaindims(b)))
+    else
+        error("multiplication with `AlgebraicArray`s not conformable")
+    end
+end
 # Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangedims(A))
 # Base.:*(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) * Matrix(B), rangedims(A), domaindims(B))
 # Base.:*(a::VectorArray, B::MatrixArray) = AlgebraicArray(vec(a) * Matrix(B), rangedims(a), domaindims(B))
