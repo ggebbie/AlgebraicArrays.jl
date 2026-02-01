@@ -2,10 +2,10 @@
 
 julia_version = "1.12.4"
 manifest_format = "2.0"
-project_hash = "c1b79863a7ae8be4ecc5ba86e23c2fc99253f761"
+project_hash = "a4c462fc13336596a796f7dc2e158a7a0895e94f"
 
 [[deps.AlgebraicArrays]]
-deps = ["LinearAlgebra"]
+deps = ["LinearAlgebra", "Revise"]
 path = "."
 uuid = "8af735f6-f3e5-4048-bdaa-40a2355e9eea"
 version = "1.0.11-DEV"

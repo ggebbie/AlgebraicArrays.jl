@@ -31,10 +31,10 @@ import LinearAlgebra: transpose, adjoint, eigen, Diagonal, diag
 # T: numeric type
 # N: number of total dimensions (sum of rows and columns)
 # D: dimension=1 for VectorArray, 2 for MatrixArray
-struct AlgebraicArray{T,D,N} <: AbstractArray{T,D}
-    data:: AbstractArray{T,N}
+struct AlgebraicArray{T,D,N,A <: AbstractArray{T,N}} <: AbstractArray{T,D}
+    data:: A
     dims:: NTuple{D,Tuple}
-    function AlgebraicArray(x::AbstractArray{T,N},y::NTuple{D,Tuple}) where {T,D,N}
+    function AlgebraicArray(x::A,y::NTuple{D,Tuple}) where A <: AbstractArray{T,N} where {T,D,N} 
         if D > 2
             error("tensors not handled")
         end
@@ -50,9 +50,9 @@ struct AlgebraicArray{T,D,N} <: AbstractArray{T,D}
         N == Dnew ? need_reshape = true : need_reshape = false  # passing algebraic data
         if need_reshape  # passing algebraic data
             x2 = reshape(x, unwrap(ynew))
-            return new{T,Dnew,ndims(x2)}(x2,ynew)
+            return new{T,Dnew,ndims(x2),typeof(x2)}(x2,ynew)
         else
-            return new{T,Dnew,N}(x,ynew)
+            return new{T,Dnew,N,A}(x,ynew)
         end
     end
 end
@@ -75,7 +75,7 @@ rangedims(A::AlgebraicArray) = first(A.dims)
 endomorphic(A::AlgebraicArray) = isequal(rangedims(A), domaindims(A))
 
 # subset of all AArrays is a VArray (VectorArray)
-VectorArray{T,N} = AlgebraicArray{T,1,N}
+VectorArray{T,N,A} = AlgebraicArray{T,1,N,A}
 
 # don't return as AArray
 # force only one argument for this vector
@@ -252,7 +252,7 @@ find_aa(a::AlgebraicArray, rest) = a
 find_aa(::Any, rest) = find_aa(rest)
 
 # subset of all AArrays is a MArray (MatrixArray)
-MatrixArray{T,N} = AlgebraicArray{T,2,N}
+MatrixArray{T,N,A} = AlgebraicArray{T,2,N,A}
 
 # don't return AArray
 function Base.getindex(A::MatrixArray, inds::Vararg{Any,2})

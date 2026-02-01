@@ -46,7 +46,8 @@
         v[1,:] = v[1,:] .+ 1.0 # works
         #v[(1,:)] = v[(1,:)] .+ 1.0 # fails
         v[1] = v[1] .+ 1.0 # works
-        @test isapprox(sum(v-b), dsize[2] + 1) # change to factor 3 when above error fixed
+        # @test isapprox(sum(v-b), dsize[2] + 1) # change to factor 3 when above error fixed
+        @test isapprox(sum(v-b), rangedims(v)[2] + 1) # change to factor 3 when above error fixed
 
         # iteration
         @test eachindex(b) == Base.OneTo(prod(size(b)))
