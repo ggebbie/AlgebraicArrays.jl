@@ -451,19 +451,8 @@ Base.:(/)(A::AlgebraicArray, B::AlgebraicArray) = AlgebraicArray( matrix_or_vec(
 # Base.:(/)(A::Union{VectorArray,MatrixArray}, b::Number) = (1/b) * A
 
 
-# Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domaindims(P), rangedims(P))
 # Base.similar(P::MatrixArray) = AlgebraicArray( similar(Matrix(P)), rangedims(P), domaindims(P))
 
-# # CR format for multiplication
-# # function Base.:*(A::MatrixArray, b::VectorArray)
-# #     c = zero(first(A))
-# #     for j in eachindex(A)
-# #         c += A[j] * b[j]
-# #     end
-# #     return VectorArray(c)
-# # end
-
-# # slightly faster version in a one-liner form
 function Base.:*(A::AlgebraicArray, b::AlgebraicArray)
     if rangedims(b) == domaindims(A)
         return AlgebraicArray(matrix_or_vec(A)*matrix_or_vec(b), (rangedims(A), domaindims(b)))
@@ -472,65 +461,15 @@ function Base.:*(A::AlgebraicArray, b::AlgebraicArray)
     end
 end
 
-
-# Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangedims(A))
-# Base.:*(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) * Matrix(B), rangedims(A), domaindims(B))
-# Base.:*(a::VectorArray, B::MatrixArray) = AlgebraicArray(vec(a) * Matrix(B), rangedims(a), domaindims(B))
-# Base.:*(a::Number, b::VectorArray) = AlgebraicArray(a * vec(b), rangedims(b))
-# Base.:*(b::VectorArray, a::Number) = a * b
-# Base.:*(a::Number, B::MatrixArray) = AlgebraicArray(a * Matrix(B), rangedims(B), domaindims(B))
-# Base.:*(B::MatrixArray, a::Number) = a * B
-
-# Base.:(\ )(A::MatrixArray, b::VectorArray) = AlgebraicArray(Matrix(A) \ vec(b), domaindims(A))
-# Base.:(\ )(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) \ Matrix(B), domaindims(A), domaindims(B))
-# Base.:(/)(A::MatrixArray, b::Number) = AlgebraicArray(Matrix(A)/b, rangedims(A), domaindims(A))
-# #     (c isa Number) && (c = [c]) # useful snippet if one-linear fails in some cases
-
-# Base.:+(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) + parent(B))
-# Base.:+(a::VectorArray, b::VectorArray) = VectorArray(parent(a) + parent(b))
-# Base.:+(A::MatrixArray, B::VectorArray) = MatrixArray(Matrix(A) + vec(B), rangedims(A), domaindims(A))
-# Base.:+(A::VectorArray, B::MatrixArray) = B + A
-
-# # special case: A is a wrapped scalar
-# # certainly not performant, but this is just a 1x1 matrix
-# function Base.:+(A::MatrixArray, b::Number)
-#     # a wrapped scalar 
-#     if (prod(domaindims(A)) ==1) && (prod(rangedims(A)) == 1)
-#         return MatrixArray([first(first(A)) + b;;], rangedims(A), domaindims(A))
-#     else
-#         error("Matrix and scalar addition only possible with 1x1 Matrix")
-#     end 
-# end 
-
-# Base.:-(A::MatrixArray, B::MatrixArray) = MatrixArray(parent(A) - parent(B))
-# Base.:-(a::VectorArray, b::VectorArray) = VectorArray(parent(a) - parent(b))
-# Base.:-(A::MatrixArray) = -1 * A
-# # special case: A is a wrapped scalar
-# # certainly not performant, but this is just a 1x1 matrix
-# function Base.:-(A::MatrixArray, b::Number)
-#     # a wrapped scalar 
-#     if (prod(domaindims(A)) ==1) && (prod(rangedims(A)) == 1)
-#         return MatrixArray([first(first(A)) - b;;], rangedims(A), domaindims(A))
-#     else
-#         error("Matrix and scalar subtraction only possible with 1x1 Matrix")
-#     end 
-# end 
-
-# """
-# function matrix right divide
-
-# `A/B = ( B'\\A')'
-# """
-
-
-# function LinearAlgebra.eigen(A::MatrixArray)
-#     F = eigen(Matrix(A))
-#     dsize = length(F.values)
-#     rsize = rangedims(A)
-#     values = AlgebraicArray(F.values,dsize)
-#     vectors = AlgebraicArray(F.vectors,rsize,dsize) 
-#     return Eigen(values, vectors)
-# end
+function LinearAlgebra.eigen(A::MatrixArray)
+    !endomorphic(A) && error("AlgebraicArrays.jl: not endomorphic")
+    F = eigen(Matrix(A))
+    dsize = size(F.values)
+    rsize = rangedims(A)
+    values = AlgebraicArray(F.values,(dsize,))
+    vectors = AlgebraicArray(F.vectors,(rsize,dsize)) 
+    return Eigen(values, vectors)
+end
 
 # # force it to return a MatrixArray
 # Diagonal(a::VectorArray) = MatrixArray(Diagonal(vec(a)), rangedims(a), rangedims(a))

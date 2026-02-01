@@ -219,8 +219,8 @@
 
         rsize = (2,3)
         dsize = (2,3)
-        x = randn(rsize,:VectorArray) #VectorArray(randn(rsize))
-        S = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize)
+        x = randn((rsize,))
+        S = randn((rsize,dsize))
 
         vals, vecs = eigen(S)
         F = eigen(S)
