@@ -433,6 +433,8 @@ domaindims(P::MatrixArray) = last(P.dims)
 # # a pattern for any function
 Base.transpose(P::MatrixArray) =
     AlgebraicArray( transpose(Matrix(P)), (domaindims(P), rangedims(P)))
+Base.adjoint(P::MatrixArray) =
+    AlgebraicArray( adjoint(Matrix(P)), (domaindims(P), rangedims(P)))
 
 # Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domaindims(P), rangedims(P))
 # Base.similar(P::MatrixArray) = AlgebraicArray( similar(Matrix(P)), rangedims(P), domaindims(P))
@@ -454,6 +456,8 @@ function Base.:*(A::AlgebraicArray, b::AlgebraicArray)
         error("multiplication with `AlgebraicArray`s not conformable")
     end
 end
+
+
 # Base.:*(A::MatrixArray, b::VectorArray) =  AlgebraicArray(Matrix(A) * vec(b), rangedims(A))
 # Base.:*(A::MatrixArray, B::MatrixArray) = AlgebraicArray(Matrix(A) * Matrix(B), rangedims(A), domaindims(B))
 # Base.:*(a::VectorArray, B::MatrixArray) = AlgebraicArray(vec(a) * Matrix(B), rangedims(a), domaindims(B))
