@@ -34,15 +34,29 @@ struct AlgebraicArray{T,D,N} <: AbstractArray{T,D}
     data:: AbstractArray{T,N}
     dims:: NTuple{D,Tuple}
     function AlgebraicArray(x::AbstractArray{T,N},y::NTuple{D,Tuple}) where {T,D,N}
-        return new{T,D,N}(x,y)
+        if D > 2
+            error("tensors not handled")
+        end
+
+        if N == D  # passing algebraic data
+            x2 = reshape(x, unwrap(y))
+            return new{T,D,ndims(x2)}(x2,y)
+        else
+            return new{T,D,N}(x,y)
+        end
     end
 end
 
 AlgebraicArray(a::Number, b) = a # helpful for slices that aren't vectors anymore
 
+
 # size of data array
 asize(A::AlgebraicArray) = unwrap(A.dims)
-unwrap(d::NTuple{D,Tuple{I,I}}) where D where I <: Int =  Tuple(d[i][j] for i in eachindex(d) for j in eachindex(d[i]))
+
+unwrap(d::NTuple{D,Tuple}) where D  =
+    Tuple(d[i][j] for i in eachindex(d) for j in eachindex(d[i]))
+# unwrap(d::Tuple)  =
+#     Tuple(d[i][j] for i in eachindex(d) for j in eachindex(d[i]))
 
 parent(A::AlgebraicArray) = A.data
 Base.size(A::AlgebraicArray) = prod.(A.dims)
@@ -50,9 +64,19 @@ Base.size(A::AlgebraicArray) = prod.(A.dims)
 # subset of all AArrays is a VArray (VectorArray)
 VectorArray{T,N} = AlgebraicArray{T,1,N}
 
+# don't return as AArray
+# force only one argument for this vector
+# function Base.getindex(b::VectorArray, ind::Vararg{Any,1})
+#     return tmp =  getindex(b.data, ind)
 function Base.getindex(b::VectorArray, inds::Vararg)
     tmp =  getindex(b.data, inds...)
-    newsize = (size(tmp),)
+    # newsize = (size(tmp),)
+    return AlgebraicArray( tmp, (size(tmp),))
+end
+# do return as AArray
+function Base.getindex(A::VectorArray, inds::Tuple)
+    # inds_full = unwrap(inds)
+    tmp = getindex(A.data, inds...)
     return AlgebraicArray( tmp, (size(tmp),))
 end
 
@@ -61,6 +85,11 @@ end
 # Base.getindex(b::VectorArray; kw...) = getindex(parent(b); kw...)
 Base.getindex(b::VectorArray; kw...) = getindex(vec(b); kw...)
 # Base.getindex(b::VectorArray; ind::Tuple) = getindex(parent(b), ind...)
+
+Base.setindex!(b::VectorArray, val, inds::Vararg) = b.data[inds...] = val
+# function Base.setindex!(b::VectorArray, val, inds::Tuple)
+#      b.data[inds...] = val
+# end
 
 Base.vec(b::VectorArray) = vec(b.data)
 
@@ -96,7 +125,7 @@ end
 #     #     end
 #     # end
 
-Base.setindex!(b::VectorArray, val, inds::Vararg) = b.data[inds...] = val
+
 # Base.setindex!(b::VectorArray, v, inds...) = setindex!(parent(b), v, inds...) 
 # Base.setindex!(b::VectorArray, v; kw...) = setindex!(parent(b), v, kw...) 
 # Base.iterate(b::VectorArray, args::Vararg) = iterate(parent(b), args...)
@@ -178,40 +207,48 @@ Base.randn(T::Type, dims::NTuple{D,Tuple}) where D =
 Base.randn(dims::NTuple{D,Tuple}) where D =
     AlgebraicArray( randn(AlgebraicArrays.unwrap(dims)), dims)
 
-# # implement broadcast
-Base.BroadcastStyle(::Type{<:VectorArray}) = Broadcast.ArrayStyle{VectorArray}()
+# # # implement broadcast
+# when I add this, broadcast over entire MatrixArray doesn't work
+# Base.IndexStyle(A::AlgebraicArray) = Base.IndexStyle(parent(A))
 
-function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{VectorArray}}, ::Type{ElType}) where ElType
+Base.BroadcastStyle(::Type{<:AlgebraicArray}) = Broadcast.ArrayStyle{AlgebraicArray}()
+
+function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{AlgebraicArray}}, ::Type{ElType}) where ElType
     # Scan the inputs
-    A = find_va(bc)
-    AlgebraicArray(similar(Array{ElType}, axes(bc)), bc.args)
+    A = find_aa(bc)
+    AlgebraicArray(similar(Array{ElType}, axes(bc)), A.dims)
 end
-function Base.similar(va::VectorArray{T}) where T 
-    tmp = reshape(similar(Array{T}, axes(va)), 
-        AlgebraicArrays.unwrap(va.dims))
-    
-    return AlgebraicArray(tmp, va.dims)
-    # VectorArray(similar(Array{T}, axes(va)))
+function Base.similar(aa::AlgebraicArray{T}) where T 
+    tmp = reshape(similar(Array{T}, axes(aa)), 
+        AlgebraicArrays.unwrap(aa.dims))
+    return AlgebraicArray(tmp, aa.dims)
 end
 
-"`A = find_va(As)` returns the first VectorArray among the arguments."
-find_va(bc::Base.Broadcast.Broadcasted) = find_va(bc.args)
-find_va(args::Tuple) = find_va(find_va(args[1]), Base.tail(args))
-find_va(x) = x
-find_va(::Tuple{}) = nothing
-find_va(a::VectorArray, rest) = a
-find_va(::Any, rest) = find_va(rest)
+# "`A = find_va(As)` returns the first AlgebraicArray among the arguments."
+find_aa(bc::Base.Broadcast.Broadcasted) = find_aa(bc.args)
+find_aa(args::Tuple) = find_aa(find_aa(args[1]), Base.tail(args))
+find_aa(x) = x
+find_aa(::Tuple{}) = nothing
+find_aa(a::AlgebraicArray, rest) = a
+find_aa(::Any, rest) = find_aa(rest)
 
-# subset of all AArrays is a VArray (VectorArray)
+# subset of all AArrays is a MArray (MatrixArray)
 MatrixArray{T,N} = AlgebraicArray{T,2,N}
 
-# example with two indices
-function Base.getindex(A::MatrixArray, rowind::Int, colind::Int)
+# don't return AArray
+function Base.getindex(A::MatrixArray, inds::Vararg{Any,2})
     # reshape A to a Matrix
     A2 = reshape(A.data, size(A))
-    return getindex(A2, rowind, colind)
+    tmp = getindex(A2, inds...)
+    return AlgebraicArray( tmp, (size(tmp),))
 end
-
+# do return AArray
+function Base.getindex(A::MatrixArray, inds::Vararg{Tuple,2})
+    # reshape A to a Matrix
+    inds_full = unwrap(inds)
+    tmp = getindex(parent(A), inds_full...)
+    return AlgebraicArray( tmp, (size(tmp),))
+end
 
 # #struct MatrixArray{T<:Number,
 # struct MatrixArray{T,
@@ -289,6 +326,13 @@ Matrix(P::MatrixArray) = reshape( P.data, size(P))
 # rowvector(A::MatrixArray, rowindex::Vararg) = transpose(VectorArray([A[j][rowindex...] for j in eachindex(A)]))
     
 # Base.getindex(A::MatrixArray; kw...) = getindex(parent(A), kw...) 
+
+# set this up for algebraic and dimensional layouts
+function Base.setindex!(MA::MatrixArray, val, inds::Vararg)
+    # Matrix step wicked slow?
+    setindex!(Matrix(MA), val, inds...)
+end
+
 # Base.setindex!(A::MatrixArray, v, inds::Vararg) = setindex!(parent(A), v, inds...) # need to reverse order?
 # Base.setindex!(A::MatrixArray, v; kw...) = setindex!(parent(A), v, kw...) 
 # #Base.IndexStyle(A::MatrixArray) = Base.IndexStyle(parent(A))
@@ -345,7 +389,7 @@ end
 # Array(P::MatrixArray) = Matrix(P)
 
 # # a pattern for any function
-# Base.transpose(P::MatrixArray) = AlgebraicArray( transpose(Matrix(P)), domaindims(P), rangedims(P))
+Base.transpose(P::MatrixArray) = AlgebraicArray( transpose(Matrix(P)), domaindims(P), rangedims(P))
 # Base.adjoint(P::MatrixArray) = AlgebraicArray( adjoint(Matrix(P)), domaindims(P), rangedims(P))
 # Base.similar(P::MatrixArray) = AlgebraicArray( similar(Matrix(P)), rangedims(P), domaindims(P))
 

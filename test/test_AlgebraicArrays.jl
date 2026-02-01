@@ -15,16 +15,31 @@
     # can immediately save it as a VectorArray for future calculations
     b = AlgebraicArray(a, vsize)
 
+    # what if dims don't match
+    c = AlgebraicArray(vec(a), vsize)
+
+    @test b == c
+
     @testset "vector broadcasting and slicing" begin
-        @test b[1,:] isa VectorArray
-        @test b[1:2,:] isa VectorArray
-        # @test b[:,2:end] isa VectorArray # end keyword not correct
+        # use physical indices
+        @test b[(1,:)] isa VectorArray
+        @test b[(1:2,:)] isa VectorArray
+
+        # currently failing
+        @test b[:,2:end] isa VectorArray # end keyword not correct
+        @test b[:,2:3] isa VectorArray # end keyword not correct
+
         v = deepcopy(b)
-        v[1,:] .+= 1.0 
+
+        v[(1,:)] .+= 1.0         # currently failing
+        v[1,:] .+= 1.0         # currently failing
+        v[1] .+= 1.0     # currently failing
         @test isapprox( sum(v-b), rsize[2])
 
         v = deepcopy(b)
-        v[1,:] = v[1,:] .+ 1.0 
+        v[1,:] = v[1,:] .+ 1.0 # works
+        v[(1,:)] = v[(1,:)] .+ 1.0 # fails
+        v[1] = v[1] .+ 1.0 # works
         @test isapprox(sum(v-b), rsize[2])
 
         # iteration
@@ -39,16 +54,16 @@
     @test similar(b) isa VectorArray
 
     # custom broadcasting
-    @test all(abs.(b) .> 0)
+    @test all(abs.(b) .> 0) # careful that it doesn't change type
         
-    # # make an array of arrays
     rsize = (1,2)
     dsize = (2,1)
     msize = (dsize, rsize)
     mdata = fill(2.0, AlgebraicArrays.unwrap(msize))
     C = AlgebraicArray(mdata, msize) 
-    D = randn(msize)
+    D = fill(2.0, msize)
 
+    @test C == D
     @test !endomorphic(D)
     @test !(diag(D) isa VectorArray)
 
@@ -66,12 +81,12 @@
         @test diag(J)[id] == J[id,id]
     end
 
-    #fill
-    J = fill(1, msize)
+    #fil
+    J = fill(1, ((2,1),(2,1)))
     @test endomorphic(J) 
     @test diag(J) isa VectorArray
     id = rand(1:size(J,1))
-    @test diag(J)[id] == J[id][id]
+    @test diag(J)[id] == J[id,id]
 
     # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
     # turn a MatrixArray back into an array of arrays: still true?
@@ -80,32 +95,35 @@
     # @test similar(D) isa MatrixArray
         
     @testset "matrix slicing" begin
-        @test D[1] isa VectorArray
-        @test D[2,1] isa VectorArray
-        @test D[1:2,1] isa MatrixArray
-        @test D[1:2] isa MatrixArray
+        @test D[1] isa Number
+        @test D[2,1] isa Number
+        @test D[1:2,1] isa VectorArray
+        @test D[1:2,:] isa MatrixArray # this one is not right, should not be VectorArray
 
         D2 = deepcopy(D)
-        D2[2,1] .+= 1.0 
+
+        D2[(:,:),(1,2)] .+= 1.0 # currently failing
         @test all(isapprox.(sum(D2-D), 1.0))
 
         # iteration uses CartesianIndices not linear indices, would need to set `iterate` function 
         # @test eachindex(D) == Base.OneTo(prod(size(b)))
 
-        @test D[2,1][1,1] isa Number
-        @test rowvector(D,1,1) isa MatrixArray
-        @test all(isapprox.(transpose(Matrix(D)[1,:]), Matrix(rowvector(D,1,1))))
+        @test D[(2,1),(1,1)] isa Number
+        @test D[(2,1),(:,:)] isa  VectorArray # row vector but Julia returns regular vector
+
+        # need to restate this onee
+        # @test all(isapprox.(transpose(Matrix(D)[1,:]), Matrix(rowvector(D,1,1))))
             
         # setindex!
-        D[2,1][1,1] = 0.0
+        D[(2,1),(1,1)] = 0.0 # failing
         # set columns to be equal
-        D[2,1] .= D[1,1]
+        D[(:,:),(1,2)] .= D[(:,:),(1,1)] # failing
         # set rows to be equal
-        #rowvector(D,1) .= 0.0 # fails, use comprehension instead
-            
+        D[(2,1)(:,:)] .= D[(1,1),(:,:)] # failing
     end
         
-    # not possible to broadcast to nested array
+    # now possible to broadcast to nested array
+    # but type changes
     F = real(D)
         
     @testset "*,+,-,/,\\ and all that" begin
@@ -114,7 +132,7 @@
         dsize = (2,3)
         msize = (dsize, rsize)
         
-        q = randn(dsize,:VectorArray) #VectorArray(randn(dsize))
+        q = randn(msize); #dsize,:VectorArray) #VectorArray(randn(dsize))
         qT = transpose(q)
         # same type than q, but type instability in code
         qTT = transpose(qT)
