@@ -20,20 +20,30 @@ import DimensionalData: dims
 
 MatrixDimArray = MatrixArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
 VectorDimArray = VectorArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
-    
-rangedims(A::VectorDimArray) = dims(parent(A))
-rangedims(A::MatrixDimArray) = dims(first(parent(A)))
 
-domaindims(A::MatrixDimArray) = dims(parent(A))
+# careful: these function conflict with ones in main module
+rangedims(A::VectorDimArray) = dims(parent(A))
+function rangedims(A::MatrixDimArray)
+    Nrange = length(first(A.dims))
+    return dims(parent(A))[1:Nrange]
+end
+
+function domaindims(A::MatrixDimArray)
+    Nrange = length(first(A.dims))
+    Ndomain = length(last(A.dims))
+    return dims(parent(A))[Nrange+1:Nrange+Ndomain]
+end
+
 domaindims(b::VectorDimArray) = ()
 
 DimensionalData.dims(A::VectorDimArray) = dims(parent(A))
+
 
 # implement broadcast
 
 # function declaration passes here but not OGFM
 #Base.BroadcastStyle(::Type{<:VectorArray{T, N, A}}) where {T, N, A <: DimensionalData.AbstractDimArray} = Broadcast.ArrayStyle{VectorArray{T, N, A}}()
-Base.BroadcastStyle(::Type{<:VectorArray{T, N, A}}) where {T, N, A <: DimensionalData.AbstractDimArray} = Broadcast.ArrayStyle{VectorDimArray}()
+# Base.BroadcastStyle(::Type{<:VectorArray{T, N, A}}) where {T, N, A <: DimensionalData.AbstractDimArray} = Broadcast.ArrayStyle{VectorDimArray}()
 
 # passes test 
 # Base.BroadcastStyle(::Type{<:VectorDimArray}) = Broadcast.ArrayStyle{VectorDimArray}()
@@ -190,16 +200,22 @@ Base.BroadcastStyle(::Type{<:VectorArray{T, N, A}}) where {T, N, A <: Dimensiona
 #     zeros(Float64, rdims, ddims, type)
 
 # ### fill
-function Base.fill(val, dims::NTuple{D,Tuple}) where D <: DimensionalData.Dimension
-    return AlgebraicArray(fill(val, rdims),(size(rdims),))
-    #AlgebraicArray(fill(prod(size(rdims))), rdims)
+function Base.fill(val, ddims::Union{Tuple, DD}, adims::NTuple{AD,Tuple}) where AD where DD <: DimensionalData.Dimension 
+    return AlgebraicArray(fill(val, ddims), adims)
 end
-# Base.fill(val::T, dims::NTuple{D,Tuple}) where {T,D} =
-#     AlgebraicArray(fill(val, AlgebraicArrays.unwrap(dims)), dims)
 
+function Base.ones(ddims::Union{Tuple, DD}, adims::NTuple{AD,Tuple}) where AD where DD <: DimensionalData.Dimension 
+    return AlgebraicArray(ones(ddims), adims)
+end
 
+function Base.zeros(ddims::Union{Tuple, DD}, adims::NTuple{AD,Tuple}) where AD where DD <: DimensionalData.Dimension 
+    return AlgebraicArray(zeros(ddims), adims)
+end
 
-# function Base.fill(val, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
+function Base.rand(ddims::Union{Tuple, DD}, adims::NTuple{AD,Tuple}) where AD where DD <: DimensionalData.Dimension 
+    return AlgebraicArray(rand(ddims), adims)
+end
+
 
 #     !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
 #     rsize = size(rdims)
@@ -282,7 +298,35 @@ end
 #     return MatrixArray(DimArray(P,ddims))
 # end
 
-# Base.transpose(b::VectorDimArray) = AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangedims(b))
+function Base.transpose(b::VectorDimArray)
+
+    size_rowvector = ((1,),first(b.dims))
+    arr = reshape(transpose(vec(b)),
+                  AlgebraicArrays.unwrap(size_rowvector)...)
+    newdim = (RowVector(["1"]), b.data.dims...)
+    da = DimArray(arr, newdim) 
+    return AlgebraicArray(da, size_rowvector)
+end
+function Base.transpose(P::MatrixDimArray)
+    size_transpose = (last(P.dims),first(P.dims))
+    arr = reshape(transpose(AlgebraicArrays.matrix_or_vec(P)),
+                  AlgebraicArrays.unwrap(size_transpose)...)
+    newdim = (domaindims(P)...,rangedims(P)...)
+    da = DimArray(arr, newdim) 
+    return AlgebraicArray(da, size_transpose)
+end
+
+function Base.:*(A::MatrixDimArray, b::VectorDimArray)
+    if rangedims(b) == domaindims(A)
+        newdim = rangedims(A)
+        arr = reshape( AlgebraicArrays.matrix_or_vec(A)*AlgebraicArrays.matrix_or_vec(b), size(newdim)...)               
+        da = DimArray(arr, newdim) 
+        return AlgebraicArray(da, (size(newdim),))
+    else
+        error("multiplication with `AlgebraicArray`s not conformable")
+    end
+end
+
 
 # # undefined resource
 # # function Base.similar(mda::MatrixDimArray{T}) where T
