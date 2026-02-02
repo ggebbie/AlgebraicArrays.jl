@@ -327,8 +327,19 @@ function Base.:*(A::MatrixDimArray, b::VectorDimArray)
     end
 end
 
+function LinearAlgebra.Diagonal(a::VectorDimArray) 
+    newdim = (rangedims(a)..., rangedims(a)...)
+    arr = reshape( Diagonal(vec(a)), size(newdim))
+    da = DimArray(arr, newdim)
+    return AlgebraicArray(da, (size(rangedims(a)), size(rangedims(a))))
+end
 
-# # undefined resource
+function Base.similar(aa::MatrixDimArray{T}) where T 
+    tmp = reshape(similar(Array{T}, axes(aa)), 
+                  AlgebraicArrays.unwrap(aa.dims))
+    da = DimArray(tmp, aa.data.dims)
+    return AlgebraicArray(da, aa.dims)
+end
 # # function Base.similar(mda::MatrixDimArray{T}) where T
 # #     MatrixArray(similar(parent(mda))) #Array{T}, axes(vda)), dims(vda))
 # # end

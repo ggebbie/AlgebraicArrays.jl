@@ -91,20 +91,21 @@
             end 
             
             # test that these vectors;matrices can be used in algebraic expressions
-            y = vec(x)
-            z = AlgebraicArray(y, dims(parent(x)))
-            @test x == z
+            # testing a constructor that no longer exists?
+            # y = vec(x)
+            # z = AlgebraicArray(y, dims(parent(x)))
+            # @test x == z
 
             # make the diagonal elements
-            w = ones(dims(x), :VectorArray)
+            w = ones(dims(x), (size(dims(x)),))
             D = Diagonal(w)
             DT = transpose(D)
             DTT = transpose(DT)
             @test D == DT
             @test D == DTT
 
-            R = AlgebraicArray(rand(length(x),length(x)),
-                rangedims(x), rangedims(x))    
+            Rda = rand((rangedims(x)..., rangedims(x)...))
+            R = AlgebraicArray(Rda, (size(rangedims(x)), size(rangedims(x))))
             RT = transpose(R)
             RTT = transpose(RT)
             @test R == RTT

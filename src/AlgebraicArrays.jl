@@ -250,7 +250,7 @@ function LinearAlgebra.eigen(A::MatrixArray)
 end
 
 # # force `Diagonal` to return an AlgebraicArray
-Diagonal(a::VectorArray) = AlgebraicArray(Diagonal(vec(a)), (rangedims(a), rangedims(a)))
+LinearAlgebra.Diagonal(a::VectorArray) = AlgebraicArray(Diagonal(vec(a)), (rangedims(a), rangedims(a)))
 
 function exp(A::MatrixArray)
     # A must be endomorphic (check type signature someday)
