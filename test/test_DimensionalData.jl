@@ -159,15 +159,17 @@
 
                 R2 = deepcopy(R)
                 #R2[At(1990),At("NATL")] .+= 1.0 #fails
-                parent(R2)[At(1990),At("NATL")] .+= 1.0 #workaround 
-                @test all(isapprox.(sum(R2-R), 1.0))
+                parent(R2)[At(1990),At("NATL"),:,:] .+= 1.0 #workaround 
+                @test all(isapprox.(sum(R2-R), prod(size(domaindims(R2)))))
 
                 # iteration uses CartesianIndices not linear indices, would need to set `iterate` function 
-                # @test eachindex(D) == Base.OneTo(prod(size(b)))
+                @test eachindex(R2) isa CartesianIndices
+                # @test eachindex(D) == Base.OneTo(prod(size()))
 
-                @test R[At(1990),At("NATL")][At(1990),At("NATL")] isa Number
-                #@test R[:][At(1990),At("NATL")] isa VectorDimArray # fails, upstream DD issue?
-                @test rowvector(R,At(1990),At("NATL")) isa MatrixDimArray
+                @test R2[(At(1990),At("NATL")),(At(1990),At("NATL"))] isa Number
+                @test parent(R2)[At(1990),At("NATL"),At(1990),At("NATL")] isa Number
+                @test R2[(At(1990),At("NATL")),(:,:)] isa MatrixDimArray # fails
+                @test parent(R2)[At(1990),At("NATL"),:,:] isa MatrixDimArray # fails
 
                 # setindex!
                 R[At(1990),At("NATL")][At(1990),At("NATL")] = 0.0

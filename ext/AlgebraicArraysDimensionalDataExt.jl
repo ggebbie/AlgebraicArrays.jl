@@ -384,37 +384,67 @@ end
 # end
 
 # annoying that so much is repeated
-function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2})
+function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2}) 
     # reshape A to a Matrix
     inds_full = AlgebraicArrays.unwrap(inds)
     tmp = getindex(parent(A), inds_full...)
 
     tmp isa Number && return tmp
 
-    Nrow = length(first(A.dims))
-    Ncol = length(last(A.dims))
+    # Nrow = length(first(A.dims))
+    # Ncol = length(last(A.dims))
 
-    # how many singleton dimensions have dropped out?
-    Nrowdrop = count(isa.(inds_full[1:Nrow],Integer))
-    Ncoldrop = count(isa.(inds_full[Nrow+1:Nrow+Ncol],Integer))
+    rdims_in = rangedims(A)
+    ddims_in = domaindims(A)
 
-    fsize = size(tmp)
-    Nrow_new = Nrow - Nrowdrop
-    Ncol_new = Ncol - Ncoldrop
+    dims_out = dims(tmp)
+
+    rdims_out = []
+    ddims_out = []
+
+    ir = [] # indices of incoming dimensions in the range
+    id = [] # indices of incoming dimensions is the domain
+    rcounter = 1 # search incoming range sequentially
+    dcounter = 1 # search incoming domain sequentially
     
-    if iszero(Ncol_new)
-        asize = ((fsize[1:Nrow_new]),)
-    elseif iszero(Nrow_new)
-        println("here")
-        asize = ((1,),(fsize[1:Ncol_new]))
+    # will need to check dims to avoid ambiguities
+    for j in eachindex(dims_out)
+        println(j)
+        # find first match in range space
+        rmatch = findfirst(==(dims_out[j]), rdims_in[rcounter:end])
+        if isnothing(rmatch) # range space exhausted
+            rcounter = length(rdims_in) + 1
+            dmatch = findfirst(==(dims_out[j]), ddims_in[dcounter:end])
+            if isnothing(dmatch)
+                error("no match")
+            else
+                println("dmatch ",dmatch + dcounter - 1)
+                push!(id, dmatch + dcounter - 1) # save domain index match
+                dcounter = dmatch + 1
+            end
+        else
+            println("rmatch ",rmatch + rcounter - 1)
+            push!(ir, rmatch + rcounter - 1) # save range index match
+            rcounter = rmatch + 1
+        end
+    end
+
+    println("id ", id)
+    println("ir ", ir)
+    if isempty(ir)
+        asize = (size(rdims_in[ir]),)
+        
+    elseif isempty(ir)
+        asize = ((1,),size(ddims_in[id]))
 
         # get the extra label
         arr = reshape(tmp, AlgebraicArrays.unwrap(asize))
         newdim = (RowVector(["1"]), dims(tmp)...)
         tmp = DimArray(arr, newdim)
     else
-        asize = (fsize[1:Nrow_new],fsize[Nrow_new+1:Nrow_new+Ncol_new])
+        asize = (size(rdims_in[ir]), size(ddims_in[id])) 
     end
+    
     return AlgebraicArray( tmp, asize)
 end
 
