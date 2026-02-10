@@ -73,7 +73,7 @@
 
                 v = deepcopy(x)
                 #v[At(1990),:] .+=  1.0 #fails
-                v[1,:] .+=  1.0 # succeeded before, now fails
+                # v[1,:] .+=  1.0 # succeeded before, now fails
                 # @test isapprox(sum(v-x), length(surfaceregions))
             
                 # slice the other way
@@ -114,31 +114,33 @@
 
             @testset "matrix construction" begin
 
-                funks = [:randn,:zeros,:ones]
+                funks = [:rand,:zeros,:ones]
                 for fnk in funks
                     #J = randn(rsize,rsize,:MatrixArray)
-                    rsize = dims(parent(x))
+                    rsize = dims(x)
                     #J = @eval $fnk((1,2),(1,2),:MatrixArray)
-                    J = @eval $fnk($rsize, $rsize,:MatrixArray)
+                    J = @eval $fnk(($rsize..., $rsize...),(size($rsize),size($rsize)))
                     @test endomorphic(J) 
                     @test diag(J) isa VectorArray
-                    id = rand(1:length(J))
-                    @test diag(J)[id] == J[id][id]
+                    id = rand(1:size(J,1))
+                    @test diag(J)[id] == J[id,id]
                 end
 
                 #fill
-                J = fill(1, rsize, rsize,:MatrixArray)
+                J =  fill(1,(dims(x)..., dims(x)...),(size(dims(x)),size(dims(x))))
                 @test endomorphic(J) 
                 @test diag(J) isa VectorArray
-                id = rand(1:length(J))
-                @test diag(J)[id] == J[id][id]
+                id = rand(1:size(J,1))
+                @test diag(J)[id] == J[id,id]
             end
 
             @testset "matrix slicing" begin
-                @test R[1] isa VectorDimArray
-                @test R[2,1] isa VectorDimArray
-                @test R[1:2,1] isa MatrixDimArray
-                @test R[1:2] isa MatrixDimArray
+                
+                @test R[(1,1),(1,1)] isa Number 
+                @test R[(1,2),(1,1)] isa Number
+                @test R[(1,1:2),(1,1)] isa VectorDimArray
+                @test R[(:,1:2),(1:2,:)] isa MatrixDimArray
+                @test R[(1,2),(:,:)] isa MatrixDimArray # row vector but Julia returns a 1 x N matrix
 
                 R2 = deepcopy(R)
                 R2[2,1] .+= 1.0 

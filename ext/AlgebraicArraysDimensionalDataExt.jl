@@ -344,6 +344,20 @@ end
 # #     MatrixArray(similar(parent(mda))) #Array{T}, axes(vda)), dims(vda))
 # # end
 
+function LinearAlgebra.diag(A::MatrixDimArray)
+    if endomorphic(A)
+
+        size_range = size(rangedims(A))
+        da = DimArray( reshape(diag(Matrix(A)), size_range), rangedims(A))
+        return AlgebraicArray(da, (size_range,))
+    else
+        # unclear what to do about dimensions in this case
+        # punt and return a vector, warning: type unstable
+        return diag(Matrix(A))
+    end
+end 
+
+
 # function  LinearAlgebra.eigen(A::MatrixDimArray)
 #     F = eigen(Matrix(A))
 #     #dsize = length(F.values)
@@ -368,5 +382,40 @@ end
 #     DA = DimArray([A[j][rowindex...] for j in eachindex(A)],domaindims(A))
 #     return transpose(VectorArray(DA))
 # end
+
+# annoying that so much is repeated
+function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2})
+    # reshape A to a Matrix
+    inds_full = AlgebraicArrays.unwrap(inds)
+    tmp = getindex(parent(A), inds_full...)
+
+    tmp isa Number && return tmp
+
+    Nrow = length(first(A.dims))
+    Ncol = length(last(A.dims))
+
+    # how many singleton dimensions have dropped out?
+    Nrowdrop = count(isa.(inds_full[1:Nrow],Integer))
+    Ncoldrop = count(isa.(inds_full[Nrow+1:Nrow+Ncol],Integer))
+
+    fsize = size(tmp)
+    Nrow_new = Nrow - Nrowdrop
+    Ncol_new = Ncol - Ncoldrop
+    
+    if iszero(Ncol_new)
+        asize = ((fsize[1:Nrow_new]),)
+    elseif iszero(Nrow_new)
+        println("here")
+        asize = ((1,),(fsize[1:Ncol_new]))
+
+        # get the extra label
+        arr = reshape(tmp, AlgebraicArrays.unwrap(asize))
+        newdim = (RowVector(["1"]), dims(tmp)...)
+        tmp = DimArray(arr, newdim)
+    else
+        asize = (fsize[1:Nrow_new],fsize[Nrow_new+1:Nrow_new+Ncol_new])
+    end
+    return AlgebraicArray( tmp, asize)
+end
 
 end #module
