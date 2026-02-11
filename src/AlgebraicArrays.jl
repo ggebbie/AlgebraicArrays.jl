@@ -191,9 +191,13 @@ Base.Matrix(P::MatrixArray) = reshape( P.data, size(P))
 matrix_or_vec(P::MatrixArray) = reshape( P.data, size(P))
 
 # set this up for algebraic and dimensional layouts
-function Base.setindex!(MA::MatrixArray, val, inds::Vararg)
+function Base.setindex!(MA::MatrixArray, val, inds::Vararg{Any,2})
     # Matrix step wicked slow?
     setindex!(Matrix(MA), val, inds...)
+end
+function Base.setindex!(MA::MatrixArray, val, inds::Vararg{Tuple,2})
+    inds_full = unwrap(inds)
+    setindex!(parent(MA), val, inds_full...)
 end
 
 function LinearAlgebra.diag(A::MatrixArray)

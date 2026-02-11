@@ -5,7 +5,8 @@ using DimensionalData
 using DimensionalData:@dim
 using LinearAlgebra
 
-export VectorDimArray, MatrixDimArray, dims, rowvector, AlgebraicArray
+export VectorDimArray, MatrixDimArray, AlgebraicDimArray
+export dims, rowvector, AlgebraicArray
 export rand, randn, zeros, ones
 
 import AlgebraicArrays: rangedims, domaindims, AlgebraicArray
@@ -20,6 +21,7 @@ import DimensionalData: dims
 
 MatrixDimArray = MatrixArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
 VectorDimArray = VectorArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
+AlgebraicDimArray = AlgebraicArray{T, D, N, A} where {T, D, N, A<:AbstractDimArray{T, N}}
 
 # careful: these function conflict with ones in main module
 rangedims(A::VectorDimArray) = dims(parent(A))
@@ -327,6 +329,14 @@ function Base.:*(A::MatrixDimArray, b::VectorDimArray)
     end
 end
 
+function Base.:(\ )(A::MatrixDimArray, B::VectorDimArray) 
+    (rangedims(A) !== rangedims(B)) && (error("AlgebraicArrays.jl: left divide not conformable"))
+    newdim = domaindims(A)
+    arr = reshape( AlgebraicArrays.matrix_or_vec(A) \ AlgebraicArrays.matrix_or_vec(B), size(newdim)...)
+    da = DimArray(arr, newdim)
+    return AlgebraicArray(da, (size(domaindims(A)), ))
+end
+
 function LinearAlgebra.Diagonal(a::VectorDimArray) 
     newdim = (rangedims(a)..., rangedims(a)...)
     arr = reshape( Diagonal(vec(a)), size(newdim))
@@ -398,7 +408,6 @@ function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2})
     Nrange = 0 # dimension of range
     for i in eachindex(rdims_in)
         if rdims_in[i][rinds_in[i]] isa DimensionalData.Dimension
-            println("range good ",i)
             Nrange += 1
         end
     end
@@ -409,7 +418,6 @@ function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2})
     Ndomain = 0 # dimension of domain
     for i in eachindex(ddims_in)
         if ddims_in[i][dinds_in[i]] isa DimensionalData.Dimension
-            println("domain good ",i)
             Ndomain += 1
         end
     end
@@ -425,9 +433,6 @@ function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2})
         newdim = (RowVector(["1"]), dims(tmp)...)
         tmp = DimArray(arr, newdim)
     else
-        println("size(tmp)",size(tmp))
-        println("Nrange",Nrange)
-        println("Ndomain",Ndomain)
         asize = (size(tmp)[1:Nrange], size(tmp)[Nrange+1:Nrange+Ndomain]) 
     end
     

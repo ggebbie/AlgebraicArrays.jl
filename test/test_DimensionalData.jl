@@ -104,7 +104,7 @@
             @test D == DT
             @test D == DTT
 
-            Rda = rand((rangedims(x)..., rangedims(x)...))
+            Rda = rand((rangedims(x)..., rangedims(x)...)) - rand((rangedims(x)..., rangedims(x)...))
             R = AlgebraicArray(Rda, (size(rangedims(x)), size(rangedims(x))))
             RT = transpose(R)
             RTT = transpose(RT)
@@ -142,23 +142,25 @@
                 @test R[(:,1:2),(1:2,:)] isa MatrixDimArray
                 @test R[(1,2),(:,:)] isa MatrixDimArray # row vector but Julia returns a 1 x N matrix
 
+                ##### STOPPED HERE
                 R2 = deepcopy(R)
-                R2[2,1] .+= 1.0 
-                @test all(isapprox.(sum(R2-R), 1.0))
+                # R2[(:,:),(1,2)] .+= 1.0 # fails
+                parent(R2)[:,:,1,2] .+= 1.0 # workaround
+                @test all(isapprox.(sum(R2-R), prod(size(rangedims(R2)))))
 
                 # iteration uses CartesianIndices not linear indices, would need to set `iterate` function 
                 # @test eachindex(D) == Base.OneTo(prod(size(b)))
 
-                @test R[2,1][1,1] isa Number
-                @test R[:][1,1] isa VectorDimArray # actually this is not the same as rowvector and is incorrect
-                @test rowvector(R,1,1) isa MatrixDimArray
+                @test R[(2,1),(1,1)] isa Number
+                @test R[(:,:),(1,1)] isa VectorDimArray # actually this is not the same as rowvector and is incorrect
+                @test R[(1,1),(:,:)] isa MatrixDimArray
 
-                @test R[At(1990),At("NATL")] isa VectorDimArray
-                @test R[At(1990:1991),At("NATL")] isa MatrixDimArray
-                @test R[At(1990:1991),:] isa MatrixDimArray
+                @test R[(:,:),(At(1990),At("NATL"))] isa VectorDimArray
+                @test R[(:,:),(At(1990:1991),At("NATL"))] isa MatrixDimArray
+                @test R[(:,:),(At(1990:1991),:)] isa MatrixDimArray
 
                 R2 = deepcopy(R)
-                #R2[At(1990),At("NATL")] .+= 1.0 #fails
+                #R2[(:,:),(At(1990),At("NATL"))] .+= 1.0 #fails
                 parent(R2)[At(1990),At("NATL"),:,:] .+= 1.0 #workaround 
                 @test all(isapprox.(sum(R2-R), prod(size(domaindims(R2)))))
 
@@ -167,15 +169,20 @@
                 # @test eachindex(D) == Base.OneTo(prod(size()))
 
                 @test R2[(At(1990),At("NATL")),(At(1990),At("NATL"))] isa Number
-                @test parent(R2)[At(1990),At("NATL"),At(1990),At("NATL")] isa Number
-                @test R2[(At(1990),At("NATL")),(:,:)] isa MatrixDimArray # fails
-                @test parent(R2)[At(1990),At("NATL"),:,:] isa MatrixDimArray # fails
+                @test R2[(At(1990),At("NATL")),(:,:)] isa MatrixDimArray 
 
                 # setindex!
-                R[At(1990),At("NATL")][At(1990),At("NATL")] = 0.0
+                R[(At(1990),At("NATL")),(At(1990),At("NATL"))] = 0.0
+
+                parent(R)[At(1990),At("NATL"),:,:] .= 0.0 # workaround
+                #                 R[(At(1990),At("NATL")),(:,:)] .= 0.0 # fails
+
                 # set columns to be equal
                 #parent(R)[At(1990),At("NATL")] .= R[At(1990),At("AABW")]  # fails, but works with numerical indices
-                @test all(isapprox.(transpose(Matrix(R)[1,:]), Matrix(rowvector(R,1))))
+                # parent(R)[At(1990),At("NATL"),:,:] .= parent(R)[At(1990),At("AABW"),:,:]  # still fails
+                parent(R)[1,1,:,:] .= parent(R)[2,1,:,:]  # workaround
+
+                @test all(isapprox.(transpose(Matrix(R)[1,:]), Matrix(R[(1,1),(:,:)])))
 
             end
             

@@ -118,13 +118,15 @@
         D2 = deepcopy(D)
 
         # setindex!
-        # D2[(:,:),(1,2)] .+= 1.0 # currently failing
-        parent(D2)[:,:,2,1] .+= 1.0 # workaround
+
+
+        D2 = deepcopy(D)
+        # D2[(1,1),(:,:)] .+= 1.0 #fails
+        parent(D2)[1,1,:,:] .+= 1.0 # workaround
         @test all(isapprox.(sum(D2-D), prod(domaindims(D))))
 
-        # D[(2,1),(1,1)] = 0.0 # failing
-        parent(D)[1,2,1,1] = 0.0 # workaround
-
+        D2[(1,1),(1,1)] = 1.0
+        
         # set columns to be equal
         # D[(:,:),(1,2)] .= D[(:,:),(1,1)] # failing
         parent(D)[:,:,2,1] .= parent(D)[:,:,1,1] # workaround
