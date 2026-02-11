@@ -383,7 +383,6 @@ end
 #     return transpose(VectorArray(DA))
 # end
 
-# annoying that so much is repeated
 function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2}) 
     # reshape A to a Matrix
     inds_full = AlgebraicArrays.unwrap(inds)
@@ -398,7 +397,10 @@ function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2})
     rinds_in = first(inds)
     Nrange = 0 # dimension of range
     for i in eachindex(rdims_in)
-        length(rdims_in[i][rinds_in[i]]) > 1 && Nrange += 1
+        if rdims_in[i][rinds_in[i]] isa DimensionalData.Dimension
+            println("range good ",i)
+            Nrange += 1
+        end
     end
 
     # domain space
@@ -406,53 +408,27 @@ function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2})
     dinds_in = last(inds)
     Ndomain = 0 # dimension of domain
     for i in eachindex(ddims_in)
-        length(ddims_in[i][dinds_in[i]]) > 1 && Ndomain += 1
-    end
-        
-
-    dims_out = dims(tmp)
-
-    rdims_out = []
-    ddims_out = []
-
-    ir = [] # indices of incoming dimensions in the range
-    id = [] # indices of incoming dimensions is the domain
-    rcounter = 1 # search incoming range sequentially
-    dcounter = 1 # search incoming domain sequentially
-    
-    # will need to check dims to avoid ambiguities
-    for j in eachindex(dims_out)
-        # find first match in range space
-        rmatch = findfirst(==(dims_out[j]), rdims_in[rcounter:end])
-        if isnothing(rmatch) # range space exhausted
-            rcounter = length(rdims_in) + 1
-            dmatch = findfirst(==(dims_out[j]), ddims_in[dcounter:end])
-            if isnothing(dmatch)
-                error("no match")
-            else
-                push!(id, dmatch + dcounter - 1) # save domain index match
-                dcounter = dmatch + 1
-            end
-        else
-            push!(ir, rmatch + rcounter - 1) # save range index match
-            rcounter = rmatch + 1
+        if ddims_in[i][dinds_in[i]] isa DimensionalData.Dimension
+            println("domain good ",i)
+            Ndomain += 1
         end
     end
-
-    println("id ", id)
-    println("ir ", ir)
-    if isempty(ir)
-        asize = (size(rdims_in[ir]),)
+    
+    if iszero(Ndomain)
+        asize = (size(tmp),)
         
-    elseif isempty(ir)
-        asize = ((1,),size(ddims_in[id]))
+    elseif iszero(Nrange)
+        asize = ((1,),size(tmp))
 
         # get the extra label
         arr = reshape(tmp, AlgebraicArrays.unwrap(asize))
         newdim = (RowVector(["1"]), dims(tmp)...)
         tmp = DimArray(arr, newdim)
     else
-        asize = (size(rdims_in[ir]), size(ddims_in[id])) 
+        println("size(tmp)",size(tmp))
+        println("Nrange",Nrange)
+        println("Ndomain",Ndomain)
+        asize = (size(tmp)[1:Nrange], size(tmp)[Nrange+1:Nrange+Ndomain]) 
     end
     
     return AlgebraicArray( tmp, asize)
