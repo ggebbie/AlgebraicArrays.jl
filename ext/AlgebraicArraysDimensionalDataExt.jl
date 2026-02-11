@@ -391,11 +391,24 @@ function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2})
 
     tmp isa Number && return tmp
 
-    # Nrow = length(first(A.dims))
-    # Ncol = length(last(A.dims))
+    # find the size of each input dim
 
+    # range space
     rdims_in = rangedims(A)
+    rinds_in = first(inds)
+    Nrange = 0 # dimension of range
+    for i in eachindex(rdims_in)
+        length(rdims_in[i][rinds_in[i]]) > 1 && Nrange += 1
+    end
+
+    # domain space
     ddims_in = domaindims(A)
+    dinds_in = last(inds)
+    Ndomain = 0 # dimension of domain
+    for i in eachindex(ddims_in)
+        length(ddims_in[i][dinds_in[i]]) > 1 && Ndomain += 1
+    end
+        
 
     dims_out = dims(tmp)
 
@@ -409,7 +422,6 @@ function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2})
     
     # will need to check dims to avoid ambiguities
     for j in eachindex(dims_out)
-        println(j)
         # find first match in range space
         rmatch = findfirst(==(dims_out[j]), rdims_in[rcounter:end])
         if isnothing(rmatch) # range space exhausted
@@ -418,12 +430,10 @@ function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2})
             if isnothing(dmatch)
                 error("no match")
             else
-                println("dmatch ",dmatch + dcounter - 1)
                 push!(id, dmatch + dcounter - 1) # save domain index match
                 dcounter = dmatch + 1
             end
         else
-            println("rmatch ",rmatch + rcounter - 1)
             push!(ir, rmatch + rcounter - 1) # save range index match
             rcounter = rmatch + 1
         end

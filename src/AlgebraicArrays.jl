@@ -49,7 +49,6 @@ struct AlgebraicArray{T,D,N,A <: AbstractArray{T,N}} <: AbstractArray{T,D}
         end
         N == Dnew ? need_reshape = true : need_reshape = false  # passing algebraic data
         if need_reshape  # passing algebraic data
-            println("needs reshape")
             x2 = reshape(x, unwrap(ynew))
             return new{T,Dnew,ndims(x2),typeof(x2)}(x2,ynew)
         else
@@ -179,16 +178,12 @@ function Base.getindex(A::MatrixArray, inds::Vararg{Tuple,2})
     fsize = size(tmp)
     Nrow_new = Nrow - Nrowdrop
     Ncol_new = Ncol - Ncoldrop
-    println(Nrow_new)
-    println(Ncol_new)
     
     if iszero(Ncol_new)
         asize = ((fsize[1:Nrow_new]),)
     else
         asize = (fsize[1:Nrow_new],fsize[Nrow_new+1:Nrow_new+Ncol_new])
     end
-    println(asize)
-    size(tmp)
     return AlgebraicArray( tmp, asize)
 end
 
