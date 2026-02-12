@@ -53,7 +53,7 @@ end
 # Unitful.ustrip(A::MatrixArray) = AlgebraicArray(ustrip.(Matrix(A)), rangedims(A), domaindims(A))
 
 # function LinearAlgebra.eigen(A::MatrixArray{T,D,N,Matrix{Quantity{T2,S,V}}}) where {T1,T2,N,M,S,V}
-function LinearAlgebra.eigen(A::MatrixArray)
+function LinearAlgebra.eigen(A::MatrixArray{<:Quantity})
     !uniform(A) && error("A has heterogeneous units, no eigenstructure")
     F = eigen(Matrix(A)) 
     dsize = size(F.values)
