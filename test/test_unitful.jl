@@ -15,22 +15,23 @@
         
         a = randn(rsize)*rand(unitlist) # uniform
         @test a isa Matrix{Quantity{T,S,V}} where {T,S,V}
-        
+
         # can immediately save it as a VectorArray for future calculations
-        b = VectorArray(a)
+        b = AlgebraicArray(a, (rsize,))
 
         # internal algorithms must be able to turn into a vector, then bring it back to VectorArray
-        c = AlgebraicArray(vec(a), rsize)
-        @test a == c    
+        c = AlgebraicArray(vec(a), (rsize,))
+        @test vec(a) == c   
+        @test b == c   
 
-        # # make an array of arrays
+        # # make an matrix array
         rsize = (1,2)
         dsize = (2,1)
-        D = randn(rsize,dsize, :MatrixArray)*rand(unitlist)
+        D = randn((rsize,dsize))*rand(unitlist)
 
         # internal algorithms must be able to turn into a matrix, then bring it back to a `MatrixArray`
         # turn a MatrixArray back into an array of arrays
-        E = AlgebraicArray(Matrix(D),rsize,dsize)
+        E = AlgebraicArray(Matrix(D),(rsize,dsize))
         @test D == E 
 
         @testset "*,+,-,/,\\ and all that" begin
@@ -39,28 +40,29 @@
             dsize = (2,3)
 
             # uniform matrix for inner product
-            q = randn(dsize, :VectorArray)*u"J"
+            q = randn((dsize,))*u"J"
             qT = transpose(q)
              # same type than q, but type instability in code
             qTT = transpose(qT)
             @test q == qTT
 
             # inner product
-            @test ustrip(qT * q) ≥ 0
+            # @test ustrip(qT * q) ≥ 0 # fails
+            @test ustrip(first(qT * q)) ≥ 0
 
-            # dot product not defined
-            #@test q ⋅ q ≥ 0 
+            @test ustrip(q ⋅ q) ≥ 0 
 
             # symmetric outer product
             @test q * qT isa MatrixArray
 
             # asymmetric outer product
             usize = (1,2)
-            u = randn(usize, :VectorArray)*u"kg"
+            # u = randn(usize, :VectorArray)*u"kg"
+            u = randn((usize,))*u"kg"
             @test q * transpose(u) isa MatrixArray
 
             # another way to make a MatrixArray
-            P = randn(rsize,dsize,:MatrixArray) * rand(unitlist)
+            P = randn((rsize,dsize)) * rand(unitlist)
     
             # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
             @test (P*q) isa VectorArray
@@ -80,13 +82,13 @@
             rsize = (2,3)
             dsize = (2,3)
 
-            S = randn(rsize,dsize,:MatrixArray) * u"m"
-            R = randn(rsize,dsize,:MatrixArray) * u"K"
+            S = randn((rsize,dsize)) * u"m"
+            R = randn((rsize,dsize)) * u"K"
             Q = R * S
-            @test isapprox(Matrix(R \ Q), Matrix(S), atol = 1e-8*unit(first(first(S))))
+            @test isapprox(Matrix(R \ Q), Matrix(S), atol = 1e-8*unit(first(S)))
 
             # # square matrices, matrix matrix right divide
-            @test isapprox(Matrix(Q / S), Matrix(R), atol = 1e-8*unit(first(first(R)))) # fails due to Quantity(F64) error
+            @test isapprox(Matrix(Q / S), Matrix(R), atol = 1e-8*unit(first(R))) 
 
         end
 
@@ -94,14 +96,13 @@
 
             rsize = (1,3)
             dsize = (1,3)
-            S = randn(rsize,dsize,:MatrixArray)*rand(unitlist)
-
-            @test S isa MatrixArray{T1,N,M,Matrix{Quantity{T2,S,V}}} where {T1,T2,N,M,S,V}
+            S = randn((rsize,dsize))*rand(unitlist)
+            @test S isa MatrixArray{<:Quantity}
             
             vals, vecs = eigen(S)
             F = eigen(S)
-            @test isapprox(Matrix(F), Matrix(S), atol= 1e-8*unit(first(first(S))))
-
+            F.vectors * Diagonal(F.values) / F.vectors
+            @test isapprox(Matrix(F), Matrix(S), atol= 1e-8*unit(first(S)))
         end
 
         @testset "diagonal divide: issue 21" begin
