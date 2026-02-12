@@ -203,12 +203,13 @@
             @test isapprox(Matrix(Q / S), Matrix(R), atol = 1e-8)
 
             # non-square multiplication
-            G = S[1:2,:]
-            rsize = (2,3)
-            dsize = (1,3)
-            G = randn(rsize,dsize,:MatrixArray) 
-            H = randn(dsize,rsize,:MatrixArray) 
-            Matrix(G * H)
+            G = S[(At(1990),:),(:,:)]
+            G * S
+            # rsiqze = (2,3)
+            # dsize = (1,3)
+            # G = randn(rsize,dsize,:MatrixArray) 
+            # H = randn(dsize,rsize,:MatrixArray) 
+            # Matrix(G * H)
             
         end
 

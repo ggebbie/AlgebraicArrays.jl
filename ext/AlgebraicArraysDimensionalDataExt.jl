@@ -354,6 +354,23 @@ function Base.:(\ )(A::AlgebraicDimArray, B::AlgebraicDimArray)
     end
 end
 
+# missing a compatibility test
+function Base.:(/)(A::AlgebraicDimArray, B::AlgebraicDimArray)
+    if isempty(rangedims(B))
+        newdim = rangedims(A)
+        arr = reshape(AlgebraicArrays.matrix_or_vec(A) /
+                      AlgebraicArrays.matrix_or_vec(B), size(newdim)...)
+        da = DimArray(arr, newdim)
+        return AlgebraicArray(da, (size(rangedims(A)),))
+    else
+        newdim = (rangedims(A)..., rangedims(B)...)
+        arr = reshape(AlgebraicArrays.matrix_or_vec(A) /
+                      AlgebraicArrays.matrix_or_vec(B), size(newdim)...)
+        da = DimArray(arr, newdim)
+        return AlgebraicArray(da, (size(rangedims(A)),size(rangedims(B))))
+    end
+end
+
 function LinearAlgebra.Diagonal(a::VectorDimArray) 
     newdim = (rangedims(a)..., rangedims(a)...)
     arr = reshape( Diagonal(vec(a)), size(newdim))
