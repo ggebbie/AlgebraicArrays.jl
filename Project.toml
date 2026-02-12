@@ -1,6 +1,6 @@
 name = "AlgebraicArrays"
 uuid = "8af735f6-f3e5-4048-bdaa-40a2355e9eea"
-version = "1.0.11-DEV"
+version = "1.1.0-DEV"
 authors = ["G Jake Gebbie <ggebbie@whoi.edu>"]
 
 [deps]
@@ -15,6 +15,7 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 [extensions]
 AlgebraicArraysDimensionalDataExt = ["DimensionalData"]
 AlgebraicArraysUnitfulExt = ["Unitful"]
+AA_DD_UnitfulExt = ["DimensionalData","Unitful"]
 
 [compat]
 DimensionalData = "0.27,0.28,0.29"
