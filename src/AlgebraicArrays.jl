@@ -49,6 +49,7 @@ struct AlgebraicArray{T,D,N,A <: AbstractArray{T,N}} <: AbstractArray{T,D}
         end
         N == Dnew ? need_reshape = true : need_reshape = false  # passing algebraic data
         if need_reshape  # passing algebraic data
+            println("needs reshape")
             x2 = reshape(x, unwrap(ynew))
             return new{T,Dnew,ndims(x2),typeof(x2)}(x2,ynew)
         else

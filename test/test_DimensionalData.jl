@@ -22,8 +22,7 @@
         n = length(surfaceregions)
         mat = cat(randn(m, n, 1), randn(m, n, 1); dims = 3)
         da = DimArray(mat, (Ti(years), SurfaceRegion(surfaceregions), StateVariable(statevar)))
-        x = VectorArray(da, (size(da),))
-        return x
+        return AlgebraicArray(da, (size(da),))
     end
 
     @testset "AlgebraicArrays + DimensionalData.jl" begin
@@ -218,8 +217,7 @@
                 years,
                 statevariables)
 
-            S = AlgebraicArray(rand(length(x),length(x)),
-                rangedims(x), rangedims(x))    
+            S = rand((dims(x)..., dims(x)...), (size(dims(x)),size(dims(x)))) 
 
             λ, V = eigen(S)
             F = eigen(S)

@@ -372,7 +372,7 @@ function Base.:(/)(A::AlgebraicDimArray, B::AlgebraicDimArray)
 end
 
 function LinearAlgebra.Diagonal(a::VectorDimArray) 
-    newdim = (rangedims(a)..., rangedims(a)...)
+    newdim = AlgebraicArrays.unwrap((rangedims(a), rangedims(a)))
     arr = reshape( Diagonal(vec(a)), size(newdim))
     da = DimArray(arr, newdim)
     return AlgebraicArray(da, (size(rangedims(a)), size(rangedims(a))))
@@ -401,6 +401,26 @@ function LinearAlgebra.diag(A::MatrixDimArray)
     end
 end 
 
+function LinearAlgebra.eigen(A::MatrixDimArray)
+    !endomorphic(A) && error("AlgebraicArrays.jl: not endomorphic")
+    F = eigen(Matrix(A))
+
+    eigen_dims = Eigenmode(1:length(F.values))
+    newdim = (rangedims(A)..., eigen_dims)
+    varr = reshape(F.vectors, size(newdim)...)
+    vda = DimArray(varr, newdim)
+    vectors = AlgebraicArray(vda, (size(rangedims(A)),size(rangedims(A))))
+
+    arr = AlgebraicArray(F.values, (size(eigen_dims),))
+    da = DimArray(arr, eigen_dims)
+    values = AlgebraicArray(da, (size(eigen_dims),))
+
+    # dsize = size(F.values)
+    # rsize = rangedims(A)
+    # values = AlgebraicArray(F.values,(dsize,))
+    # vectors = AlgebraicArray(F.vectors,(rsize,dsize)) 
+    return Eigen(values, vectors)
+end
 
 # function  LinearAlgebra.eigen(A::MatrixDimArray)
 #     F = eigen(Matrix(A))
