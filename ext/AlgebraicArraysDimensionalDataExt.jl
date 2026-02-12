@@ -430,6 +430,15 @@ function LinearAlgebra.eigen(A::MatrixDimArray)
     return Eigen(values, vectors)
 end
 
+function Base.exp(A::MatrixDimArray)
+    # A must be endomorphic (check type signature someday)
+    !AlgebraicArrays.endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
+    arr = reshape( exp(Matrix(A)), AlgebraicArrays.unwrap(A.dims))
+    da = DimArray(arr, dims(parent(A)))
+    return AlgebraicArray(da, A.dims)
+end
+
+
 # function  LinearAlgebra.eigen(A::MatrixDimArray)
 #     F = eigen(Matrix(A))
 #     #dsize = length(F.values)
@@ -439,13 +448,6 @@ end
 #     values = AlgebraicArray(F.values, eigen_dims)
 #     vectors = AlgebraicArray(F.vectors,rsize,eigen_dims) 
 #     return Eigen(values, vectors)
-# end
-
-# function Base.exp(A::MatrixDimArray)
-#     # A must be endomorphic (check type signature someday)
-#     !AlgebraicArrays.endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
-#     eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually
-#     return AlgebraicArray(exp(Matrix(A)),rangedims(A),domaindims(A)) # wrap with same labels and format as A
 # end
 
 # #rowvector(A::MatrixDimArray{T,M,N}, rowindex::Vararg) where {T,M,N} = transpose(A[fill(:,N)...][rowindex...])
