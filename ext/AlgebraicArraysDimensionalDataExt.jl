@@ -75,6 +75,7 @@ function Base.transpose(P::MatrixDimArray)
     return AlgebraicArray(da, size_transpose)
 end
 
+Base.:*(a::Number,B::AlgebraicDimArray) = AlgebraicArray(a*parent(B),B.dims)
 function Base.:*(A::AlgebraicDimArray, b::AlgebraicDimArray)
     if rangedims(b) == domaindims(A)
         if isempty(domaindims(b))
