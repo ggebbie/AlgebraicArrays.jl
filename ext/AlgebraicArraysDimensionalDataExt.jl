@@ -318,12 +318,19 @@ function Base.transpose(P::MatrixDimArray)
     return AlgebraicArray(da, size_transpose)
 end
 
-function Base.:*(A::MatrixDimArray, b::VectorDimArray)
+function Base.:*(A::AlgebraicDimArray, b::AlgebraicDimArray)
     if rangedims(b) == domaindims(A)
-        newdim = rangedims(A)
-        arr = reshape( AlgebraicArrays.matrix_or_vec(A)*AlgebraicArrays.matrix_or_vec(b), size(newdim)...)               
-        da = DimArray(arr, newdim) 
-        return AlgebraicArray(da, (size(newdim),))
+        if isempty(domaindims(b))
+            newdim = rangedims(A)
+            arr = reshape( AlgebraicArrays.matrix_or_vec(A)*AlgebraicArrays.matrix_or_vec(b), size(newdim)...)               
+            da = DimArray(arr, newdim) 
+            return AlgebraicArray(da, (size(newdim),))
+        else
+            newdim = (rangedims(A)...,domaindims(b)...)
+            arr = reshape( AlgebraicArrays.matrix_or_vec(A)*AlgebraicArrays.matrix_or_vec(b), size(newdim)...)               
+            da = DimArray(arr, newdim) 
+            return AlgebraicArray(da, (size(rangedims(A)),size(domaindims(b))))
+        end
     else
         error("multiplication with `AlgebraicArray`s not conformable")
     end

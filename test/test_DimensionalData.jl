@@ -142,7 +142,6 @@
                 @test R[(:,1:2),(1:2,:)] isa MatrixDimArray
                 @test R[(1,2),(:,:)] isa MatrixDimArray # row vector but Julia returns a 1 x N matrix
 
-                ##### STOPPED HERE
                 R2 = deepcopy(R)
                 # R2[(:,:),(1,2)] .+= 1.0 # fails
                 parent(R2)[:,:,1,2] .+= 1.0 # workaround
@@ -193,8 +192,9 @@
             y = R \ q
             @test isapprox(x, y, atol = 1e-8)
 
-            S = AlgebraicArray(rand(length(x),length(x)),
-                rangedims(x), rangedims(x))    
+            S = rand((dims(x)..., dims(x)...), (size(dims(x)),size(dims(x)))) 
+            @test S isa MatrixDimArray
+
             Q = R * S
             U = R \ Q 
             @test isapprox(Matrix(U), Matrix(S), atol = 1e-8)
