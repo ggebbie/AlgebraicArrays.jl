@@ -336,12 +336,22 @@ function Base.:*(A::AlgebraicDimArray, b::AlgebraicDimArray)
     end
 end
 
-function Base.:(\ )(A::MatrixDimArray, B::VectorDimArray) 
+function Base.:(\ )(A::AlgebraicDimArray, B::AlgebraicDimArray) 
     (rangedims(A) !== rangedims(B)) && (error("AlgebraicArrays.jl: left divide not conformable"))
-    newdim = domaindims(A)
-    arr = reshape( AlgebraicArrays.matrix_or_vec(A) \ AlgebraicArrays.matrix_or_vec(B), size(newdim)...)
-    da = DimArray(arr, newdim)
-    return AlgebraicArray(da, (size(domaindims(A)), ))
+    if isempty(domaindims(B))
+        newdim = domaindims(A)
+        arr = reshape( AlgebraicArrays.matrix_or_vec(A) \
+                       AlgebraicArrays.matrix_or_vec(B), size(newdim)...)
+        da = DimArray(arr, newdim)
+        return AlgebraicArray(da, (size(domaindims(A)), ))
+    else
+        newdim = (domaindims(A)...,domaindims(B)...)
+        arr = reshape(
+            AlgebraicArrays.matrix_or_vec(A)\AlgebraicArrays.matrix_or_vec(B),
+            size(newdim)...)               
+        da = DimArray(arr, newdim) 
+        return AlgebraicArray(da, (size(domaindims(A)),size(domaindims(B))))
+    end
 end
 
 function LinearAlgebra.Diagonal(a::VectorDimArray) 
