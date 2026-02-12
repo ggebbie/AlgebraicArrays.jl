@@ -1,7 +1,5 @@
 @testset "unitful" begin
 
-    using Unitful
-    
     @testset "constructors" begin
         unitlist = [u"kg" u"K" u"m";
                     u"kg" u"K" u"m"]

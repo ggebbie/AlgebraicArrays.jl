@@ -4,7 +4,7 @@ using LinearAlgebra
 using Test
 using DimensionalData
 using DimensionalData:@dim
-# using Unitful
+using Unitful
 
 # fixed parameters
 @dim YearCE "years Common Era"

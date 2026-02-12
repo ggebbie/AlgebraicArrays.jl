@@ -8,8 +8,8 @@
     # @dim SurfaceRegion "surface location"
     # @dim InteriorLocation "interior location"
     # @dim StateVariable "state variable"
-    #surfaceregions = [:NATL,:ANT,:SUBANT]
-    surfaceregions = ["NATL","ANT","SUBANT"]
+    surfaceregions = [:NATL,:ANT,:SUBANT]
+    # surfaceregions = ["NATL","ANT","SUBANT"]
     N = length(surfaceregions)
     years = (1990:1993)
     statevariables = [:θ, :δ¹⁸O] 
@@ -22,14 +22,19 @@
         m = length(years)
         n = length(surfaceregions)
         mat = cat(randn(m, n, 1), randn(m, n, 1); dims = 3)K
-        x = VectorArray(DimArray(mat, (Ti(years), SurfaceRegion(surfaceregions), StateVariable(statevar))))
+        x = AlgebraicArray(DimArray(mat, (Ti(years), SurfaceRegion(surfaceregions), StateVariable(statevar))),
+            ((m,n,2),))
         return x
     end
 
     @testset "AlgebraicArrays + DimensionalData + Unitful" begin
 
-        MatrixDimArray = MatrixArray{T, M, N, R} where {M, T, N, R<:AbstractDimArray{T, M}}
-        VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.AbstractDimArray}
+        MatrixDimArray = MatrixArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
+        VectorDimArray = VectorArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
+        AlgebraicDimArray = AlgebraicArray{T, D, N, A} where {T, D, N, A<:AbstractDimArray{T, N}}
+
+        # MatrixDimArray = MatrixArray{T, M, N, R} where {M, T, N, R<:AbstractDimArray{T, M}}
+        # VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.AbstractDimArray}
 
         @testset "with units" begin
             x = source_water_solution_with_uniform_units(surfaceregions,
@@ -39,7 +44,7 @@
             @test x isa VectorDimArray
 
             K = unit(first(x))
-            @test fill(2.0,dims(x),:VectorArray)K isa VectorDimArray
+            @test fill(2.0,dims(x),(size(dims(x)),))K isa VectorDimArray
             @test ones(dims(x),:VectorArray)K isa VectorDimArray
             @test randn(dims(x),:VectorArray)K isa VectorDimArray
 

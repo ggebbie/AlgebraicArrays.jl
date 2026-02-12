@@ -5,12 +5,12 @@ using LinearAlgebra
 using Unitful
 
 import Base: *, (\), (/)
-import Unitful: ustrip, unit
+import Unitful: ustrip, unit, Units
 import LinearAlgebra: eigen
 
-# Base.:*(a::Unitful.Units, b::VectorArray) = AlgebraicArray(a * vec(b), rangedims(b))
-# Base.:*(a::Unitful.Units, B::MatrixArray) = AlgebraicArray(a * Matrix(B), rangedims(B), domaindims(B))
-# Base.:*(B::Union{VectorArray,MatrixArray}, a::Unitful.Units) = a * B
+# Base.:*(a::Units, b::VectorArray) = AlgebraicArray(a * vec(b), (rangedims(b),))
+# Base.:*(a::Units, B::MatrixArray) = AlgebraicArray(a * Matrix(B), (rangedims(B), domaindims(B)))
+# Base.:*(B::Union{VectorArray,MatrixArray}, a::Units) = a * B
 
 # Unitful doesn't handle matrix left divide between Quantity and non-Quantity
 # nor this case.
@@ -43,11 +43,11 @@ function Base.:(/)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat{
 
 Base.:(/)(A::MatrixArray, b::Unitful.Units) = AlgebraicArray(Matrix(A)/b, rangedims(A), domaindims(A))
 
-function Base.:(/)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}},
-    B::AbstractVecOrMat{Quantity{Q2,S2,V2}}) where {Q1,S1,V1} where {Q2,S2,V2}
-    C = AlgebraicArrays.matrix_or_vec(A) / AlgebraicArrays.matrix_or_vec(B)
-    return AlgebraicArray(C, (rangedims(A), domaindims(A)))
-end
+# function Base.:(/)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}},
+#     B::AbstractVecOrMat{Quantity{Q2,S2,V2}}) where {Q1,S1,V1} where {Q2,S2,V2}
+#     C = AlgebraicArrays.matrix_or_vec(A) / AlgebraicArrays.matrix_or_vec(B)
+#     return AlgebraicArray(C, (rangedims(A), domaindims(A)))
+# end
 
 # # caution: dot broadcast added here on rhs, not lhs
 # Unitful.ustrip(A::MatrixArray) = AlgebraicArray(ustrip.(Matrix(A)), rangedims(A), domaindims(A))
@@ -70,8 +70,6 @@ function LinearAlgebra.eigen(A::AbstractMatrix{Quantity{T,S,V}}) where {T,S,V}
     F = eigen(ustrip.(A))
     return Eigen(F.values*Aunit, F.vectors)
 end
-
-# #AbstractMatrix(F::Eigen) = F.vectors * Diagonal(F.values) / F.vectors
 
 uniform(A::AbstractArray{<:Quantity{D,E}}) where {D,E} = true
 uniform(A::AbstractArray) = false
