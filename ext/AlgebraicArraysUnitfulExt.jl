@@ -15,7 +15,7 @@ import LinearAlgebra: eigen
 # Unitful doesn't handle matrix left divide between Quantity and non-Quantity
 # nor this case.
 # this is a benign form of type piracy
-function Base.:(\)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}},
+function Base.:(\)(A::Union{AbstractVecOrMat{Quantity{Q1,S1,V1}},Diagonal{Quantity{Q1,S1,V1}}},
                    B::AbstractVecOrMat{Quantity{Q2,S2,V2}}) where {Q1,S1,V1} where {Q2,S2,V2}
      Aunit = unit(first(A))
      Bunit = unit(first(B))
@@ -24,14 +24,6 @@ end
 
 # # more type piracy
 # function Base.:(\)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat) where {Q1,S1,V1} 
-#     #if uniform(A) # already handled by input types
-#     Aunit = unit(first(first(A)))
-#     return (1/Aunit) * (ustrip.(A) \ B)
-# end
-
-# # handle issue 21
-# function Base.:(\)(A::LinearAlgebra.Diagonal{Unitful.Quantity{Q1, S1, V1}, V} where V<:AbstractArray{Unitful.Quantity{Q1, S1, V1}, 1}, B::AbstractArray{Unitful.Quantity{Q2, S2, V2}, 2}) where {Q2, S2, V2, Q1, S1, V1}
-# #function Base.:(\)(A::Diagonal{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat) where {Q1,S1,V1} 
 #     #if uniform(A) # already handled by input types
 #     Aunit = unit(first(first(A)))
 #     return (1/Aunit) * (ustrip.(A) \ B)

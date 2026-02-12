@@ -15,6 +15,6 @@ using DimensionalData:@dim
 @testset "AlgebraicArrays.jl" begin
     include("test_AlgebraicArrays.jl")
     include("test_DimensionalData.jl")
-    # include("test_unitful.jl")
+    include("test_unitful.jl")
     # include("test_DimensionalData_Unitful.jl")
 end
