@@ -103,8 +103,10 @@
             @test D == DT
             @test D == DTT
 
-            Rda = rand((rangedims(x)..., rangedims(x)...)) - rand((rangedims(x)..., rangedims(x)...))
-            R = AlgebraicArray(Rda, (size(rangedims(x)), size(rangedims(x))))
+            Rda = rand((rangedims(x)..., rangedims(x)...)) - 2*rand((rangedims(x)..., rangedims(x)...))
+
+            # interesting: watch out for singular R
+            R = AlgebraicArray(Rda, (size(rangedims(x)), size(rangedims(x)))) 
             RT = transpose(R)
             RTT = transpose(RT)
             @test R == RTT
@@ -183,7 +185,11 @@
                 @test all(isapprox.(transpose(Matrix(R)[1,:]), Matrix(R[(1,1),(:,:)])))
 
             end
-            
+
+            # reset R
+            Rda = rand((rangedims(x)..., rangedims(x)...)) - 2*rand((rangedims(x)..., rangedims(x)...))
+            R = AlgebraicArray(Rda, (size(rangedims(x)), size(rangedims(x)))) 
+
             q = R * x
             @test q isa VectorArray{T,N,DA} where T where N where DA <: DimensionalData.AbstractDimArray
             @test q isa VectorDimArray
