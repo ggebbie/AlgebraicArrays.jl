@@ -135,12 +135,33 @@ function LinearAlgebra.Diagonal(a::VectorDimArray)
     return AlgebraicArray(da, (size(rangedims(a)), size(rangedims(a))))
 end
 
-function Base.similar(aa::MatrixDimArray{T}) where T 
+function Base.similar(aa::AlgebraicDimArray{T}) where T 
     tmp = reshape(similar(Array{T}, axes(aa)), 
                   AlgebraicArrays.unwrap(aa.dims))
     da = DimArray(tmp, aa.data.dims)
     return AlgebraicArray(da, aa.dims)
 end
+
+# Base.BroadcastStyle(::Type{<:AlgebraicArray}) = Broadcast.ArrayStyle{AlgebraicArray}()
+
+# function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{AlgebraicArray}}, ::Type{ElType}) where ElType
+#     # Scan the inputs
+#     A = find_aa(bc)
+#     AlgebraicArray(similar(Array{ElType}, axes(bc)), A.dims)
+# end
+# function Base.similar(aa::AlgebraicArray{T}) where T 
+#     tmp = reshape(similar(Array{T}, axes(aa)), 
+#         AlgebraicArrays.unwrap(aa.dims))
+#     return AlgebraicArray(tmp, aa.dims)
+# end
+
+# # "`A = find_va(As)` returns the first AlgebraicArray among the arguments."
+# find_aa(bc::Base.Broadcast.Broadcasted) = find_aa(bc.args)
+# find_aa(args::Tuple) = find_aa(find_aa(args[1]), Base.tail(args))
+# find_aa(x) = x
+# find_aa(::Tuple{}) = nothing
+# find_aa(a::AlgebraicArray, rest) = a
+# find_aa(::Any, rest) = find_aa(rest)
 
 function LinearAlgebra.diag(A::MatrixDimArray)
     if endomorphic(A)

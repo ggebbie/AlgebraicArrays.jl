@@ -27,11 +27,7 @@ VectorDimArray = VectorArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
 AlgebraicDimArray = AlgebraicArray{T, D, N, A} where {T, D, N, A<:AbstractDimArray{T, N}}
 
 Base.:*(a::Unitful.Units, b::AlgebraicDimArray) = AlgebraicArray(a * parent(b), b.dims)
-
-
 Base.:*(a::Unitful.Units, B::MatrixArray) = AlgebraicArray(a * Matrix(B), (rangedims(B), domaindims(B)))
 Base.:*(B::Union{VectorArray,MatrixArray}, a::Unitful.Units) = a * B
 
-
 end # module
-
