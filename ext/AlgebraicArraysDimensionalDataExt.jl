@@ -409,9 +409,17 @@ function LinearAlgebra.eigen(A::MatrixDimArray)
     newdim = (rangedims(A)..., eigen_dims)
     varr = reshape(F.vectors, size(newdim)...)
     vda = DimArray(varr, newdim)
-    vectors = AlgebraicArray(vda, (size(rangedims(A)),size(rangedims(A))))
+    rdims_new = size(rangedims(A))
+    ddims_new = size(eigen_dims)
 
-    arr = AlgebraicArray(F.values, (size(eigen_dims),))
+    println("vda ",vda)
+    println("rdims_new ",rdims_new)
+    println("ddims_new ", ddims_new)
+
+    vectors = AlgebraicArray(vda,(rdims_new,ddims_new))
+
+    # arr = AlgebraicArray(F.values, (size(eigen_dims),))
+    arr = AlgebraicArray(F.values, (ddims_new,))
     da = DimArray(arr, eigen_dims)
     values = AlgebraicArray(da, (size(eigen_dims),))
 
