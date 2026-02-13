@@ -64,7 +64,7 @@
         
     rsize = (1,2)
     dsize = (2,1)
-    msize = (rsize, dsize)
+    msize = (dsize, rsize)
     mdata = fill(2.0, AlgebraicArrays.unwrap(msize))
     C = AlgebraicArray(mdata, msize) 
     D = fill(2.0, msize)
@@ -105,10 +105,10 @@
         # will never slice the algebraic array.
         # only slice the dimensional array
         @test D[(1,1),(1,1)] isa Number
-        @test D[(1,2),(1,1)] isa Number
-        @test D[(1,1:2),(1,1)] isa VectorArray
-        @test D[(:,1:2),(1:2,:)] isa MatrixArray
-        @test D[(1,2),(:,:)] isa MatrixArray # row vector but Julia returns a 1 x N matrix
+        @test D[(2,1),(1,1)] isa Number
+        @test D[(1:2,1),(1,1)] isa VectorArray
+        @test D[(1:2,:),(:,1:2)] isa MatrixArray
+        @test D[(2,1),(:,:)] isa MatrixArray # row vector but Julia returns a 1 x N matrix
 
         # iteration uses CartesianIndices not linear indices, would need to set `iterate` function 
         @test eachindex(D) isa CartesianIndices
@@ -118,19 +118,19 @@
 
         # setindex!
         # D2[(:,:),(1,2)] .+= 1.0 # currently failing
-        parent(D2)[:,:,2,1] .+= 1.0 # workaround
+        parent(D2)[:,:,1,2] .+= 1.0 # workaround
         @test all(isapprox.(sum(D2-D), prod(domaindims(D))))
 
         # D[(2,1),(1,1)] = 0.0 # failing
-        parent(D)[1,2,1,1] = 0.0 # workaround
+        parent(D)[2,1,1,1] = 0.0 # workaround
 
         # set columns to be equal
         # D[(:,:),(1,2)] .= D[(:,:),(1,1)] # failing
-        parent(D)[:,:,2,1] .= parent(D)[:,:,1,1] # workaround
+        parent(D)[:,:,1,2] .= parent(D)[:,:,1,1] # workaround
 
         # set rows to be equal
         # D[(2,1)(:,:)] .= D[(1,1),(:,:)] # failing
-        parent(D)[1,2,:,:] .= parent(D)[1,1,:,:] # workaround
+        parent(D)[2,1,:,:] .= parent(D)[1,1,:,:] # workaround
 
         D = randn(msize)
         Drow1 = Matrix(D[(1,1),(:,:)])
@@ -183,7 +183,7 @@
         # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
         @test (P*q) isa VectorArray
 
-        # # matrix-matrix multiplication
+        # # matrix-matrix multiplictation
         PT = transpose(P)
         @test P * PT isa MatrixArray
         @test P == transpose(PT)
