@@ -78,6 +78,9 @@ endomorphic(A::AlgebraicArray) = isequal(rangedims(A), domaindims(A))
 # subset of all AArrays is a VArray (VectorArray)
 VectorArray{T,N,A} = AlgebraicArray{T,1,N,A}
 
+# a convenience function
+VectorArray(A::AbstractArray) = AlgebraicArray(A,(size(A),))
+
 function Base.getindex(b::VectorArray, inds::Vararg)
     tmp =  getindex(b.data, inds...)
     return AlgebraicArray( tmp, (size(tmp),))
