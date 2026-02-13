@@ -22,12 +22,12 @@ function Base.:(\)(A::Union{AbstractVecOrMat{Quantity{Q1,S1,V1}},Diagonal{Quanti
      return (Bunit/Aunit) * (ustrip.(A) \ ustrip.(B))
 end
 
-# # more type piracy
-# function Base.:(\)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat) where {Q1,S1,V1} 
-#     #if uniform(A) # already handled by input types
-#     Aunit = unit(first(first(A)))
-#     return (1/Aunit) * (ustrip.(A) \ B)
-# end
+# # more type piracy, benign as extends previously broken function
+function Base.:(\)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat) where {Q1,S1,V1} 
+    #if uniform(A) # already handled by input types
+    Aunit = unit(first(A))
+    return (1/Aunit) * (ustrip.(A) \ B)
+end
 
 # Unitful is not handling this case now, benign type piracy here
 function Base.:(/)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat) where {Q1,S1,V1} 

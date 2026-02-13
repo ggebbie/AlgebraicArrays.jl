@@ -177,6 +177,8 @@ function LinearAlgebra.diag(A::MatrixDimArray)
     end
 end 
 
+# complete copy of DimData extension method to avoid dispatch ambiguity
+# must be another way to disambiguate
 function LinearAlgebra.eigen(A::MatrixDimArray)
     !endomorphic(A) && error("AlgebraicArrays.jl: not endomorphic")
     F = eigen(Matrix(A))

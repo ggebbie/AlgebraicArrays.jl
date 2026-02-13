@@ -16,5 +16,5 @@ using Unitful
     include("test_AlgebraicArrays.jl")
     include("test_DimensionalData.jl")
     include("test_unitful.jl")
-    # include("test_DimensionalData_Unitful.jl")
+    include("test_DimensionalData_Unitful.jl")
 end
