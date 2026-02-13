@@ -14,7 +14,8 @@
     years = (1990:1993)
     statevariables = [:θ, :δ¹⁸O] 
     M = 5 # Interior Locations with obs
-
+    K = u"K"
+    
     function source_water_solution_with_uniform_units(surfaceregions, years, statevar)
         yr = u"yr"
         K = u"K"

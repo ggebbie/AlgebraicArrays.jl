@@ -4,7 +4,7 @@ using AlgebraicArrays
 using DimensionalData
 using DimensionalData:@dim
 using Unitful
-
+# using AlgebraicArraysDimensionalDataExt: Eigenmode
 using LinearAlgebra
 
 @dim Eigenmode "eigenmode"
