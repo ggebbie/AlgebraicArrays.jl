@@ -42,11 +42,13 @@
         # ERROR: MethodError: no method matching copyto!(::Float64, ::Base.Broadcast.Broadcasted{Base.Broadcast.DefaultArrayStyle{…}, Tuple{}, typeof(+), Tuple{…}})
         # The function `copyto!` exists, but no method is defined for this combination of argument types.
 
+        @test isapprox( sum(v-b), rsize[2])
+
         v = deepcopy(b)
         v[1,:] = v[1,:] .+ 1.0 # works
-        #v[(1,:)] = v[(1,:)] .+ 1.0 # fails
+        v[(1,:)] = v[(1,:)] .+ 1.0 # fails
         v[1] = v[1] .+ 1.0 # works
-        @test isapprox(sum(v-b), dsize[2] + 1) # change to factor 3 when above error fixed
+        @test isapprox(sum(v-b), 2*rsize[2]) # change to factor 3 when above error fixed
 
         # iteration
         @test eachindex(b) == Base.OneTo(prod(size(b)))
@@ -146,44 +148,38 @@
 
         rsize = (3,4)
         dsize = (2,3)
-        msize = (rsize, dsize)
-
-        q = randn((dsize,))
+        msize = (dsize, rsize)
+        
+        q = randn(msize); #dsize,:VectorArray) #VectorArray(randn(dsize))
         qT = transpose(q)
-        @test q[2] == qT[1,2]
-
         # same type than q, but type instability in code
         qTT = transpose(qT)
-
-        itest = rand(eachindex(q))
-        @test q[itest] == qTT[itest]
+        @test q == qTT
 
         # inner product
-        @test first(qT * q) ≥ 0 # workaround
-        # @test qT * q ≥ 0 # returns Vector, should be Number
+        @test qT * q ≥ 0
 
+        # dot product is not correct
         @test q ⋅ q ≥ 0 
-
-        @test isapprox(first(qT * q), q ⋅ q) # workaround
-        # @test isapprox(qT * q, q ⋅ q) # fails
+        @test isapprox(qT * q, q ⋅ q)
 
         # symmetric outer product
         @test q * qT isa MatrixArray
 
         # asymmetric outer product
         usize = (1,2)
-        u = randn((usize,)) 
+        u = randn(usize,:VectorArray) # formerly randn_VectorArray(usize)
         @test q * transpose(u) isa MatrixArray
 
         # another way to make a MatrixArray
-        P = randn(msize)
+        P = randn(rsize,dsize,:MatrixArray) #randn_MatrixArray(rsize,dsize)
         @test rangedims(P) == rsize
         @test domaindims(P) == dsize
             
         # # multiplication of a MatrixArray and a VectorArray gives a VectorArray
         @test (P*q) isa VectorArray
 
-        # # matrix-matrix multiplictation
+        # # matrix-matrix multiplication
         PT = transpose(P)
         @test P * PT isa MatrixArray
         @test P == transpose(PT)
