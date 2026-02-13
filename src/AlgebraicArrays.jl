@@ -1,6 +1,5 @@
 module AlgebraicArrays
 
-using LinearAlgebra: NumberArray
 using LinearAlgebra
 
 export VectorArray, MatrixArray, AlgebraicArray, Array
@@ -240,40 +239,17 @@ MatrixArray{T,N} = AlgebraicArray{T,2,N}
 function Base.getindex(A::MatrixArray, inds::Vararg{Any,2})
     # reshape A to a Matrix
     A2 = reshape(A.data, size(A))
-    return tmp = getindex(A2, inds...)
-    # Nrow = length(first(D.dims))
-    # Ncol = length(last(D.dims))
-    # fsize = size(tmp)
-    # asize = Tuple( Tuple(fsize[1:Nrow]), Tuple(fsize[Nrow+1:Nrow+Ncol]))
-    # return AlgebraicArray( tmp, asize)
+    tmp = getindex(A2, inds...)
+    return AlgebraicArray( tmp, (size(tmp),))
 end
 # do return AArray
 function Base.getindex(A::MatrixArray, inds::Vararg{Tuple,2})
     # reshape A to a Matrix
     inds_full = unwrap(inds)
     tmp = getindex(parent(A), inds_full...)
-
-    tmp isa Number && return tmp
-
-    Nrow = length(first(A.dims))
-    Ncol = length(last(A.dims))
-
-    # how many singleton dimensions have dropped out?
-    Nrowdrop = count(isa.(inds_full[1:Nrow],Integer))
-    Ncoldrop = count(isa.(inds_full[Nrow+1:Nrow+Ncol],Integer))
-
-    fsize = size(tmp)
-    Nrow_new = Nrow - Nrowdrop
-    Ncol_new = Ncol - Ncoldrop
-
-    if iszero(Ncol_new)
-        asize = ((fsize[1:Nrow_new]),)
-    else
-        asize = (fsize[1:Nrow_new],fsize[Nrow_new+1:Nrow_new+Ncol_new])
-    end
-    
-    return AlgebraicArray( tmp, asize)
+    return AlgebraicArray( tmp, (size(tmp),))
 end
+
 # #struct MatrixArray{T<:Number,
 # struct MatrixArray{T,
 #     M,
