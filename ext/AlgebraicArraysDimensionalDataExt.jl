@@ -57,6 +57,10 @@ function Base.rand(ddims::Union{Tuple, DD}, adims::NTuple{AD,Tuple}) where AD wh
     return AlgebraicArray(rand(ddims), adims)
 end
 
+function Base.randn(ddims::Union{Tuple, DD}, adims::NTuple{AD,Tuple}) where AD where DD <: DimensionalData.Dimension 
+    return AlgebraicArray(DimArray(randn(size(ddims)), ddims), adims)
+end
+
 function Base.transpose(b::VectorDimArray)
 
     size_rowvector = ((1,),first(b.dims))
