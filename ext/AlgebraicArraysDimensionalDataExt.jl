@@ -98,8 +98,10 @@ function Base.:*(A::AlgebraicDimArray, b::AlgebraicDimArray)
     end
 end
 
-function Base.:(\ )(A::AlgebraicDimArray, B::AlgebraicDimArray) 
-    (rangedims(A) !== rangedims(B)) && (error("AlgebraicArrays.jl: left divide not conformable"))
+function Base.:(\ )(A::AlgebraicDimArray, B::AlgebraicDimArray)
+    if (rangedims(A) != rangedims(B))
+        error("AlgebraicArrays.jl: left divide not conformable")
+    end
     if isempty(domaindims(B))
         newdim = domaindims(A)
         arr = reshape( AlgebraicArrays.matrix_or_vec(A) \
