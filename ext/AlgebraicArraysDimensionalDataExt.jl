@@ -17,7 +17,7 @@ import Base: rand, randn, zeros, ones, fill
 import DimensionalData: dims
 
 @dim RowVector "singular dimension"
-@dim Eigenmode "eigenmode"
+#@dim Eigenmode "eigenmode" # error of overwriting (already done once?)
 
 MatrixDimArray = MatrixArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
 VectorDimArray = VectorArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
