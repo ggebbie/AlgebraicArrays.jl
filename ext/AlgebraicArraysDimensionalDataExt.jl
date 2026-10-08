@@ -5,313 +5,264 @@ using DimensionalData
 using DimensionalData:@dim
 using LinearAlgebra
 
-export VectorDimArray, MatrixDimArray, dims, rowvector, AlgebraicArray
+export VectorDimArray, MatrixDimArray, AlgebraicDimArray
+export dims, rowvector, AlgebraicArray
 export rand, randn, zeros, ones
 
-import AlgebraicArrays: rangedims, domaindims, AlgebraicArray, rowvector
+import AlgebraicArrays: rangedims, domaindims, AlgebraicArray
 import AlgebraicArrays: MatrixArray, VectorArray 
 import LinearAlgebra: eigen
 import Base: exp, transpose
-import Base: rand, randn, zeros, ones
+import Base: rand, randn, zeros, ones, fill
 import DimensionalData: dims
 
 @dim RowVector "singular dimension"
-@dim Eigenmode "eigenmode"
+@dim Eigenmode "eigenmode" # error of overwriting (already done once?)
 
-MatrixDimArray = MatrixArray{T, M, N, R} where {M, T, N, R<:AbstractDimArray{T, M}}
-VectorDimArray = VectorArray{T, N, A} where {T, N, A <: DimensionalData.AbstractDimArray}
+MatrixDimArray = MatrixArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
+VectorDimArray = VectorArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
+AlgebraicDimArray = AlgebraicArray{T, D, N, A} where {T, D, N, A<:AbstractDimArray{T, N}}
 
-#VectorDimArray(array,rdims) = VectorArray(DimArray(array,rdims))
-    
+# careful: these function conflict with ones in main module
 rangedims(A::VectorDimArray) = dims(parent(A))
-rangedims(A::MatrixDimArray) = dims(first(parent(A)))
+function rangedims(A::MatrixDimArray)
+    Nrange = length(first(A.dims))
+    return dims(parent(A))[1:Nrange]
+end
 
-domaindims(A::MatrixDimArray) = dims(parent(A))
+function domaindims(A::MatrixDimArray)
+    Nrange = length(first(A.dims))
+    Ndomain = length(last(A.dims))
+    return dims(parent(A))[Nrange+1:Nrange+Ndomain]
+end
+
 domaindims(b::VectorDimArray) = ()
 
 DimensionalData.dims(A::VectorDimArray) = dims(parent(A))
 
-# implement broadcast
-
-# function declaration passes here but not OGFM
-#Base.BroadcastStyle(::Type{<:VectorArray{T, N, A}}) where {T, N, A <: DimensionalData.AbstractDimArray} = Broadcast.ArrayStyle{VectorArray{T, N, A}}()
-Base.BroadcastStyle(::Type{<:VectorArray{T, N, A}}) where {T, N, A <: DimensionalData.AbstractDimArray} = Broadcast.ArrayStyle{VectorDimArray}()
-
-# passes test 
-# Base.BroadcastStyle(::Type{<:VectorDimArray}) = Broadcast.ArrayStyle{VectorDimArray}()
-
-#function opening passes here but not OGFM
-#function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{VectorArray{T, N, A}}}, ::Type{ElType}) where {ElType, T, N, A <: DimensionalData.AbstractDimArray}
-
-#passes test
-function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{VectorDimArray}}, ::Type{ElType}) where ElType
-    B = find_vda(bc)
-    VectorArray(DimArray(similar(Array{ElType}, axes(bc)), dims(B)))
+# ### fill
+function Base.fill(val, ddims::Union{Tuple, DD}, adims::NTuple{AD,Tuple}) where AD where DD <: DimensionalData.Dimension 
+    return AlgebraicArray(fill(val, ddims), adims)
 end
 
-function Base.similar(vda::VectorDimArray{T}) where T
-    VectorArray(similar(parent(vda))) #Array{T}, axes(vda)), dims(vda))
+function Base.ones(ddims::Union{Tuple, DD}, adims::NTuple{AD,Tuple}) where AD where DD <: DimensionalData.Dimension 
+    return AlgebraicArray(ones(ddims), adims)
 end
 
-### rand
-function Base.rand(rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-    if type == :VectorArray
-        # actually use rand (randn not implemented for DimArray)
-        return VectorArray(rand(rdims))
-    else
-        error("randn not implemented for this type")
-    end
-end
-function Base.rand(T::Type,rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-    if type == :VectorArray
-        # actually use rand (randn not implemented for DimArray)
-        return VectorArray(rand(T,rdims))
-    else
-        error("rand not implemented for this type")
-    end
-end
-function Base.rand(T::Type, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-
-    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
-    rsize = size(rdims)
-    dsize = size(ddims)
-    M = prod(rsize)
-    N = prod(dsize)
-    A = rand(T,M,N)
-    if type == :AlgebraicArray
-        return AlgebraicArray(A, rdims, ddims)
-    elseif type == :MatrixArray
-        return MatrixArray(A, rdims, ddims)
-    end
-    #return AlgebraicArray(A, rdims, ddims)
-end
-# make Float64 the default
-Base.rand(rdims::Union{Tuple, D}, ddims::Union{Tuple, D}, type::Symbol) where D <: DimensionalData.Dimension =
-    rand(Float64, rdims, ddims, type)
-
-### randn
-function Base.randn(rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-    if type == :VectorArray
-        return AlgebraicArray(randn(prod(size(rdims))), rdims)
-    else
-        error("randn not implemented for this type")
-    end
-end
-function Base.randn(T::Type, rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-    if type == :VectorArray
-        return AlgebraicArray(randn(T, prod(size(rdims))), rdims)
-    else
-        error("randn not implemented for this type")
-    end
-end
-function Base.randn(T::Type, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-
-    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
-    rsize = size(rdims)
-    dsize = size(ddims)
-    M = prod(rsize)
-    N = prod(dsize)
-    A = randn(T,M,N)
-    if type == :AlgebraicArray
-        return AlgebraicArray(A, rdims, ddims)
-    elseif type == :MatrixArray
-        return MatrixArray(A, rdims, ddims)
-    end
-    #return AlgebraicArray(A, rdims, ddims)
-end
-# make Float64 the default
-Base.randn(rdims::Union{Tuple, D}, ddims::Union{Tuple, D}, type::Symbol) where D <: DimensionalData.Dimension =
-    randn(Float64, rdims, ddims, type)
-
-### ones
-function Base.ones(rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-    if type == :VectorArray
-        return AlgebraicArray(ones(prod(size(rdims))), rdims)
-    else
-        error("ones not implemented for this type")
-    end
-end
-function Base.ones(T::Type, rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-    if type == :VectorArray
-        return AlgebraicArray(ones(T, prod(size(rdims))), rdims)
-    else
-        error("ones not implemented for this type")
-    end
-end
-function Base.ones(T::Type, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-
-    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
-    rsize = size(rdims)
-    dsize = size(ddims)
-    M = prod(rsize)
-    N = prod(dsize)
-    A = ones(M,N)
-    if type == :AlgebraicArray
-        return AlgebraicArray(A, rdims, ddims)
-    elseif type == :MatrixArray
-        return MatrixArray(A, rdims, ddims)
-    end
-    #return AlgebraicArray(A, rdims, ddims)
-end
-# make Float64 the default
-Base.ones(rdims::Union{Tuple, D}, ddims::Union{Tuple, D}, type::Symbol) where D <: DimensionalData.Dimension =
-    ones(Float64, rdims, ddims, type)
-
-### zeros
-function Base.zeros(rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-    if type == :VectorArray
-        return AlgebraicArray(zeros(prod(size(rdims))), rdims)
-    else
-        error("randn not implemented for this type")
-    end
-end
-function Base.zeros(T::Type, rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-    if type == :VectorArray
-        return AlgebraicArray(zeros(T, prod(size(rdims))), rdims)
-    else
-        error("randn not implemented for this type")
-    end
-end
-function Base.zeros(T::Type, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-
-    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
-    rsize = size(rdims)
-    dsize = size(ddims)
-    M = prod(rsize)
-    N = prod(dsize)
-    A = zeros(T, M, N)
-    if type == :AlgebraicArray
-        return AlgebraicArray(A, rdims, ddims)
-    elseif type == :MatrixArray
-        return MatrixArray(A, rdims, ddims)
-    end
-    #return AlgebraicArray(A, rdims, ddims)
-end
-# make Float64 the default
-Base.zeros(rdims::Union{Tuple, D}, ddims::Union{Tuple, D}, type::Symbol) where D <: DimensionalData.Dimension =
-    zeros(Float64, rdims, ddims, type)
-
-### fill
-function Base.fill(val, rdims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-    if type == :VectorArray
-        return VectorArray(fill(val, rdims)) #AlgebraicArray(fill(prod(size(rdims))), rdims)
-    else
-        error("randn not implemented for this type")
-    end
-end
-function Base.fill(val, rdims::Union{Tuple,D}, ddims::Union{Tuple,D}, type::Symbol) where D <: DimensionalData.Dimension
-
-    !(type == :MatrixArray || type == :AlgebraicArray ) && error("type not implemented")
-    rsize = size(rdims)
-    dsize = size(ddims)
-    M = prod(rsize)
-    N = prod(dsize)
-    A = fill(val, M, N)
-    if type == :AlgebraicArray
-        return AlgebraicArray(A, rdims, ddims)
-    elseif type == :MatrixArray
-        return MatrixArray(A, rdims, ddims)
-    end
-    #return AlgebraicArray(A, rdims, ddims)
+function Base.zeros(ddims::Union{Tuple, DD}, adims::NTuple{AD,Tuple}) where AD where DD <: DimensionalData.Dimension 
+    return AlgebraicArray(zeros(ddims), adims)
 end
 
-"`A = find_vda(As)` returns the first VectorDimArray among the arguments."
-find_vda(bc::Base.Broadcast.Broadcasted) = find_vda(bc.args)
-find_vda(args::Tuple) = find_vda(find_vda(args[1]), Base.tail(args))
-find_vda(x) = x
-find_vda(::Tuple{}) = nothing
-find_vda(a::VectorDimArray, rest) = a
-find_vda(::Any, rest) = find_vda(rest)
-
-# would prefer to be more specific about the type of Tuple
-# instead I made the core routines dispatch with a specific Tuple structure
-function AlgebraicArray(A::AbstractVector, rdims::Union{Tuple,D}) where D <: DimensionalData.Dimension
-    rsize = size(rdims)
-    M = prod(rsize)
-    if M > 1
-        return VectorArray(DimArray(reshape(A,rsize),rdims))
-    elseif M == 1
-        # warning: introduces type instability
-        # but useful for inner products
-        #return VectorArray(first(A)) # bugfix?
-        return first(A) # bugfix?
-    end
+function Base.rand(ddims::Union{Tuple, DD}, adims::NTuple{AD,Tuple}) where AD where DD <: DimensionalData.Dimension 
+    return AlgebraicArray(rand(ddims), adims)
 end
 
-# force-construct a VectorArray if you know what you want
-function VectorArray(A::AbstractVector, rdims::Union{Tuple,D}) where D <: DimensionalData.Dimension
-    rsize = size(rdims)
-    M = prod(rsize)
-    return VectorArray(DimArray(reshape(A,rsize),rdims))
+function Base.randn(ddims::Union{Tuple, DD}, adims::NTuple{AD,Tuple}) where AD where DD <: DimensionalData.Dimension 
+    return AlgebraicArray(DimArray(randn(size(ddims)), ddims), adims)
 end
 
-function AlgebraicArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Union{Tuple,D2}) where T where D1 <: DimensionalData.Dimension where D2 <: DimensionalData.Dimension
-#function AlgebraicArray(A::AbstractVector, rdims::Tuple)
-    rsize = size(rdims)
-    dsize = size(ddims)
-    M = prod(dsize)
-    N = length(rsize)
+function Base.transpose(b::VectorDimArray)
 
-    if M > 1
-        P = Array{DimArray{T,N}}(undef,dsize)
-        for j in 1:M
-            P[j] = DimArray(reshape(A[:,j],rsize),rdims)
+    size_rowvector = ((1,),first(b.dims))
+    arr = reshape(transpose(vec(b)),
+                  AlgebraicArrays.unwrap(size_rowvector)...)
+    newdim = (RowVector(["1"]), b.data.dims...)
+    da = DimArray(arr, newdim) 
+    return AlgebraicArray(da, size_rowvector)
+end
+function Base.transpose(P::MatrixDimArray)
+    size_transpose = (last(P.dims),first(P.dims))
+    arr = reshape(transpose(AlgebraicArrays.matrix_or_vec(P)),
+                  AlgebraicArrays.unwrap(size_transpose)...)
+    newdim = (domaindims(P)...,rangedims(P)...)
+    da = DimArray(arr, newdim) 
+    return AlgebraicArray(da, size_transpose)
+end
+
+Base.:*(a::Number,B::AlgebraicDimArray) = AlgebraicArray(a*parent(B),B.dims)
+function Base.:*(A::AlgebraicDimArray, b::AlgebraicDimArray)
+    if rangedims(b) == domaindims(A)
+        if isempty(domaindims(b))
+            newdim = rangedims(A)
+            arr = reshape( AlgebraicArrays.matrix_or_vec(A)*AlgebraicArrays.matrix_or_vec(b), size(newdim)...)               
+            da = DimArray(arr, newdim) 
+            return AlgebraicArray(da, (size(newdim),))
+        else
+            newdim = (rangedims(A)...,domaindims(b)...)
+            arr = reshape( AlgebraicArrays.matrix_or_vec(A)*AlgebraicArrays.matrix_or_vec(b), size(newdim)...)               
+            da = DimArray(arr, newdim) 
+            return AlgebraicArray(da, (size(rangedims(A)),size(domaindims(b))))
         end
-        return MatrixArray(DimArray(P,ddims))
-    elseif M == 1
-        # warning: introduces type instability
-        # but useful for transpose of row vector
-        return VectorArray(DimArray(reshape(A,rsize),rdims))
     else
-        error("incompatible number of columns") 
+        error("multiplication with `AlgebraicArray`s not conformable")
     end
 end
 
-# force output to be `MatrixArray` even in funny/limiting cases
-function MatrixArray(A::AbstractMatrix{T}, rdims::Union{Tuple,D1}, ddims::Union{Tuple,D2}) where T where D1 <: DimensionalData.Dimension where D2 <: DimensionalData.Dimension
-
-    rsize = size(rdims)
-    dsize = size(ddims)
-    M = prod(dsize)
-    N = length(rsize)
-
-    P = Array{DimArray{T,N}}(undef,dsize)
-    for j in 1:M
-        P[j] = DimArray(reshape(A[:,j],rsize),rdims)
+function Base.:(\ )(A::AlgebraicDimArray, B::AlgebraicDimArray)
+    if (rangedims(A) != rangedims(B))
+        error("AlgebraicArrays.jl: left divide not conformable")
     end
-    return MatrixArray(DimArray(P,ddims))
+    if isempty(domaindims(B))
+        newdim = domaindims(A)
+        arr = reshape( AlgebraicArrays.matrix_or_vec(A) \
+                       AlgebraicArrays.matrix_or_vec(B), size(newdim)...)
+        da = DimArray(arr, newdim)
+        return AlgebraicArray(da, (size(domaindims(A)), ))
+    else
+        newdim = (domaindims(A)...,domaindims(B)...)
+        arr = reshape(
+            AlgebraicArrays.matrix_or_vec(A)\AlgebraicArrays.matrix_or_vec(B),
+            size(newdim)...)               
+        da = DimArray(arr, newdim) 
+        return AlgebraicArray(da, (size(domaindims(A)),size(domaindims(B))))
+    end
 end
 
-Base.transpose(b::VectorDimArray) = AlgebraicArray(transpose(vec(b)), RowVector(["1"]), rangedims(b))
+# missing a compatibility test
+function Base.:(/)(A::AlgebraicDimArray, B::AlgebraicDimArray)
+    if isempty(rangedims(B))
+        newdim = rangedims(A)
+        arr = reshape(AlgebraicArrays.matrix_or_vec(A) /
+                      AlgebraicArrays.matrix_or_vec(B), size(newdim)...)
+        da = DimArray(arr, newdim)
+        return AlgebraicArray(da, (size(rangedims(A)),))
+    else
+        newdim = (rangedims(A)..., rangedims(B)...)
+        arr = reshape(AlgebraicArrays.matrix_or_vec(A) /
+                      AlgebraicArrays.matrix_or_vec(B), size(newdim)...)
+        da = DimArray(arr, newdim)
+        return AlgebraicArray(da, (size(rangedims(A)),size(rangedims(B))))
+    end
+end
 
-# undefined resource
-# function Base.similar(mda::MatrixDimArray{T}) where T
-#     MatrixArray(similar(parent(mda))) #Array{T}, axes(vda)), dims(vda))
+function LinearAlgebra.Diagonal(a::VectorDimArray) 
+    newdim = AlgebraicArrays.unwrap((rangedims(a), rangedims(a)))
+    arr = reshape( Diagonal(vec(a)), size(newdim))
+    da = DimArray(arr, newdim)
+    return AlgebraicArray(da, (size(rangedims(a)), size(rangedims(a))))
+end
+
+function Base.similar(aa::AlgebraicDimArray{T}) where T
+    tmp = reshape(similar(Array{T}, axes(aa)), 
+                  AlgebraicArrays.unwrap(aa.dims))
+    da = DimArray(tmp, aa.data.dims)
+    return AlgebraicArray(da, aa.dims)
+end
+
+Base.BroadcastStyle(::Type{<:AlgebraicDimArray}) = Broadcast.ArrayStyle{AlgebraicDimArray}()
+
+function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{AlgebraicDimArray}}, ::Type{ElType}) where ElType
+    # Scan the inputs, first AArray amongst the arguments
+    A = find_aa(bc)
+    tmp = reshape(similar(Array{ElType}, axes(A)), 
+        AlgebraicArrays.unwrap(A.dims))
+    da = DimArray(tmp, A.data.dims)
+    aa = AlgebraicArray( da, A.dims)
+    return aa
+end
+
+# function Base.similar(aa::AlgebraicArray{T}) where T 
+#     tmp = reshape(similar(Array{T}, axes(aa)), 
+#         AlgebraicArrays.unwrap(aa.dims))
+#     return AlgebraicArray(tmp, aa.dims)
 # end
 
-function  LinearAlgebra.eigen(A::MatrixDimArray)
-    F = eigen(Matrix(A))
-    #dsize = length(F.values)
-    eigen_dims = Eigenmode(1:length(F.values))
+# "`A = find_va(As)` returns the first AlgebraicArray among the arguments."
+find_aa(bc::Base.Broadcast.Broadcasted) = find_aa(bc.args)
+find_aa(args::Tuple) = find_aa(find_aa(args[1]), Base.tail(args))
+find_aa(x) = x
+find_aa(::Tuple{}) = nothing
+find_aa(a::AlgebraicArray, rest) = a
+find_aa(::Any, rest) = find_aa(rest)
 
-    rsize = rangedims(A)
-    values = AlgebraicArray(F.values, eigen_dims)
-    vectors = AlgebraicArray(F.vectors,rsize,eigen_dims) 
+function LinearAlgebra.diag(A::MatrixDimArray)
+    if endomorphic(A)
+
+        size_range = size(rangedims(A))
+        da = DimArray( reshape(diag(Matrix(A)), size_range), rangedims(A))
+        return AlgebraicArray(da, (size_range,))
+    else
+        # unclear what to do about dimensions in this case
+        # punt and return a vector, warning: type unstable
+        return diag(Matrix(A))
+    end
+end 
+
+# complete copy of DimData extension method to avoid dispatch ambiguity
+# must be another way to disambiguate
+function LinearAlgebra.eigen(A::MatrixDimArray)
+    !endomorphic(A) && error("AlgebraicArrays.jl: not endomorphic")
+    F = eigen(Matrix(A))
+
+    eigen_dims = Eigenmode(1:length(F.values))
+    newdim = (rangedims(A)..., eigen_dims)
+    varr = reshape(F.vectors, size(newdim)...)
+    vda = DimArray(varr, newdim)
+    rdims_new = size(rangedims(A))
+    ddims_new = size(eigen_dims)
+
+    vectors = AlgebraicArray(vda,(rdims_new,ddims_new))
+
+    # arr = AlgebraicArray(F.values, (size(eigen_dims),))
+    arr = AlgebraicArray(F.values, (ddims_new,))
+    da = DimArray(arr, eigen_dims)
+    values = AlgebraicArray(da, (size(eigen_dims),))
+
     return Eigen(values, vectors)
 end
 
 function Base.exp(A::MatrixDimArray)
     # A must be endomorphic (check type signature someday)
     !AlgebraicArrays.endomorphic(A) && error("A must be endomorphic to be consistent with matrix exponential")
-    eA = exp(Matrix(A)) # move upstream to MultipliableDimArrays eventually
-    return AlgebraicArray(exp(Matrix(A)),rangedims(A),domaindims(A)) # wrap with same labels and format as A
+    arr = reshape( exp(Matrix(A)), AlgebraicArrays.unwrap(A.dims))
+    da = DimArray(arr, dims(parent(A)))
+    return AlgebraicArray(da, A.dims)
 end
 
-#rowvector(A::MatrixDimArray{T,M,N}, rowindex::Vararg) where {T,M,N} = transpose(A[fill(:,N)...][rowindex...])
-#rowvector(A::MatrixDimArray, rowindex::Vararg) = transpose(A[fill(:,N)...][rowindex...])
-function rowvector(A::MatrixDimArray{T,M,N}, rowindex::Vararg) where {T,M,N}
-    DA = DimArray([A[j][rowindex...] for j in eachindex(A)],domaindims(A))
-    return transpose(VectorArray(DA))
+function Base.getindex(A::MatrixDimArray, inds::Vararg{Tuple,2}) 
+    # reshape A to a Matrix
+    inds_full = AlgebraicArrays.unwrap(inds)
+    tmp = getindex(parent(A), inds_full...)
+
+    tmp isa Number && return tmp
+
+    # find the size of each input dim
+
+    # range space
+    rdims_in = rangedims(A)
+    rinds_in = first(inds)
+    Nrange = 0 # dimension of range
+    for i in eachindex(rdims_in)
+        if rdims_in[i][rinds_in[i]] isa DimensionalData.Dimension
+            Nrange += 1
+        end
+    end
+
+    # domain space
+    ddims_in = domaindims(A)
+    dinds_in = last(inds)
+    Ndomain = 0 # dimension of domain
+    for i in eachindex(ddims_in)
+        if ddims_in[i][dinds_in[i]] isa DimensionalData.Dimension
+            Ndomain += 1
+        end
+    end
+    
+    if iszero(Ndomain)
+        asize = (size(tmp),)
+        
+    elseif iszero(Nrange)
+        asize = ((1,),size(tmp))
+
+        # get the extra label
+        arr = reshape(tmp, AlgebraicArrays.unwrap(asize))
+        newdim = (RowVector(["1"]), dims(tmp)...)
+        tmp = DimArray(arr, newdim)
+    else
+        asize = (size(tmp)[1:Nrange], size(tmp)[Nrange+1:Nrange+Ndomain]) 
+    end
+    
+    return AlgebraicArray( tmp, asize)
 end
 
 end #module
