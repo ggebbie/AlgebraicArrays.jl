@@ -8,6 +8,7 @@ using LinearAlgebra
 export VectorDimArray, MatrixDimArray, AlgebraicDimArray
 export dims, rowvector, AlgebraicArray
 export rand, randn, zeros, ones
+export RowVector, Eigenmode
 
 import AlgebraicArrays: rangedims, domaindims, AlgebraicArray
 import AlgebraicArrays: MatrixArray, VectorArray 
