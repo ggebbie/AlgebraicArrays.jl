@@ -7,9 +7,6 @@ using Unitful
 # using AlgebraicArraysDimensionalDataExt: Eigenmode
 using LinearAlgebra
 
-# name Eigenmode already taken, causes overwriting issue
-@dim EigenMode "eigenmode"
-
 # export VectorDimArray, MatrixDimArray, AlgebraicDimArray
 # export dims, rowvector, AlgebraicArray
 # export rand, randn, zeros, ones
@@ -21,6 +18,14 @@ import LinearAlgebra: eigen
 # import Base: exp, transpose
 # import Base: rand, randn, zeros, ones, fill
 # import DimensionalData: dims
+
+# name Eigenmode already taken, causes overwriting issue
+# @dim EigenMode "eigenmode"
+# This is a workaround.
+ext = Base.get_extension(AlgebraicArrays, :AlgebraicArraysDimensionalDataExt) 
+if !isnothing(ext)
+    Eigenmode = ext.Eigenmode
+end
 
 MatrixUnitfulDimArray = MatrixArray{T, N, A} where {T <: Quantity, N, A<:AbstractDimArray{T, N}}
 VectorUnitfulDimArray = VectorArray{T, N, A} where {T <: Quantity, N, A<:AbstractDimArray{T, N}}
@@ -38,7 +43,7 @@ function LinearAlgebra.eigen(A::MatrixDimArray{<:Quantity})
     !endomorphic(A) && error("AlgebraicArrays.jl: not endomorphic")
     F = eigen(Matrix(A))
 
-    eigen_dims = EigenMode(1:length(F.values))
+    eigen_dims = Eigenmode(1:length(F.values))
     newdim = (rangedims(A)..., eigen_dims)
     varr = reshape(F.vectors, size(newdim)...)
     vda = DimArray(varr, newdim)
