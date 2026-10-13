@@ -26,7 +26,7 @@ Suppose you are working with a random variable on a three-dimensional ($I \times
 I = 5; J = 4; K = 2
 v = randn(I, J, K)
 ```
-but you often need to flatten to a N-dimensional vector where $N = I  J  K$. Consider casting the array into a `VectorArray`. 
+but you often need to flatten to a N-dimensional vector where $N = I*  J*  K$. Consider casting the array into a `VectorArray`. 
 ```julia
 w = VectorArray(v)
 ```
