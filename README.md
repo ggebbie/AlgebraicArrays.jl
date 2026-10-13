@@ -129,6 +129,10 @@ da = DimArray(randn(m,n),(Ti(years),SurfaceRegion(surfaceregions)))
 # wrap it with an AlgebraicArray
 aa = AlgebraicArray(da, (size(da),))
 ```
+or more simply:
+```julia
+aa = VectorArray(da)
+```
 
 When the inner array in an `AlgebraicArray` is a `DimArray`, we can define it as a `MatrixDimArray` or `VectorDimArray`:
 ```julia
