@@ -26,7 +26,7 @@ Suppose you are working with a random variable on a three-dimensional ($I \times
 I = 5; J = 4; K = 2
 v = randn(I, J, K)
 ```
-but you often need to flatten to a M-dimensional vector where $N = I \times J \times K$. Consider casting the array into a `VectorArray`. 
+but you often need to flatten to a N-dimensional vector where $N = I  J  K$. Consider casting the array into a `VectorArray`. 
 ```julia
 w = VectorArray(v)
 ```
@@ -50,7 +50,7 @@ norm(w)
 dot(w,w)
 transpose(w)*w
 ```
-More importantly, methods that keep the same input type will make the output a `VectorArray` if that was the input:
+In addition, methods that keep the same input type will make the output a `VectorArray` if that was the input:
 ```julia
 w.^2 
 w .+ 1.0
@@ -70,7 +70,7 @@ or the alternative dimensional notation:
 ```julia
 w[(1,1,1)]
 ```
-The `end` keyword does not currently work for the dimensional notation, i.e., `w[end,end,end]`.
+Caution: the `end` keyword does not currently work for the dimensional notation, i.e., `w[end,end,end]`.
 
 Get the size of the array in vector form with `size(w)`. Get the size of dimensional array with `size(parent(w))`.
 
@@ -102,6 +102,8 @@ F[(1, 1), (1, 1, 1)]
 F[(P, Q), (I, J, K)]
 ```
 
+Get the size of the array in matrix form with `size(w)`. Get the size of dimensional array with `size(parent(w))`.
+
 # Dimensional Data Extension
 
 Both the `VectorArray` and `MatrixArray` are limiting cases of the
@@ -116,6 +118,8 @@ to load bonus code in the package-extending module `AlgebraicArraysDimensionalDa
 
 Example:
 ```julia
+@dim YearCE "years Common Era"
+@dim SurfaceRegion "surface location"
 surfaceregions = ["NATL","ANT","SUBANT"]
 years = (1990:1993)
 m = length(years)
