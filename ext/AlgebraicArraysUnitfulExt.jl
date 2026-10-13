@@ -8,18 +8,13 @@ import Base: *, (\), (/)
 import Unitful: ustrip, unit, Units
 import LinearAlgebra: eigen
 
-# Base.:*(a::Units, b::VectorArray) = AlgebraicArray(a * vec(b), (rangedims(b),))
-# Base.:*(a::Units, B::MatrixArray) = AlgebraicArray(a * Matrix(B), (rangedims(B), domaindims(B)))
-# Base.:*(B::Union{VectorArray,MatrixArray}, a::Units) = a * B
-
 # Unitful doesn't handle matrix left divide between Quantity and non-Quantity
-# nor this case.
-# this is a benign form of type piracy
+# nor this case. this is a benign form of type piracy
 function Base.:(\)(A::Union{AbstractVecOrMat{Quantity{Q1,S1,V1}},Diagonal{Quantity{Q1,S1,V1}}},
                    B::AbstractVecOrMat{Quantity{Q2,S2,V2}}) where {Q1,S1,V1} where {Q2,S2,V2}
-     Aunit = unit(first(A))
-     Bunit = unit(first(B))
-     return (Bunit/Aunit) * (ustrip.(A) \ ustrip.(B))
+    Aunit = unit(first(A))
+    Bunit = unit(first(B))
+    return (Bunit/Aunit) * (ustrip.(A) \ ustrip.(B))
 end
 
 # # more type piracy, benign as extends previously broken function
@@ -36,23 +31,13 @@ function Base.:(/)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat)
 end
 
 function Base.:(/)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}}, B::AbstractVecOrMat{Quantity{Q2,S2,V2}}) where {Q1,S1,V1} where {Q2,S2,V2} 
-     Aunit = unit(first(first(A)))
-     Bunit = unit(first(first(B)))
+    Aunit = unit(first(first(A)))
+    Bunit = unit(first(first(B)))
     return (Aunit/Bunit) * (ustrip.(A) / ustrip.(B))
  end
 
 Base.:(/)(A::MatrixArray, b::Unitful.Units) = AlgebraicArray(Matrix(A)/b, rangedims(A), domaindims(A))
 
-# function Base.:(/)(A::AbstractVecOrMat{Quantity{Q1,S1,V1}},
-#     B::AbstractVecOrMat{Quantity{Q2,S2,V2}}) where {Q1,S1,V1} where {Q2,S2,V2}
-#     C = AlgebraicArrays.matrix_or_vec(A) / AlgebraicArrays.matrix_or_vec(B)
-#     return AlgebraicArray(C, (rangedims(A), domaindims(A)))
-# end
-
-# # caution: dot broadcast added here on rhs, not lhs
-# Unitful.ustrip(A::MatrixArray) = AlgebraicArray(ustrip.(Matrix(A)), rangedims(A), domaindims(A))
-
-# function LinearAlgebra.eigen(A::MatrixArray{T,D,N,Matrix{Quantity{T2,S,V}}}) where {T1,T2,N,M,S,V}
 function LinearAlgebra.eigen(A::MatrixArray{<:Quantity})
     !uniform(A) && error("A has heterogeneous units, no eigenstructure")
     F = eigen(Matrix(A)) 
