@@ -4,23 +4,10 @@ using AlgebraicArrays
 using DimensionalData
 using DimensionalData:@dim
 using Unitful
-# using AlgebraicArraysDimensionalDataExt: Eigenmode
 using LinearAlgebra
 
-# export VectorDimArray, MatrixDimArray, AlgebraicDimArray
-# export dims, rowvector, AlgebraicArray
-# export rand, randn, zeros, ones
-
-# import AlgebraicArrays: rangedims, domaindims, AlgebraicArray
-# import AlgebraicArrays: MatrixArray, VectorArray 
 import LinearAlgebra: eigen
 
-# import Base: exp, transpose
-# import Base: rand, randn, zeros, ones, fill
-# import DimensionalData: dims
-
-# name Eigenmode already taken, causes overwriting issue
-# @dim EigenMode "eigenmode"
 # This is a workaround.
 ext = Base.get_extension(AlgebraicArrays, :AlgebraicArraysDimensionalDataExt) 
 if !isnothing(ext)

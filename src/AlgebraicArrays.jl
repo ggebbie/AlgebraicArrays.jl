@@ -28,9 +28,16 @@ import Base: getindex, setindex!, BroadcastStyle, similar
 import Base: rand, randn, fill, ones, zeros
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal, diag
 
-# T: numeric type
-# N: number of total dimensions (sum of rows and columns)
-# D: dimension=1 for VectorArray, 2 for MatrixArray
+"""
+struct AlgebraicArray{T,D,N,A <: AbstractArray{T,N}} <: AbstractArray{T,D}
+    data:: A
+    dims:: NTuple{D,Tuple}
+
+# Parameters of this type:
+- `T`: numeric type
+- `N`: number of total dimensions (sum of rows and columns)
+- `D`: dimension=1 for VectorArray, 2 for MatrixArray
+"""
 struct AlgebraicArray{T,D,N,A <: AbstractArray{T,N}} <: AbstractArray{T,D}
     data:: A
     dims:: NTuple{D,Tuple}
