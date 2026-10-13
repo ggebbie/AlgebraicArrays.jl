@@ -19,9 +19,9 @@ The Julia package `AlgebraicArrays.jl` aims to do the right thing to permit line
 
 `MatrixArray`: An N-dimensional array that acts like a matrix in mathematical operations
 
-# Introducting a `VectorArray`
+# Introducing a `VectorArray`
 
-	Suppose you are working with a random variable on a three-dimensional ($I \times J \times K$) grid:
+Suppose you are working with a random variable on a three-dimensional ($I \times J \times K$) grid:
 ```julia
 I = 5; J = 4; K = 2
 v = randn(I, J, K)
@@ -74,7 +74,7 @@ The `end` keyword does not currently work for the dimensional notation, i.e., `w
 
 Get the size of the array in vector form with `size(w)`. Get the size of dimensional array with `size(parent(w))`.
 
-# Introducting a `MatrixArray`
+# Introducing a `MatrixArray`
 
 A `MatrixArray` defines a mapping of a `VectorArray` from one space to a `VectorArray` in a new space. 
 Suppose that we have a random mapping from a $I \times J \times K$ dimensional space to a $P \times Q$ dimensional space. This mapping can be defined by a `MatrixArray`:
@@ -102,16 +102,47 @@ F[(1, 1), (1, 1, 1)]
 F[(P, Q), (I, J, K)]
 ```
 
-
 # Dimensional Data Extension
 
-This package is meant to define an `AlgebraicArray` abstract type that composes well with packages that it knows nothing about. For example, `DimArray`s compose well. Use the statement
+Both the `VectorArray` and `MatrixArray` are limiting cases of the
+`AlgebraicArray` type. This package aims to define the
+`AlgebraicArray` such that it composes well with packages that it
+knows nothing about. For example, `DimArray`s compose well. Use the
+statement
 
 `using DimensionalData`
 
 to load bonus code in the package-extending module `AlgebraicArraysDimensionalDataExt`. An N-dimensional state vector, `x`, can then be stored as a `VectorDimArray` where the dimensions of the array, i.e., `dims(x)` give the spatial or temporal locations.  These dimensions could also be used to denote which variable type is being referred to. The word, dimensions, unfortunately, has many different meanings. Do not confuse these dimensions with the units or physical quantities of the numerical entries in the array. The book, "Multidimensional Analysis" by George Hart deals with these physical units, instead. One may still input numerical values with units in the parent array of the `DimArray` by using the `Unitful` or `DynamicQuantities` Julia packages.
 
-# Basic methods
+Example:
+```julia
+surfaceregions = ["NATL","ANT","SUBANT"]
+years = (1990:1993)
+m = length(years)
+n = length(surfaceregions)
+da = DimArray(randn(m,n),(Ti(years),SurfaceRegion(surfaceregions)))
+
+# wrap it with an AlgebraicArray
+aa = AlgebraicArray(da, (size(da),))
+```
+
+When the inner array in an `AlgebraicArray` is a `DimArray`, we can define it as a `MatrixDimArray` or `VectorDimArray`:
+```julia
+MatrixDimArray = MatrixArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
+VectorDimArray = VectorArray{T, N, A} where {T, N, A<:AbstractDimArray{T, N}}
+```
+In this case, `aa` is a `VectorDimArray`. Access elements of `aa` with vector notation:
+```julia
+aa[1]
+aa[length(aa)]
+```
+or access using the dimensional indexing with utilities from `DimensionalData.jl`:
+```julia
+aa[At(1990), At("NATL")]
+aa[1, 3]
+```
+
+# Other methods
 
 Methods include `*`, `exp`, `/`, `\`, `eigen`, and more.
 
