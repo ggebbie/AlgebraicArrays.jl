@@ -29,14 +29,16 @@ import Base: rand, randn, fill, ones, zeros
 import LinearAlgebra: transpose, adjoint, eigen, Diagonal, diag
 
 """
-struct AlgebraicArray{T,D,N,A <: AbstractArray{T,N}} <: AbstractArray{T,D}
-    data:: A
-    dims:: NTuple{D,Tuple}
+    struct AlgebraicArray{T,D,N,A <: AbstractArray{T,N}} <: AbstractArray{T,D}
+
+data:: A
+dims:: NTuple{D,Tuple}
 
 # Parameters of this type:
 - `T`: numeric type
-- `N`: number of total dimensions (sum of rows and columns)
 - `D`: dimension=1 for VectorArray, 2 for MatrixArray
+- `N`: number of total dimensions (sum of rows and columns)
+- `A`: inner array type
 """
 struct AlgebraicArray{T,D,N,A <: AbstractArray{T,N}} <: AbstractArray{T,D}
     data:: A
@@ -176,6 +178,13 @@ function Base.getindex(A::MatrixArray, inds::Vararg{Any,2})
 end
 # do return AArray
 function Base.getindex(A::MatrixArray, inds::Vararg{Tuple,2})
+
+    # check that indices conform to dimensions (issue 38)
+    if (length(first(inds)) != length(first(A.dims))) ||
+       (length(last(inds)) != length(last(A.dims))) 
+       error("AlgebraicArrays.jl: wrong dimensions in domain and/or range")
+    end
+    
     # reshape A to a Matrix
     inds_full = unwrap(inds)
     tmp = getindex(parent(A), inds_full...)

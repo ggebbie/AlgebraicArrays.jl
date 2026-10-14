@@ -111,6 +111,9 @@
         @test D[(:,1:2),(1:2,:)] isa MatrixArray
         @test D[(1,2),(:,:)] isa MatrixArray # row vector but Julia returns a 1 x N matrix
 
+        # issue 38: should not work if indexing wrong
+        @test_throws ArgumentError D[(1),(2,:,:)]
+        
         # iteration uses CartesianIndices not linear indices, would need to set `iterate` function 
         @test eachindex(D) isa CartesianIndices
         # @test eachindex(D) == Base.OneTo(prod(size(D)))
