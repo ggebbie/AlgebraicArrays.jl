@@ -109,6 +109,14 @@
             Da = Diagonal(rand(M)u"K")
             @test (Da\ Da) == I(M)  # dispatch ambiguity?         
         end
+
+        # @testset "issue 13" begin
+        #     A = [1u"K" 1u"m"; 1u"J" 1u"kg"]
+        #     Ava = VectorArray(A)
+        #     #unit.(Ava)
+        #     Ava.^2
+        # end
+
     end
 
 end
